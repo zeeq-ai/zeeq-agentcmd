@@ -5,3 +5,11 @@ allowBuilds:
   esbuild: false
   unrs-resolver: false
   vue-demi: false
+
+# unctx 3.0.1 can otherwise bind to incompatible peers from its parents.
+# Remove this when the upstream graph supplies versions matching its peer ranges.
+packageExtensions:
+  'unctx@3.0.1':
+    dependencies:
+      oxc-parser: 0.156.0
+      unplugin: 3.7.0

@@ -49,3 +49,17 @@ The artifact includes HTML routes, raw Markdown twins, local search data,
 `llms.txt`, `llms-full.txt`, and `.nojekyll`. It needs no runtime server or
 secret. `scripts/check-static.mjs` checks the generated routes and repository
 prefix before upload.
+
+## Dependency audit
+
+Run `mise exec -- pnpm --dir docs audit --prod` to review the locked graph.
+As of 2026-11-03, it reports five advisories: one high, two moderate, and two
+low. The high advisory, [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5),
+affects Zod versions before 4.6.6. Nuxt Content 3.16.2 requires Zod 3.25.76,
+so forcing the fixed major would cross its declared dependency range. Update
+Nuxt Content when it supports the fix, then remove this note after verification.
+
+The deployed site is static. An audit of the package graph alone does not
+establish which dependencies run in the browser or whether an advisory is
+reachable in this site. The `unctx` package extension in `pnpm-workspace.yaml`
+supplies compatible peer dependencies for the currently locked version.
