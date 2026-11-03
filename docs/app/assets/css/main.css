@@ -24,7 +24,7 @@
   --ui-container: var(--container-8xl);
   --zeeq-yellow: #d3ec13;
   --zeeq-green: #acbe10;
-  --ui-primary: var(--color-zeeq-700);
+  --ui-primary: var(--color-zeeq-800);
   --zeeq-gradient: linear-gradient(to top right, var(--color-zeeq-800), var(--color-zeeq-700));
 }
 
