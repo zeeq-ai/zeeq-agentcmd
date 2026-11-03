@@ -42,6 +42,7 @@ Inspired by `SqlCommand`, built on Microsoft.Extensions.AI. Keep prompt intent, 
   :::
 
 #default
+  :::hero-code
   ```csharp [ExtractInvoice.cs] {13-15}
   // Keep identity and intent together.
   // The generator supplies the contract.
@@ -59,6 +60,7 @@ Inspired by `SqlCommand`, built on Microsoft.Extensions.AI. Keep prompt intent, 
       .ExecuteAsync(ct);
   // result is Outcome<Invoice>.
   ```
+  :::
 ::
 
 ::u-page-section
