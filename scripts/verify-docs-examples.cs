@@ -262,6 +262,10 @@ try
         Fence(telemetryExample, "csharp", "TelemetryProgram.cs")
     );
     File.WriteAllText(
+        Path.Combine(telemetryApp, "TelemetryFakes.cs"),
+        Fence(telemetryExample, "csharp", "TelemetryFakes.cs")
+    );
+    File.WriteAllText(
         Path.Combine(telemetryApp, "TelemetryExport.cs"),
         Fence(telemetryGuide, "csharp", "TelemetryExport.cs")
     );

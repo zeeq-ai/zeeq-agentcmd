@@ -17,7 +17,7 @@ orientation: horizontal
 Prompts as [typed commands]{.brand-gradient-text}.
 
 #description
-Inspired by `SqlCommand`, built on Microsoft.Extensions.AI. Keep prompt intent, parameters, execution, and results together — from one extraction to a whole you can evaluate.
+Give a prompt a name, typed inputs, and a result you can inspect. LlmCmd brings those pieces together over Microsoft.Extensions.AI, from one model call to a whole you can evaluate.
 
 #links
   :::u-button
@@ -43,7 +43,7 @@ Inspired by `SqlCommand`, built on Microsoft.Extensions.AI. Keep prompt intent, 
 
 #default
   :::hero-code
-  ```csharp [ExtractInvoice.cs] {13-15}
+  ```csharp [ExtractInvoice.cs] {12-14}
   // Keep identity and intent together.
   // The generator supplies the contract.
   public sealed partial class ExtractInvoice
@@ -71,7 +71,9 @@ Why LlmCmd?
 The prompt is one part of the operation.
 
 #description
-MEAI already gives you typed responses, schema helpers, and middleware. LlmCmd connects stable prompt identity, captured inputs, execution telemetry, delivery receipts, and evaluation of stored results.
+Your application asks a model to extract an invoice. Later, the total looks wrong. Which prompt and inputs produced it? Which model ran? Can you evaluate the exact invoice that was stored?
+
+MEAI already provides typed responses, schema helpers, and middleware. LlmCmd brings the rest of that operation together: a stable prompt identity, captured inputs, execution telemetry, a delivery receipt, and a result you can read back and evaluate.
 
 #default
   :::u-page-grid{class="lg:grid-cols-2"}
@@ -152,7 +154,7 @@ Keep the important choices visible.
 From intent to an inspectable result.
 
 #description
-The command describes the operation. MEAI runs the provider call. Telemetry explains the execution, and a stored output reference identifies what you can read back and grade. See [Telemetry and evaluation capture](/guides/accounting-and-observability).
+Think of the command as a reusable recipe. The invocation supplies the ingredients. MEAI runs the provider call, and the outcome tells you what happened. A stored output reference gives you the exact result to read back and grade. See [Telemetry and evaluation capture](/guides/accounting-and-observability).
 
 #default
 :call-flow
