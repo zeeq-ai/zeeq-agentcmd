@@ -27,6 +27,10 @@ export default defineAppConfig({
     credits: 'Zeeq LlmCmd · Built on Microsoft.Extensions.AI',
     colorMode: false,
     links: [{
+      label: 'MIT License',
+      to: 'https://github.com/zeeq-ai/zeeq-llmcmd/blob/main/LICENSE',
+      target: '_blank'
+    }, {
       'icon': 'i-simple-icons-github',
       'to': 'https://github.com/zeeq-ai/zeeq-llmcmd',
       'target': '_blank',

@@ -10,6 +10,7 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <WarningsAsErrors>$(WarningsAsErrors);CS8509;CS8524</WarningsAsErrors>
     <Version>0.1.0-alpha.1</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
     <Deterministic>true</Deterministic>
     <LibraryRepositoryRoot>$(MSBuildThisFileDirectory)</LibraryRepositoryRoot>

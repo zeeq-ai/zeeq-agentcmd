@@ -4,6 +4,8 @@ Typed prompt commands and aggregate composition over `Microsoft.Extensions.AI`. 
 
 [Documentation](https://zeeq-ai.github.io/zeeq-llmcmd/) · [Offline quick start](docs/content/1.getting-started/3.quick-start.md) · [Build the documentation site](docs/README.md)
 
+LlmCmd is available under the [MIT License](LICENSE).
+
 The core NuGet package includes the runtime, source generators and registration analyzers. Its generator emits AOT-safe serializer metadata directly. A consumer needs one `PackageReference`; it does not need a handwritten command constructor, serializer context, JSON schema, registration table or MSBuild import. Provider extraction and OpenTelemetry are separate optional packages.
 
 ## Author a command
