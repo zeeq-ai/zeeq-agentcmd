@@ -1,0 +1,220 @@
+[tools]
+# Match zeeq-tmpl: the formatter is a pinned dotnet tool managed by mise.
+"dotnet:Csharpier" = "1.3.0"
+node = "24.15.0"
+pnpm = "12.9.1"
+
+# Keep one SDK version source. Both mise and the .NET CLI read global.json.
+[settings]
+idiomatic_version_file_enable_tools = ["dotnet"]
+# Shell/IDE startup can prepend system dotnet after mise activation. Keep the
+# project's selected SDK first when tasks launch from nested directories too.
+activate_aggressive = true
+
+# Keep this preview SDK separate from mise's shared stable SDK installation.
+[settings.dotnet]
+isolated = true
+
+# These projects share build outputs. Ordered run steps avoid concurrent builds
+# of the same runtime/generator; a failure stops the remaining suites.
+[tasks.test]
+description = "Run all local TUnit suites directly with dotnet"
+run = [
+  { task = "test:analyzers" },
+  { task = "test:core" },
+  { task = "test:collector-adapters" },
+  { task = "test:human-grading" },
+  { task = "test:provider-adapters" },
+  { task = "test:provider-sdk" },
+  { task = "test:context-propagation" },
+  { task = "test:composition" },
+]
+
+[tasks."test:analyzers"]
+description = "Check registration analyzer errors and conservative dynamic-setup handling"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/Zeeq.LlmCmd.Generators.Tests -- --junit-output-path /tmp/opencode/llmcmd-registration-analyzer/tests.xml"
+
+[tasks."test:core"]
+description = "Run source-generated library runtime and outcome tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.CommandRoot.Tests/LlmCmd.CommandRoot.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-commandroot/tests.xml"
+
+[tasks."test:collector-adapters"]
+description = "Run collector-adapter TUnit tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.CollectorAdapters.Tests/LlmCmd.CollectorAdapters.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-adapters/tests.xml"
+
+[tasks."test:human-grading"]
+description = "Run immutable-output and human-grading TUnit tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.HumanGrading.Tests/LlmCmd.HumanGrading.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-human/tests.xml"
+
+[tasks."test:command-root"]
+description = "Run generated-command and outcome TUnit tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.CommandRoot.Tests/LlmCmd.CommandRoot.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-commandroot/tests.xml"
+
+[tasks."test:provider-adapters"]
+description = "Run provider-extraction TUnit tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.ProviderAdapters.Tests/LlmCmd.ProviderAdapters.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-providers/tests.xml"
+
+[tasks."test:provider-sdk"]
+description = "Check real SDK bridges offline; paid API tests stay skipped"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests/LlmCmd.LiveProviders.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-live-providers/offline.xml"
+
+# Paid cases are deliberately outside `test` and `verify`. Explicit selection
+# plus this process-local opt-in are both required before a paid model call.
+[tasks."test:live:openai"]
+description = "Make one paid OpenAI request and verify the captured SDK response"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests/LlmCmd.LiveProviders.Tests.csproj -- --treenode-filter '/*/*/OpenAiCaptureTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/openai.xml"
+
+[tasks."test:live:anthropic"]
+description = "Make one paid Claude request and verify the captured SDK response"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests/LlmCmd.LiveProviders.Tests.csproj -- --treenode-filter '/*/*/AnthropicCaptureTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/anthropic.xml"
+
+[tasks."test:live:azure"]
+description = "Make one paid Azure GPT-6 Luna request and verify captured response accounting"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests/LlmCmd.LiveProviders.Tests.csproj -- --treenode-filter '/*/*/AzureOpenAiCaptureTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/azure.xml"
+
+[tasks."test:live:runtime:azure"]
+description = "Verify one paid Azure call through a generated command, capture and stored typed output"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests -- --treenode-filter '/*/*/AzureRuntimeCaptureTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/azure-runtime.xml"
+
+[tasks."test:live:runtime:anthropic"]
+description = "Verify one paid Haiku call through a generated command, capture and stored typed output"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests -- --treenode-filter '/*/*/AnthropicRuntimeCaptureTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/anthropic-runtime.xml"
+
+[tasks."test:live:composition"]
+description = "Explicit Azure three-prompt composition with read-side aggregate-only evaluation"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests -- --treenode-filter '/*/*/AzureMultiPromptEvaluationTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/azure-composition.xml"
+
+[tasks."test:live:matrix:azure"]
+description = "Explicit six-deployment Azure model and request-policy matrix; at most six paid requests"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests -- --treenode-filter '/*/*/AzureModelMatrixTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/azure-matrix.xml"
+
+[tasks."test:live:matrix:anthropic"]
+description = "Explicit Haiku and Sonnet model matrix; at most two paid requests"
+env = { LLMCMD_RUN_LIVE_TESTS = "1", TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests -- --treenode-filter '/*/*/AnthropicModelMatrixTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/anthropic-matrix.xml"
+
+[tasks."test:replay:matrix"]
+description = "Reprice the local sanitized matrix receipts without API calls or secrets"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.LiveProviders.Tests -- --treenode-filter '/*/*/RecordedModelMatrixTests/*' --junit-output-path /tmp/opencode/llmcmd-live-providers/matrix-replay.xml"
+
+[tasks."test:langfuse:start"]
+description = "Explicitly start a private local Langfuse test stack (Docker required)"
+run = "dotnet run --project tests/LlmCmd.LangfuseReadback -- start"
+
+[tasks."test:langfuse:readback"]
+description = "Verify local OTLP ingestion and persisted generation; optionally pass a sanitized capture path"
+run = "dotnet run --project tests/LlmCmd.LangfuseReadback --"
+
+[tasks."test:langfuse:stop"]
+description = "Stop only the dedicated Langfuse test stack and remove its temporary data"
+run = "dotnet run --project tests/LlmCmd.LangfuseReadback -- stop"
+
+[tasks."test:langfuse:cross-check"]
+description = "Compare a capture's token estimate with Langfuse's independent managed-model pricing"
+run = "dotnet run --project tests/LlmCmd.LangfuseReadback -- --cross-check"
+
+[tasks."test:context-propagation"]
+description = "Run local context and propagation TUnit tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.ContextPropagation.Tests/LlmCmd.ContextPropagation.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-propagation/tests.xml"
+
+[tasks."test:composition"]
+description = "Run aggregate-composition TUnit tests"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/LlmCmd.Composition.Tests/LlmCmd.Composition.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-composition/tests.xml"
+
+[tasks.verify]
+description = "Build and verify the real library, tests, packed consumer and examples"
+run = [{ task = "build" }, { task = "format:check" }, { task = "test" }, { task = "test:package" }, { task = "demo:command" }, { task = "demo:composition" }]
+
+[tasks."demo:command"]
+description = "Run the generated single-command demo"
+run = "dotnet run --project examples/Zeeq.LlmCmd.CommandExample/Zeeq.LlmCmd.CommandExample.csproj --"
+
+[tasks."demo:composition"]
+description = "Run the four-pass aggregate demo; pass --quick for its other branch"
+run = "dotnet run --project examples/Zeeq.LlmCmd.CompositionExample/Zeeq.LlmCmd.CompositionExample.csproj --"
+
+# Service tests are separate entry points, never dependencies of `test`.
+# Existing wrappers own readiness checks, explicit resource starts and cleanup.
+[tasks."spike:secrets"]
+description = "Start/test/stop the placeholder-secret Aspire spike (Python wrapper)"
+run = "python3 research/scripts/verify_secret_propagation.py"
+
+# A scratch Docker config avoids the credential-helper stall observed locally.
+# These proofs use public images and do not need registry credentials.
+[tasks."spike:observability"]
+description = "Start/test/stop the Aspire OTLP Collector spike (Docker, Python)"
+run = "python3 research/scripts/verify_observability.py --docker-config /tmp/opencode/llmcmd-docker-config"
+
+[tasks."spike:propagation"]
+description = "Start/test/stop the Aspire RabbitMQ propagation spike (Docker, Python)"
+run = "python3 research/scripts/verify_propagation.py --docker-config /tmp/opencode/llmcmd-docker-config"
+
+[tasks.build]
+description = "Compile the source library, generators, tests and examples"
+run = "dotnet build Zeeq.LlmCmd.slnx --nologo"
+
+[tasks.format]
+description = "Normalize maintained C# and project files with the pinned CSharpier"
+run = "bash scripts/format.sh format"
+
+[tasks."format:check"]
+description = "Check CSharpier formatting without modifying source (safe for CI)"
+run = "bash scripts/format.sh check"
+
+[tasks.pack]
+description = "Create the three local alpha NuGet packages"
+run = [
+  "dotnet pack src/Zeeq.LlmCmd/Zeeq.LlmCmd.csproj -c Release -o artifacts/packages --nologo",
+  "dotnet pack src/Zeeq.LlmCmd.Providers/Zeeq.LlmCmd.Providers.csproj -c Release -o artifacts/packages --nologo",
+  "dotnet pack src/Zeeq.LlmCmd.OpenTelemetry/Zeeq.LlmCmd.OpenTelemetry.csproj -c Release -o artifacts/packages --nologo",
+]
+
+[tasks."verify:research"]
+description = "Re-run archived spike/compiler evidence (Python wrapper, no paid APIs)"
+run = "python3 research/scripts/verify.py"
+
+[tasks."test:package"]
+description = "Pack and run a clean NuGet-only consumer with reflection disabled"
+env = { TUNIT_ENABLE_JUNIT_REPORTER = "1" }
+run = "dotnet run --project tests/Zeeq.LlmCmd.Packaging.Tests/Zeeq.LlmCmd.Packaging.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-package-tests.xml"
+
+[tasks."docs:install"]
+description = "Restore the documentation site from its lockfile"
+dir = "docs"
+run = "pnpm install --frozen-lockfile"
+
+[tasks."docs:dev"]
+description = "Serve Nuxt documentation locally"
+dir = "docs"
+run = "pnpm dev --host 127.0.0.1"
+
+[tasks."docs:check"]
+description = "Lint and type-check the Nuxt documentation"
+dir = "docs"
+run = "pnpm check"
+
+[tasks."docs:build"]
+description = "Generate the GitHub Pages site and verify its static routes"
+dir = "docs"
+run = ["pnpm generate", "node scripts/check-static.mjs"]
+
+[tasks."docs:examples"]
+description = "Compile exact documentation fences and run the offline quick start against a local package"
+run = "dotnet run scripts/verify-docs-examples.cs"

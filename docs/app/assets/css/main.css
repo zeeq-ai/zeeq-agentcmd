@@ -1,0 +1,55 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@source "../../../content/**/*";
+
+@theme static {
+  --container-8xl: 90rem;
+  --font-sans: 'Public Sans', sans-serif;
+
+  --color-zeeq-50: #fcfde8;
+  --color-zeeq-100: #f7f9c5;
+  --color-zeeq-200: #edf28c;
+  --color-zeeq-300: #e2e94d;
+  --color-zeeq-400: #d3ec13;
+  --color-zeeq-500: #c2d912;
+  --color-zeeq-600: #acbe10;
+  --color-zeeq-700: #87950d;
+  --color-zeeq-800: #646e0b;
+  --color-zeeq-900: #42490a;
+  --color-zeeq-950: #272b07;
+}
+
+:root {
+  --ui-container: var(--container-8xl);
+  --zeeq-yellow: #d3ec13;
+  --zeeq-green: #acbe10;
+  --ui-primary: var(--color-zeeq-700);
+  --zeeq-gradient: linear-gradient(to top right, var(--color-zeeq-800), var(--color-zeeq-700));
+}
+
+.dark {
+  --ui-primary: var(--color-zeeq-400);
+  --zeeq-gradient: linear-gradient(to top right, var(--zeeq-yellow), var(--zeeq-green));
+}
+
+/* A long source path must wrap in prose. Only fenced code and tables should
+   scroll sideways; an inline token must not widen the document on phones. */
+code:not(pre code) {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+pre {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.brand-gradient-text {
+  background: var(--zeeq-gradient);
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}

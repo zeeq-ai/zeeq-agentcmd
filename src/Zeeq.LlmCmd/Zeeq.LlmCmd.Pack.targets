@@ -1,0 +1,12 @@
+<Project>
+  <Target Name="_LlmCmdIncludePackageAnalyzers" BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <None
+        Include="$(MSBuildThisFileDirectory)../Zeeq.LlmCmd.Generators/bin/$(Configuration)/netstandard2.0/Zeeq.LlmCmd.Generators.dll"
+        Pack="true"
+        PackagePath="analyzers/dotnet/cs/"
+        Visible="false"
+      />
+    </ItemGroup>
+  </Target>
+</Project>

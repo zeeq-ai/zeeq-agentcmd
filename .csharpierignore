@@ -1,0 +1,21 @@
+# Preserve historical compiler/spike evidence and generated output.
+research/
+artifacts/
+**/bin/
+**/obj/
+**/node_modules/
+
+# CSharpier 1.3.0 predates C# 15 closed/union syntax. scripts/format.sh
+# sends these exact paths to the pinned SDK formatter instead of skipping them.
+src/Zeeq.LlmCmd.Providers/Core/Snapshot.cs
+src/Zeeq.LlmCmd.Providers/Core/Registry.cs
+src/Zeeq.LlmCmd/Context/OperationContext.cs
+src/Zeeq.LlmCmd/Commands/Contracts.cs
+src/Zeeq.LlmCmd/Commands/Composition/CompositeContracts.cs
+src/Zeeq.LlmCmd/Commands/Outcomes.cs
+src/Zeeq.LlmCmd.OpenTelemetry/Propagation/Ingress.cs
+src/Zeeq.LlmCmd/Routing/ProfileRouter.cs
+src/Zeeq.LlmCmd.OpenTelemetry/Targets.cs
+src/Zeeq.LlmCmd.OpenTelemetry/Propagation/PropagationAdapter.cs
+src/Zeeq.LlmCmd/Commands/Composition/CompositionStore.cs
+src/Zeeq.LlmCmd/Evaluation/Contracts.cs

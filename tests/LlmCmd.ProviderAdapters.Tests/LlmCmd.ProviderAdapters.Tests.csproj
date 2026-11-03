@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>15</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);MEAI001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <None Include="PricingFixtures/*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fixtures/*.json" CopyToOutputDirectory="PreserveNewest" LinkBase="Fixtures" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Zeeq.LlmCmd.Providers/Zeeq.LlmCmd.Providers.csproj" />
+    <ProjectReference Include="../../src/Zeeq.LlmCmd.OpenTelemetry/Zeeq.LlmCmd.OpenTelemetry.csproj" />
+    <Compile
+      Include="../LlmCmd.LangfuseReadback/PricingCrossCheck.cs"
+      Link="PricingCrossCheck.cs"
+    />
+  </ItemGroup>
+</Project>

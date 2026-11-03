@@ -1,0 +1,46 @@
+{
+  "fixture": {
+    "synthetic": true,
+    "live": false,
+    "name": "openai-chat-audio-prediction",
+    "description": "audio and prediction details retained as separate dimensions",
+    "schema": "OpenAI Chat Completions usage object",
+    "rulesSource": "docs/research/provider-adapters.md @2026-11-01",
+    "note": "Hand-written synthetic fixture. NOT captured from a live provider call and NOT produced by a vendor SDK. The meai section hand-simulates what an MEAI bridge projects (see docs/research/provider-adapters.md); it is not the output of the production bridge."
+  },
+  "meai": {
+    "input": 100,
+    "output": 40,
+    "total": 140,
+    "cached": 30,
+    "additional": {
+      "InputTokenDetails.AudioTokenCount": 20,
+      "OutputTokenDetails.AudioTokenCount": 5,
+      "OutputTokenDetails.AcceptedPredictionTokenCount": 6,
+      "OutputTokenDetails.RejectedPredictionTokenCount": 4
+    }
+  },
+  "wire": {
+    "id": "chatcmpl-synthetic-2",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "length"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140,
+      "prompt_tokens_details": {
+        "cached_tokens": 30,
+        "audio_tokens": 20
+      },
+      "completion_tokens_details": {
+        "audio_tokens": 5,
+        "accepted_prediction_tokens": 6,
+        "rejected_prediction_tokens": 4
+      }
+    }
+  }
+}

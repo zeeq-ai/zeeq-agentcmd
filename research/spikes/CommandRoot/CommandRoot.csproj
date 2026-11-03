@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net11.0</TargetFramework><LangVersion>15</LangVersion><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles><CompilerGeneratedFilesOutputPath>obj/generated</CompilerGeneratedFilesOutputPath></PropertyGroup>
+  <ItemGroup><Compile Remove="Runtime/**/*.cs" /><ProjectReference Include="Runtime/Runtime.csproj"/><ProjectReference Include="../CommandRoot.Generator/Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" /></ItemGroup>
+  <Import Project="build/LlmCmd.Precompile.targets" />
+</Project>

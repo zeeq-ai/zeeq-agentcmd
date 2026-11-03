@@ -1,0 +1,23 @@
+**/bin/
+**/obj/
+**/__pycache__/
+.DS_Store
+artifacts/
+
+# Local tools, test reports, and host state do not belong in source control.
+**/TestResults/
+**/test-results/
+.aspire/
+.env
+.env.*
+!.env.example
+*.user
+*.suo
+.vs/
+
+# The documentation is generated from docs/content, never from build output.
+**/node_modules/
+docs/.nuxt/
+docs/.output/
+docs/.data/
+docs/.cache/

@@ -1,0 +1,43 @@
+{
+  "fixture": {
+    "synthetic": true,
+    "live": false,
+    "name": "openai-chat-basic",
+    "description": "input 100, output 40, cached 60, reasoning 10 as subsets; total 140",
+    "schema": "OpenAI Chat Completions usage object",
+    "rulesSource": "docs/research/provider-adapters.md @2026-11-01",
+    "note": "Hand-written synthetic fixture. NOT captured from a live provider call and NOT produced by a vendor SDK. The meai section hand-simulates what an MEAI bridge projects (see docs/research/provider-adapters.md); it is not the output of the production bridge."
+  },
+  "meai": {
+    "input": 100,
+    "output": 40,
+    "total": 140,
+    "cached": 60,
+    "reasoning": 10
+  },
+  "wire": {
+    "id": "chatcmpl-synthetic-1",
+    "model": "synthetic-model",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "stop",
+        "message": {
+          "role": "assistant",
+          "content": "synthetic"
+        }
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140,
+      "prompt_tokens_details": {
+        "cached_tokens": 60
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 10
+      }
+    }
+  }
+}

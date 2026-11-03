@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PackageId>Zeeq.LlmCmd.OpenTelemetry</PackageId>
+    <Description>OpenTelemetry instrumentation, collector profiles and explicit context propagation for Zeeq.LlmCmd.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <ProjectReference Include="../Zeeq.LlmCmd/Zeeq.LlmCmd.csproj" />
+    <ProjectReference Include="../Zeeq.LlmCmd.Providers/Zeeq.LlmCmd.Providers.csproj" />
+  </ItemGroup>
+</Project>

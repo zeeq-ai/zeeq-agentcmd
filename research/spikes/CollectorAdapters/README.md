@@ -1,0 +1,12 @@
+# Collector adapter profile spike
+
+Typed C# 15 closed target options resolve through `ISecretSource` to a native `ConfiguredTarget | ConfigurationError` union. Handle the default union's null case. The profile accepts an OTLP **base** URI including the vendor prefix, and creates full per-signal paths. Explicit exporter endpoints are signal-specific, so the SDK does not append another path. HTTP is restricted to loopback; other endpoints require HTTPS. Secret references and resolved errors contain no secret values; resolved headers are private and `ConfiguredTarget.ToString()` is redacted. Exporter options necessarily contain resolved credentials while exporting. The caller owns secret-source security and exporter lifetime.
+
+Langfuse and LangSmith support traces in these profiles; Braintrust supports traces and logs, with a parent required by this application's policy; Logfire and generic profiles support all three signals. Logfire defaults to raw Authorization and has an explicit Bearer option because vendor documentation shows both. LangSmith uses closed project-or-agent address cases. Generic headers are supplied as secret references. The SDK unescapes the full header string before splitting it: this spike rejects commas in resolved secret and routing values and percent signs in generic header names before constructing the exporter. Percent signs, equals signs and spaces in valid header values are covered by a real exporter round-trip test. Prompt/observation mapping is intentionally minimal.
+
+These tests validate configuration and actual OpenTelemetry 1.20.1 HTTP/protobuf exporter requests through an in-process fake handler. They do not contact vendors or verify their processing, authentication, ingestion semantics, pricing, or feedback APIs. Eval scores are distinct from trace ingestion: Braintrust documents the 0–1 `gen_ai.evaluation.result` event, Langfuse scores use a separate HTTP API, LangSmith feedback addressing remains unverified, and no generic Logfire feedback API was established. See `docs/research/collector-adapters.md`.
+
+```sh
+/tmp/opencode/llmcmd-dotnet11/dotnet build tests/LlmCmd.CollectorAdapters.Tests/LlmCmd.CollectorAdapters.Tests.csproj
+TUNIT_ENABLE_JUNIT_REPORTER=1 /tmp/opencode/llmcmd-dotnet11/dotnet run --no-build --project tests/LlmCmd.CollectorAdapters.Tests/LlmCmd.CollectorAdapters.Tests.csproj -- --junit-output-path /tmp/opencode/llmcmd-adapters/tests.xml
+```

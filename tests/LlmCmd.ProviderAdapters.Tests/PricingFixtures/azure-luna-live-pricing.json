@@ -1,0 +1,233 @@
+{
+  "ModelId": "gpt-6-luna-2026-09-22",
+  "Usage": {
+    "Measurements": [
+      {
+        "Dimension": "input",
+        "Value": 10,
+        "Unit": 0,
+        "Relation": 0,
+        "Parent": null,
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 0,
+            "Path": "meai:Usage.InputTokenCount",
+            "Value": 10,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.prompt_tokens",
+            "Value": 10,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "output",
+        "Value": 4,
+        "Unit": 0,
+        "Relation": 0,
+        "Parent": null,
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 0,
+            "Path": "meai:Usage.OutputTokenCount",
+            "Value": 4,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.completion_tokens",
+            "Value": 4,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "total",
+        "Value": 14,
+        "Unit": 0,
+        "Relation": 0,
+        "Parent": null,
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 0,
+            "Path": "meai:Usage.TotalTokenCount",
+            "Value": 14,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.total_tokens",
+            "Value": 14,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "input.cached",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "input",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 0,
+            "Path": "meai:Usage.CachedInputTokenCount",
+            "Value": 0,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.prompt_tokens_details.cached_tokens",
+            "Value": 0,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "output.reasoning",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "output",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 0,
+            "Path": "meai:Usage.ReasoningTokenCount",
+            "Value": 0,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.completion_tokens_details.reasoning_tokens",
+            "Value": 0,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "input.audio",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "input",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 1,
+            "Path": "meai:Usage.AdditionalCounts[InputTokenDetails.AudioTokenCount]",
+            "Value": 0,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.prompt_tokens_details.audio_tokens",
+            "Value": 0,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "output.audio",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "output",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 1,
+            "Path": "meai:Usage.AdditionalCounts[OutputTokenDetails.AudioTokenCount]",
+            "Value": 0,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.completion_tokens_details.audio_tokens",
+            "Value": 0,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "output.prediction.accepted",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "output",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 1,
+            "Path": "meai:Usage.AdditionalCounts[OutputTokenDetails.AcceptedPredictionTokenCount]",
+            "Value": 0,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.completion_tokens_details.accepted_prediction_tokens",
+            "Value": 0,
+            "Note": null
+          }
+        ]
+      },
+      {
+        "Dimension": "output.prediction.rejected",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "output",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 1,
+            "Path": "meai:Usage.AdditionalCounts[OutputTokenDetails.RejectedPredictionTokenCount]",
+            "Value": 0,
+            "Note": null
+          },
+          {
+            "Origin": 2,
+            "Path": "wire:usage.completion_tokens_details.rejected_prediction_tokens",
+            "Value": 0,
+            "Note": "still counted within billed completion tokens"
+          }
+        ]
+      },
+      {
+        "Dimension": "input.cache_write",
+        "Value": 0,
+        "Unit": 0,
+        "Relation": 1,
+        "Parent": "input",
+        "Status": 0,
+        "Observations": [
+          {
+            "Origin": 2,
+            "Path": "wire:usage.prompt_tokens_details.cache_write_tokens",
+            "Value": 0,
+            "Note": "unadjusted write count as reported by the provider"
+          }
+        ]
+      }
+    ],
+    "Conflicts": [],
+    "Input": 10,
+    "Output": 4,
+    "Total": 14
+  },
+  "Diagnostics": [
+    {
+      "Severity": 1,
+      "Code": "unknown-field",
+      "Path": "$.usage.latency_checkpoint",
+      "Message": "Unrecognized field of kind Object; its value is not extracted"
+    }
+  ]
+}

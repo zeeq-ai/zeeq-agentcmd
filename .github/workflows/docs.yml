@@ -1,0 +1,69 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'src/**', 'examples/**', 'scripts/verify-docs-examples.cs', 'global.json', 'Directory.Build.props', 'Directory.Packages.props', '.github/workflows/docs.yml']
+  pull_request:
+    paths: ['docs/**', 'src/**', 'examples/**', 'scripts/verify-docs-examples.cs', 'global.json', 'Directory.Build.props', 'Directory.Packages.props', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/action-setup@f53f5227a9e83886ab598c617f3c170fab62f0d3 # v6
+        with:
+          package_json_file: docs/package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: docs/.nvmrc
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm generate
+        env:
+          NUXT_APP_BASE_URL: /zeeq-llmcmd/
+          NUXT_PUBLIC_SITE_URL: https://zeeq-ai.github.io
+      - run: node scripts/check-static.mjs
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: docs/.output/public
+
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
+      # Validate the copied Markdown against the package a reader will use.
+      - run: dotnet pack src/Zeeq.LlmCmd/Zeeq.LlmCmd.csproj -c Release -o artifacts/packages --nologo
+      - run: dotnet run scripts/verify-docs-examples.cs
+
+  deploy:
+    # Pull requests validate the same static artifact but cannot publish it.
+    if: github.event_name != 'pull_request'
+    needs: [build, examples]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+      - name: Publish the validated artifact
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

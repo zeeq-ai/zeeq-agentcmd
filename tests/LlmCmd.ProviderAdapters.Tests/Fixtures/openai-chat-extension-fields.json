@@ -1,0 +1,36 @@
+{
+  "fixture": {
+    "synthetic": true,
+    "live": false,
+    "name": "openai-chat-extension-fields",
+    "description": "cache_write_tokens is retained; an invented unknown key is diagnosed, not extracted",
+    "schema": "OpenAI Chat Completions usage object with a synthetic future key",
+    "rulesSource": "docs/research/provider-adapters.md @2026-11-01",
+    "note": "Hand-written synthetic fixture. NOT captured from a live provider call and NOT produced by a vendor SDK. The meai section hand-simulates what an MEAI bridge projects (see docs/research/provider-adapters.md); it is not the output of the production bridge."
+  },
+  "meai": {
+    "input": 100,
+    "output": 40,
+    "total": 140,
+    "cached": 60
+  },
+  "wire": {
+    "id": "chatcmpl-synthetic-3",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140,
+      "prompt_tokens_details": {
+        "cached_tokens": 60,
+        "cache_write_tokens": 25,
+        "synthetic_future_detail": 7
+      }
+    }
+  }
+}

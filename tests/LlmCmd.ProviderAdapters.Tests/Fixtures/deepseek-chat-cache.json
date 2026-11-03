@@ -1,0 +1,40 @@
+{
+  "fixture": {
+    "synthetic": true,
+    "live": false,
+    "name": "deepseek-chat-cache",
+    "description": "prompt 100 = hit 60 + miss 40; nested cached 60 is an alias of hit",
+    "schema": "DeepSeek Chat Completions usage object",
+    "rulesSource": "docs/research/provider-adapters.md @2026-11-01",
+    "note": "Hand-written synthetic fixture. NOT captured from a live provider call and NOT produced by a vendor SDK. The meai section hand-simulates what an MEAI bridge projects (see docs/research/provider-adapters.md); it is not the output of the production bridge."
+  },
+  "meai": {
+    "input": 100,
+    "output": 40,
+    "total": 140,
+    "cached": 60,
+    "reasoning": 12
+  },
+  "wire": {
+    "id": "ds-synthetic-1",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 100,
+      "completion_tokens": 40,
+      "total_tokens": 140,
+      "prompt_cache_hit_tokens": 60,
+      "prompt_cache_miss_tokens": 40,
+      "prompt_tokens_details": {
+        "cached_tokens": 60
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 12
+      }
+    }
+  }
+}

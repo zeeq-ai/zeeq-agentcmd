@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>15</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <DefineConstants>$(DefineConstants);CODEC_CANDIDATE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference
+      Include="../codec/Generator/Generator.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+    <Compile Include="../shared/Contracts.cs" Link="Contracts.cs" />
+    <Compile Include="../shared/ISpikeSerializer.cs" Link="ISpikeSerializer.cs" />
+    <!-- Exact same holdout cases and oracle; only the candidate alias changes. -->
+    <Compile Include="../metadata-holdout/Program.cs" Link="Program.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>15</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PublishAot>true</PublishAot>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Shared/**/*.cs" />
+    <ProjectReference Include="Shared/Shared.csproj" />
+    <PackageReference Include="Zeeq.LlmCmd" Version="$(LlmCmdPackageVersion)" />
+    <PackageReference Include="Zeeq.LlmCmd.Providers" Version="$(LlmCmdPackageVersion)" />
+    <PackageReference Include="Zeeq.LlmCmd.OpenTelemetry" Version="$(LlmCmdPackageVersion)" />
+  </ItemGroup>
+</Project>

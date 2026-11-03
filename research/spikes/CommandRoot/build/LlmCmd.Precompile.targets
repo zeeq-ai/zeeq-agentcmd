@@ -1,0 +1,34 @@
+<Project>
+  <!-- Import into the consuming project. The tool uses the SDK that is building that project. -->
+  <PropertyGroup>
+    <_LlmCmdPrecompileProject>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../CommandRoot.Precompile/Precompile.csproj'))</_LlmCmdPrecompileProject>
+    <_LlmCmdDotnet>$(NetCoreRoot)dotnet</_LlmCmdDotnet>
+    <_LlmCmdDotnet Condition="'$(OS)' == 'Windows_NT'">$(NetCoreRoot)dotnet.exe</_LlmCmdDotnet>
+  </PropertyGroup>
+  <!-- Reuse the last normal-build output for IDE compilation without running the tool. -->
+  <Target Name="LlmCmdIncludeExistingSerializerContext" BeforeTargets="CoreCompile;CompileDesignTime" Condition="'$(DesignTimeBuild)' == 'true' and '$(IsCrossTargetingBuild)' != 'true'">
+    <PropertyGroup>
+      <_LlmCmdDesignTimeOutput>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)llmcmd-precompile/LlmCmdJsonContext.g.cs', '$(MSBuildProjectDirectory)'))</_LlmCmdDesignTimeOutput>
+    </PropertyGroup>
+    <ItemGroup Condition="Exists('$(_LlmCmdDesignTimeOutput)')">
+      <Compile Remove="$(_LlmCmdDesignTimeOutput)" />
+      <Compile Include="$(_LlmCmdDesignTimeOutput)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="LlmCmdPrecompileSerializerContext" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences;GenerateGlobalUsings" Condition="'$(DesignTimeBuild)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'">
+    <PropertyGroup>
+      <_LlmCmdPrecompileRoot>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)llmcmd-precompile', '$(MSBuildProjectDirectory)'))</_LlmCmdPrecompileRoot>
+      <_LlmCmdPrecompileOutput>$(_LlmCmdPrecompileRoot)/LlmCmdJsonContext.g.cs</_LlmCmdPrecompileOutput>
+    </PropertyGroup>
+    <Error Condition="'$(NETCoreSdkVersion)' != '11.0.100-rc.3.26522.148'" Text="LLMCMDPRE001: this spike requires .NET SDK 11.0.100-rc.3.26522.148." />
+    <Error Condition="!Exists('$(_LlmCmdPrecompileProject)')" Text="LLMCMDPRE001: serializer precompilation tool project not found." />
+    <MakeDir Directories="$(_LlmCmdPrecompileRoot)" />
+    <MSBuild Projects="$(_LlmCmdPrecompileProject)" Targets="Restore;Build" BuildInParallel="false" Properties="Configuration=$(Configuration);BaseIntermediateOutputPath=$(_LlmCmdPrecompileRoot)/tool/obj/;MSBuildProjectExtensionsPath=$(_LlmCmdPrecompileRoot)/tool/obj/;OutputPath=$(_LlmCmdPrecompileRoot)/tool/bin/;AppendTargetFrameworkToOutputPath=false;AppendRuntimeIdentifierToOutputPath=false" />
+    <ItemGroup><Compile Remove="$(_LlmCmdPrecompileOutput)" /></ItemGroup>
+    <WriteLinesToFile File="$(_LlmCmdPrecompileRoot)/sources.txt" Lines="@(Compile->'%(FullPath)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <WriteLinesToFile File="$(_LlmCmdPrecompileRoot)/references.txt" Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <WriteLinesToFile File="$(_LlmCmdPrecompileRoot)/defines.txt" Lines="$(DefineConstants)" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <Exec Command="&quot;$(_LlmCmdDotnet)&quot; &quot;$(_LlmCmdPrecompileRoot)/tool/bin/Precompile.dll&quot; &quot;$(_LlmCmdPrecompileRoot)/sources.txt&quot; &quot;$(_LlmCmdPrecompileRoot)/references.txt&quot; &quot;$(_LlmCmdPrecompileRoot)/defines.txt&quot; &quot;$(_LlmCmdPrecompileOutput)&quot;" />
+    <ItemGroup><Compile Include="$(_LlmCmdPrecompileOutput)" /><FileWrites Include="$(_LlmCmdPrecompileOutput)" /></ItemGroup>
+  </Target>
+</Project>

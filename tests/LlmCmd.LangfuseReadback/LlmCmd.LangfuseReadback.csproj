@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Zeeq.LlmCmd.OpenTelemetry/Zeeq.LlmCmd.OpenTelemetry.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="compose.yml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

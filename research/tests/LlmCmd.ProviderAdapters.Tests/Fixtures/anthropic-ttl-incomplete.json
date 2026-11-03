@@ -1,0 +1,42 @@
+{
+  "fixture": {
+    "synthetic": true,
+    "live": false,
+    "name": "anthropic-ttl-incomplete",
+    "description": "only the 5m split is present; no residual may be invented",
+    "schema": "Anthropic Messages usage object",
+    "rulesSource": "docs/research/provider-adapters.md @2026-11-01",
+    "note": "Hand-written synthetic fixture. NOT captured from a live provider call and NOT produced by a vendor SDK. The meai section hand-simulates what an MEAI bridge projects (see docs/research/provider-adapters.md); it is not the output of the production bridge."
+  },
+  "meai": {
+    "input": 110,
+    "output": 40,
+    "total": 150,
+    "cached": 80,
+    "additional": {
+      "CacheCreationInputTokens": 20,
+      "WebSearchRequests": 2
+    }
+  },
+  "wire": {
+    "id": "msg_synthetic_3",
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 10,
+      "cache_read_input_tokens": 80,
+      "cache_creation_input_tokens": 20,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 12
+      },
+      "output_tokens": 40,
+      "output_tokens_details": {
+        "thinking_tokens": 15
+      },
+      "server_tool_use": {
+        "web_search_requests": 2,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard"
+    }
+  }
+}

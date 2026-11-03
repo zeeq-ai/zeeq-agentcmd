@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(LibraryRepositoryRoot)README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <!-- ProjectReference does not carry analyzers transitively. Source-checkout
+       consumers opt in here; the NuGet package supplies its generator directly. -->
+  <ItemGroup Condition="'$(LlmCmdGenerateCommands)' == 'true'">
+    <ProjectReference
+      Include="$(LibraryRepositoryRoot)src/Zeeq.LlmCmd.Generators/Zeeq.LlmCmd.Generators.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+      PrivateAssets="all"
+    />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,13 @@
+<Project>
+  <Import Project="../Directory.Build.props" />
+  <PropertyGroup>
+    <!-- Public API docs are a compiler check, scoped away from test fixtures.
+         Use the SDK's analyzer set, with a small explicit correctness floor in
+         .editorconfig; avoid an additional third-party analyzer bundle. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591;CS1573</WarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>11.0</AnalysisLevel>
+    <AnalysisMode>Default</AnalysisMode>
+  </PropertyGroup>
+</Project>
