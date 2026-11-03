@@ -38,7 +38,7 @@ export default defineNuxtConfig({
       markdown: {
         toc: { searchDepth: 1 },
         highlight: {
-          theme: { default: 'github-light', dark: 'github-dark' },
+          theme: { default: 'github-light', light: 'github-light', dark: 'github-dark' },
           langs: ['csharp', 'bash', 'json', 'yaml', 'xml', 'ts', 'vue', 'md']
         }
       }
