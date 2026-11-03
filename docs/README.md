@@ -13,7 +13,7 @@ mise run docs:check      # ESLint and TypeScript.
 mise run docs:build      # Static Pages artifact and route/link checks.
 mise exec -- pnpm --dir docs preview # Preview the artifact at /zeeq-llmcmd/.
 
-# Validate copied C# examples against a freshly packed local package.
+# Validate copied C# examples against freshly packed local packages.
 mise run pack
 mise run docs:examples
 ```
@@ -34,8 +34,10 @@ state their prerequisites. Illustrative scenarios are labeled. NativeAOT and
 alpha limits remain explicit. Do not imply that local packages are on NuGet.org.
 
 `scripts/verify-docs-examples.cs` extracts the exact named C# and project fences
-from the Markdown. It runs the quick start and compiles the selected context,
-inspection, support, and composition setup examples. Other partial excerpts
+from the Markdown. It runs the quick start and offline telemetry/evaluation
+example against local packages. It also compiles the selected context,
+inspection, support, composition setup and telemetry exporter examples. The
+exporter is compiled but does not contact a collector. Other partial excerpts
 are not a substitute for the runnable examples under `examples/`.
 
 ## GitHub Pages

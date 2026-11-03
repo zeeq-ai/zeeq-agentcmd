@@ -1,6 +1,6 @@
 ---
 title: Zeeq LlmCmd
-description: Typed prompt commands over Microsoft.Extensions.AI. Keep intent, parameters, execution, and stored-output evaluation together.
+description: Typed prompt commands over Microsoft.Extensions.AI. Keep intent, telemetry, execution, and stored-output evaluation together.
 seo:
   title: Zeeq LlmCmd — Prompts as typed commands
   description: A SqlCommand-inspired command layer over Microsoft.Extensions.AI. Stable prompt identity, captured parameters, closed outcomes, and evaluation of the exact stored whole.
@@ -71,7 +71,7 @@ Why LlmCmd?
 The prompt is one part of the operation.
 
 #description
-MEAI already gives you typed responses, schema helpers, and middleware. LlmCmd adds a place to keep stable prompt identity, captured inputs, delivery receipts, and evaluation of stored results.
+MEAI already gives you typed responses, schema helpers, and middleware. LlmCmd connects stable prompt identity, captured inputs, execution telemetry, delivery receipts, and evaluation of stored results.
 
 #default
   :::u-page-grid{class="lg:grid-cols-2"}
@@ -132,9 +132,9 @@ Keep the important choices visible.
 
   :::u-page-feature
   ---
-  title: Your MEAI pipeline
-  icon: i-lucide-workflow
-  description: Bring standard IChatClient implementations and host middleware. Provider accounting and telemetry stay optional and separate from the command layer.
+  title: Trace and capture each attempt
+  icon: i-lucide-activity
+  description: Subscribe to command activities and add provider capture inside your MEAI pipeline. Export observations through the collector your host chooses.
   ---
   :::
 
@@ -152,7 +152,7 @@ Keep the important choices visible.
 From intent to an inspectable result.
 
 #description
-The command describes the operation. MEAI runs the provider call. A stored output reference identifies what you can read back and grade.
+The command describes the operation. MEAI runs the provider call. Telemetry explains the execution, and a stored output reference identifies what you can read back and grade. See [Telemetry and evaluation capture](/guides/accounting-and-observability).
 
 #default
 :call-flow

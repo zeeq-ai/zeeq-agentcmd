@@ -4,13 +4,20 @@ using System.Xml.Linq;
 // The documentation is the source of truth: extracting named fences makes the
 // package-only check fail when an example drifts, rather than testing a copy.
 var repository = Path.GetFullPath(args.Length > 0 ? args[0] : Directory.GetCurrentDirectory());
-var package = Path.Combine(repository, "artifacts", "packages", "Zeeq.LlmCmd.0.1.0-alpha.1.nupkg");
-if (!File.Exists(package))
+var packageDirectory = Path.Combine(repository, "artifacts", "packages");
+var packageNames = new[]
 {
-    throw new FileNotFoundException(
-        "Build the local alpha package before validating the docs.",
-        package
-    );
+    "Zeeq.LlmCmd.0.1.0-alpha.1.nupkg",
+    "Zeeq.LlmCmd.Providers.0.1.0-alpha.1.nupkg",
+    "Zeeq.LlmCmd.OpenTelemetry.0.1.0-alpha.1.nupkg",
+};
+foreach (var name in packageNames)
+{
+    var path = Path.Combine(packageDirectory, name);
+    if (!File.Exists(path))
+    {
+        throw new FileNotFoundException("Run mise run pack before validating the docs.", path);
+    }
 }
 
 var tempParent =
@@ -26,7 +33,10 @@ Directory.CreateDirectory(feed);
 
 try
 {
-    File.Copy(package, Path.Combine(feed, Path.GetFileName(package)));
+    foreach (var name in packageNames)
+    {
+        File.Copy(Path.Combine(packageDirectory, name), Path.Combine(feed, name));
+    }
     File.Copy(Path.Combine(repository, "global.json"), Path.Combine(tempRoot, "global.json"));
     // Mirror the documented in-checkout layout, including its inherited central package settings.
     File.Copy(
@@ -197,8 +207,101 @@ try
         "-p:JsonSerializerIsReflectionEnabledByDefault=false",
         "-p:RestorePackagesPath=" + packages
     );
+
+    // Validate the published telemetry fences in a second NuGet-only app. It
+    // exercises the capture pipeline and ledger without contacting a collector.
+    var telemetryApp = Path.Combine(tempRoot, "telemetry-app");
+    Directory.CreateDirectory(telemetryApp);
+    var packageGroup = project.Descendants("PackageReference").Single().Parent!;
+    packageGroup.Add(
+        new XElement(
+            "PackageReference",
+            new XAttribute("Include", "Zeeq.LlmCmd.Providers"),
+            new XAttribute("Version", "0.1.0-alpha.1")
+        ),
+        new XElement(
+            "PackageReference",
+            new XAttribute("Include", "Zeeq.LlmCmd.OpenTelemetry"),
+            new XAttribute("Version", "0.1.0-alpha.1")
+        )
+    );
+    project.Save(Path.Combine(telemetryApp, "telemetry-app.csproj"));
+    File.Copy(Path.Combine(app, "NuGet.Config"), Path.Combine(telemetryApp, "NuGet.Config"));
+    File.Copy(
+        Path.Combine(app, "ReflectionProbe.cs"),
+        Path.Combine(telemetryApp, "ReflectionProbe.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(telemetryApp, "ExtractInvoice.cs"),
+        Fence(quickStart, "csharp", "ExtractInvoice.cs")
+    );
+    var telemetryExample = Path.Combine(
+        repository,
+        "docs",
+        "content",
+        "3.examples",
+        "6.telemetry-and-evals.md"
+    );
+    var telemetryGuide = Path.Combine(
+        repository,
+        "docs",
+        "content",
+        "2.guides",
+        "5.accounting-and-observability.md"
+    );
+    File.WriteAllText(
+        Path.Combine(telemetryApp, "CaptureSetup.cs"),
+        Fence(telemetryExample, "csharp", "CaptureSetup.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(telemetryApp, "EvaluationCapture.cs"),
+        Fence(telemetryExample, "csharp", "EvaluationCapture.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(telemetryApp, "Program.cs"),
+        Fence(telemetryExample, "csharp", "TelemetryProgram.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(telemetryApp, "TelemetryExport.cs"),
+        Fence(telemetryGuide, "csharp", "TelemetryExport.cs")
+    );
+    await Run(
+        telemetryApp,
+        "build",
+        "telemetry-app.csproj",
+        "-p:TreatWarningsAsErrors=true",
+        "-p:JsonSerializerIsReflectionEnabledByDefault=false",
+        "-p:RestorePackagesPath=" + packages
+    );
+    var telemetryOutput = await Run(
+        telemetryApp,
+        "run",
+        "--no-build",
+        "--project",
+        "telemetry-app.csproj"
+    );
+    if (
+        !telemetryOutput.Contains(
+            "Prompt: invoice.extract; input tokens: 7",
+            StringComparison.Ordinal
+        )
+        || !telemetryOutput.Contains(
+            "Template: Extract the invoice from {Document}.",
+            StringComparison.Ordinal
+        )
+        || !telemetryOutput.Contains("Document: Invoice for USD 12.50", StringComparison.Ordinal)
+        || !telemetryOutput.Contains("Stored output:", StringComparison.Ordinal)
+        || !telemetryOutput.Contains(
+            "The exact stored total was read and graded.",
+            StringComparison.Ordinal
+        )
+    )
+    {
+        throw new InvalidOperationException("The exact telemetry example did not pass.");
+    }
+
     Console.WriteLine(
-        "Exact quick-start fences ran; explicit context, support command, outcome inspector, header command, and composition bootstrap compiled; JSON reflection is disabled."
+        "Exact quick-start and telemetry examples ran; context, support, outcome, composition and exporter fences compiled; JSON reflection is disabled."
     );
 }
 finally
