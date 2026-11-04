@@ -128,6 +128,12 @@ Defaults and fixed bindings enter composition replay identity. Legacy routes kee
 their original fingerprint. Host middleware configuration is outside that identity;
 hosts must version request/trial keys when changing such external behavior.
 
+## Try runtime variants
+
+An experiment source can supply a new prompt, opted-in parameter values, and an allowed client, model and sampling configuration while the application is running. A/B selection returns the selected variant. Optional shadows run independently and retain their own output references for comparison. A composition pins its publication before executing parts, so a later update cannot switch the selected publication during execution. If a source fails before selection, the complete configured default runs.
+
+The host owns authorization, client pipelines, assignment and the side-effect policy for shadows. The default cache, scheduler and ledger are process-local. Composition shadows are offered explicitly after the primary is pinned. See the [runtime experiments guide](docs/content/2.guides/7.runtime-experiments.md) and run the [offline example](examples/Zeeq.LlmCmd.ExperimentsExample/README.md) with `mise run demo:experiments`.
+
 ## Compose an aggregate
 
 ```csharp
@@ -172,6 +178,7 @@ mise run test:package
 mise run demo:command
 mise run demo:composition
 mise run demo:composition --quick
+mise run demo:experiments
 mise run pack
 ```
 

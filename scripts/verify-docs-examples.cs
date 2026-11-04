@@ -81,6 +81,35 @@ try
         Fence(quickStart, "csharp", "ExtractInvoice.cs")
     );
     File.WriteAllText(Path.Combine(app, "Program.cs"), Fence(quickStart, "csharp", "Program.cs"));
+    var experiments = Path.Combine(
+        repository,
+        "docs",
+        "content",
+        "2.guides",
+        "7.runtime-experiments.md"
+    );
+    File.WriteAllText(
+        Path.Combine(app, "InvoiceRequest.cs"),
+        Fence(experiments, "csharp", "InvoiceRequest.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(app, "ExperimentSourceValidation.cs"),
+        """
+        using Zeeq.LlmCmd;
+        internal static class ExperimentSourceValidation
+        {
+            internal static ExperimentResolver Create(string path)
+            {
+        """
+            + Environment.NewLine
+            + Fence(experiments, "csharp", "Source setup")
+            + Environment.NewLine
+            + """
+                    return resolver;
+                }
+            }
+            """
+    );
     // This additive probe checks the build option without editing the excerpt under test.
     File.WriteAllText(
         Path.Combine(app, "ReflectionProbe.cs"),
@@ -305,7 +334,7 @@ try
     }
 
     Console.WriteLine(
-        "Exact quick-start and telemetry examples ran; context, support, outcome, composition and exporter fences compiled; JSON reflection is disabled."
+        "Exact quick-start and telemetry examples ran; context, support, outcome, composition, experiment and exporter fences compiled; JSON reflection is disabled."
     );
 }
 finally
