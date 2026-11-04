@@ -11,9 +11,9 @@ esac
 if [[ "$mode" == "format" ]]; then
     # Apply the one build-enforced style rule before CSharpier. The SDK parser
     # supports preview syntax and adds braces without rewriting control flow.
-    dotnet format style Zeeq.LlmCmd.slnx --no-restore --diagnostics IDE0011 --severity warn
+    dotnet format style Zeeq.AgentCmd.slnx --no-restore --diagnostics IDE0011 --severity warn
 else
-    dotnet format style Zeeq.LlmCmd.slnx --no-restore --diagnostics IDE0011 --severity warn --verify-no-changes
+    dotnet format style Zeeq.AgentCmd.slnx --no-restore --diagnostics IDE0011 --severity warn --verify-no-changes
 fi
 
 csharpier "$mode" .
@@ -33,7 +33,7 @@ done < .csharpierignore
 handled=0
 # Load only the owning libraries. Formatting them does not need the AppHost's
 # design-time workspace or the test projects' generated fixture catalogs.
-for library in Zeeq.LlmCmd Zeeq.LlmCmd.Providers Zeeq.LlmCmd.OpenTelemetry; do
+for library in Zeeq.AgentCmd Zeeq.AgentCmd.Providers Zeeq.AgentCmd.OpenTelemetry; do
     library_files=()
     for source in "${preview_files[@]}"; do
         case "$source" in

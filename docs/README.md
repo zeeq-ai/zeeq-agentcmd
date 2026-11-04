@@ -1,4 +1,4 @@
-# LlmCmd documentation
+# AgentCmd documentation
 
 Nuxt UI and Nuxt Content, with the same navigation and reading layout as
 `zeeq-biome`. Content lives in `content/`. Existing architecture and research
@@ -26,7 +26,7 @@ Both variables must be set consistently when running `docs:build`.
 
 Start with a concrete operation. Explain the reason for a design choice, show
 the code, then show the result a reader can inspect. Credit MEAI's existing
-typed-response and middleware APIs. Use LlmCmd's identity, capture, delivery,
+typed-response and middleware APIs. Use AgentCmd's identity, capture, delivery,
 composition, and whole-output evaluation to explain why to add a command layer.
 
 The getting-started example runs with a fake client. Provider setup excerpts

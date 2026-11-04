@@ -7,17 +7,17 @@ artifacts/
 
 # CSharpier 1.3.0 predates C# 15 closed/union syntax. scripts/format.sh
 # sends these exact paths to the pinned SDK formatter instead of skipping them.
-src/Zeeq.LlmCmd.Providers/Core/Snapshot.cs
-src/Zeeq.LlmCmd.Providers/Core/Registry.cs
-src/Zeeq.LlmCmd/Context/OperationContext.cs
-src/Zeeq.LlmCmd/Commands/Contracts.cs
-src/Zeeq.LlmCmd/Commands/Composition/CompositeContracts.cs
-src/Zeeq.LlmCmd/Commands/Outcomes.cs
-src/Zeeq.LlmCmd.OpenTelemetry/Propagation/Ingress.cs
-src/Zeeq.LlmCmd/Routing/ProfileRouter.cs
-src/Zeeq.LlmCmd.OpenTelemetry/Targets.cs
-src/Zeeq.LlmCmd.OpenTelemetry/Propagation/PropagationAdapter.cs
-src/Zeeq.LlmCmd/Commands/Composition/CompositionStore.cs
-src/Zeeq.LlmCmd/Evaluation/Contracts.cs
-src/Zeeq.LlmCmd/Experiments/SourceContracts.cs
-src/Zeeq.LlmCmd/Experiments/CatalogView.cs
+src/Zeeq.AgentCmd.Providers/Core/Snapshot.cs
+src/Zeeq.AgentCmd.Providers/Core/Registry.cs
+src/Zeeq.AgentCmd/Context/OperationContext.cs
+src/Zeeq.AgentCmd/Commands/Contracts.cs
+src/Zeeq.AgentCmd/Commands/Composition/CompositeContracts.cs
+src/Zeeq.AgentCmd/Commands/Outcomes.cs
+src/Zeeq.AgentCmd.OpenTelemetry/Propagation/Ingress.cs
+src/Zeeq.AgentCmd/Routing/ProfileRouter.cs
+src/Zeeq.AgentCmd.OpenTelemetry/Targets.cs
+src/Zeeq.AgentCmd.OpenTelemetry/Propagation/PropagationAdapter.cs
+src/Zeeq.AgentCmd/Commands/Composition/CompositionStore.cs
+src/Zeeq.AgentCmd/Evaluation/Contracts.cs
+src/Zeeq.AgentCmd/Experiments/SourceContracts.cs
+src/Zeeq.AgentCmd/Experiments/CatalogView.cs

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>15</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestProject>true</IsTestProject>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Zeeq.AgentCmd.TestFixtures/Zeeq.AgentCmd.TestFixtures.csproj" />
+    <ProjectReference Include="../../src/Zeeq.AgentCmd/Zeeq.AgentCmd.csproj" />
+    <ProjectReference Include="../../src/Zeeq.AgentCmd.OpenTelemetry/Zeeq.AgentCmd.OpenTelemetry.csproj" />
+  </ItemGroup>
+</Project>

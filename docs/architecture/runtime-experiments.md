@@ -12,9 +12,9 @@ The original design shows separate prompt and parameter providers. The existing 
 
 Suppose `invoice.extract` has a compiled template and an input with `Document` and `Locale`. The command author permits an external override for `Locale`, but not for `Document`. The host has registered both an OpenAI and an Anthropic client pipeline.
 
-1. The host selects a control or treatment assignment for a request. The host supplies that assignment; LlmCmd does not invent one from a trace ID.
+1. The host selects a control or treatment assignment for a request. The host supplies that assignment; AgentCmd does not invent one from a trace ID.
 2. A source publishes a new treatment containing a new template, `Locale = "fr-CA"`, an Anthropic model, and compatible sampling settings. The running application does not rebuild or restart.
-3. A later call uses the existing `WithParameters(input).ExecuteAsync(ct)` shape. LlmCmd resolves the treatment, validates the effective typed input and route, and sends the rendered prompt through the selected host-owned MEAI pipeline.
+3. A later call uses the existing `WithParameters(input).ExecuteAsync(ct)` shape. AgentCmd resolves the treatment, validates the effective typed input and route, and sends the rendered prompt through the selected host-owned MEAI pipeline.
 4. If the external source fails before selection, the host's complete configured default runs. The result records that fallback and the settings actually used.
 5. The result records the assignment, source and revision, effective templates, parameter origins, route and attempts, and output reference. An evaluator can read and grade the exact stored output or composed whole.
 

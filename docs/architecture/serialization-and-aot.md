@@ -31,7 +31,7 @@ declare the applicable roots. Its options retain authority over naming,
 converters and unmapped members. Generated validation still applies.
 
 Unsupported framework shapes, attributes or constructor arrangements produce
-`LLMMETA001` rather than silently changing their meaning or enabling reflection.
+`AGENTMETA001` rather than silently changing their meaning or enabling reflection.
 The supported boundary is deliberate; supplying an explicit context is the
 extension seam for contracts outside it.
 

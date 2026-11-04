@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Zeeq.AgentCmd/Zeeq.AgentCmd.csproj" />
+    <Project Path="src/Zeeq.AgentCmd.Generators/Zeeq.AgentCmd.Generators.csproj" />
+    <Project Path="src/Zeeq.AgentCmd.OpenTelemetry/Zeeq.AgentCmd.OpenTelemetry.csproj" />
+    <Project Path="src/Zeeq.AgentCmd.Providers/Zeeq.AgentCmd.Providers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AgentCmd.CollectorAdapters.Tests/AgentCmd.CollectorAdapters.Tests.csproj" />
+    <Project Path="tests/AgentCmd.CommandRoot.Tests/AgentCmd.CommandRoot.Tests.csproj" />
+    <Project Path="tests/AgentCmd.Composition.Tests/AgentCmd.Composition.Tests.csproj" />
+    <Project Path="tests/AgentCmd.ContextPropagation.Tests/AgentCmd.ContextPropagation.Tests.csproj" />
+    <Project Path="tests/AgentCmd.HumanGrading.Tests/AgentCmd.HumanGrading.Tests.csproj" />
+    <Project Path="tests/AgentCmd.LiveProviders.Tests/AgentCmd.LiveProviders.Tests.csproj" />
+    <Project Path="tests/AgentCmd.LangfuseReadback/AgentCmd.LangfuseReadback.csproj" />
+    <Project Path="tests/AgentCmd.ProviderAdapters.Tests/AgentCmd.ProviderAdapters.Tests.csproj" />
+    <Project Path="tests/Zeeq.AgentCmd.Generators.Tests/Zeeq.AgentCmd.Generators.Tests.csproj" />
+    <Project Path="tests/Zeeq.AgentCmd.Packaging.Tests/Zeeq.AgentCmd.Packaging.Tests.csproj" />
+    <Project Path="tests/Zeeq.AgentCmd.TestFixtures/Zeeq.AgentCmd.TestFixtures.csproj" />
+  </Folder>
+  <Folder Name="/examples/">
+    <Project Path="examples/Zeeq.AgentCmd.CommandExample/Zeeq.AgentCmd.CommandExample.csproj" />
+    <Project Path="examples/Zeeq.AgentCmd.CompositionExample/Zeeq.AgentCmd.CompositionExample.csproj" />
+    <Project Path="examples/Zeeq.AgentCmd.ExperimentsExample/Zeeq.AgentCmd.ExperimentsExample.csproj" />
+  </Folder>
+  <Folder Name="/dev/">
+    <Project Path="dev/Zeeq.AgentCmd.AppHost/Zeeq.AgentCmd.AppHost.csproj" />
+  </Folder>
+</Solution>

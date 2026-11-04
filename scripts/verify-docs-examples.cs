@@ -7,9 +7,9 @@ var repository = Path.GetFullPath(args.Length > 0 ? args[0] : Directory.GetCurre
 var packageDirectory = Path.Combine(repository, "artifacts", "packages");
 var packageNames = new[]
 {
-    "Zeeq.LlmCmd.0.1.0-alpha.1.nupkg",
-    "Zeeq.LlmCmd.Providers.0.1.0-alpha.1.nupkg",
-    "Zeeq.LlmCmd.OpenTelemetry.0.1.0-alpha.1.nupkg",
+    "Zeeq.AgentCmd.0.1.0-alpha.1.nupkg",
+    "Zeeq.AgentCmd.Providers.0.1.0-alpha.1.nupkg",
+    "Zeeq.AgentCmd.OpenTelemetry.0.1.0-alpha.1.nupkg",
 };
 foreach (var name in packageNames)
 {
@@ -24,7 +24,7 @@ var tempParent =
     OperatingSystem.IsMacOS() && Directory.Exists("/private/tmp")
         ? "/private/tmp"
         : Path.GetTempPath();
-var tempRoot = Path.Combine(tempParent, "llmcmd-docs-" + Guid.NewGuid().ToString("N"));
+var tempRoot = Path.Combine(tempParent, "agentcmd-docs-" + Guid.NewGuid().ToString("N"));
 var app = Path.Combine(tempRoot, "my-app");
 var feed = Path.Combine(tempRoot, "artifacts", "packages");
 var packages = Path.Combine(tempRoot, "nuget-cache");
@@ -95,7 +95,7 @@ try
     File.WriteAllText(
         Path.Combine(app, "ExperimentSourceValidation.cs"),
         """
-        using Zeeq.LlmCmd;
+        using Zeeq.AgentCmd;
         internal static class ExperimentSourceValidation
         {
             internal static ExperimentResolver Create(string path)
@@ -236,7 +236,7 @@ try
     var composition = Path.Combine(repository, "docs", "content", "2.guides", "3.composition.md");
     var bootstrap = Fence(composition, "csharp", "CompositionBootstrap.cs");
     var commands = File.ReadAllText(
-        Path.Combine(repository, "examples", "Zeeq.LlmCmd.CompositionExample", "Commands.cs")
+        Path.Combine(repository, "examples", "Zeeq.AgentCmd.CompositionExample", "Commands.cs")
     );
     const string headerMarker =
         "public sealed partial class ExtractHeader : PromptCommand<SourceText, Header>";
@@ -258,8 +258,8 @@ try
         using CompositionDemo;
         using Microsoft.Extensions.AI;
         using Microsoft.Extensions.DependencyInjection;
-        using Zeeq.LlmCmd;
-        using Zeeq.LlmCmd.Generated;
+        using Zeeq.AgentCmd;
+        using Zeeq.AgentCmd.Generated;
         internal static class BootstrapValidation
         {
             internal static void Validate(IChatClient client)
@@ -290,12 +290,12 @@ try
     packageGroup.Add(
         new XElement(
             "PackageReference",
-            new XAttribute("Include", "Zeeq.LlmCmd.Providers"),
+            new XAttribute("Include", "Zeeq.AgentCmd.Providers"),
             new XAttribute("Version", "0.1.0-alpha.1")
         ),
         new XElement(
             "PackageReference",
-            new XAttribute("Include", "Zeeq.LlmCmd.OpenTelemetry"),
+            new XAttribute("Include", "Zeeq.AgentCmd.OpenTelemetry"),
             new XAttribute("Version", "0.1.0-alpha.1")
         )
     );

@@ -1,0 +1,12 @@
+<Project>
+  <Target Name="_AgentCmdIncludePackageAnalyzers" BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <None
+        Include="$(MSBuildThisFileDirectory)../Zeeq.AgentCmd.Generators/bin/$(Configuration)/netstandard2.0/Zeeq.AgentCmd.Generators.dll"
+        Pack="true"
+        PackagePath="analyzers/dotnet/cs/"
+        Visible="false"
+      />
+    </ItemGroup>
+  </Target>
+</Project>

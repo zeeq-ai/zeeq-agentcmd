@@ -61,11 +61,11 @@ export default defineNuxtConfig({
 
   llms: {
     domain: `${siteUrl}${baseURL.replace(/\/$/, '')}`,
-    title: 'Zeeq LlmCmd',
+    title: 'Zeeq AgentCmd',
     description: 'Typed prompt commands over Microsoft.Extensions.AI. Stable identity, captured parameters, closed outcomes, and evaluation of the exact stored whole.',
     full: {
-      title: 'Zeeq LlmCmd — Full documentation',
-      description: 'The local alpha documentation for LlmCmd on .NET 11 / C# 15 RC.'
+      title: 'Zeeq AgentCmd — Full documentation',
+      description: 'The local alpha documentation for AgentCmd on .NET 11 / C# 15 RC.'
     },
     sections: ([
       ['Getting started', '/getting-started%'],

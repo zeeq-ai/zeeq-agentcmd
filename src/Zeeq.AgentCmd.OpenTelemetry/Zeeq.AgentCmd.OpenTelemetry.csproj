@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PackageId>Zeeq.AgentCmd.OpenTelemetry</PackageId>
+    <Description>OpenTelemetry instrumentation, collector profiles and explicit context propagation for Zeeq.AgentCmd.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <ProjectReference Include="../Zeeq.AgentCmd/Zeeq.AgentCmd.csproj" />
+    <ProjectReference Include="../Zeeq.AgentCmd.Providers/Zeeq.AgentCmd.Providers.csproj" />
+  </ItemGroup>
+</Project>

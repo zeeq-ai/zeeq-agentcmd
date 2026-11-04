@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AgentCmdGenerateCommands>true</AgentCmdGenerateCommands>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Zeeq.AgentCmd/Zeeq.AgentCmd.csproj" />
+  </ItemGroup>
+</Project>

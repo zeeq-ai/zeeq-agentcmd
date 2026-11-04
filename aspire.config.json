@@ -1,5 +1,5 @@
 {
   "appHost": {
-    "path": "dev/Zeeq.LlmCmd.AppHost/Zeeq.LlmCmd.AppHost.csproj"
+    "path": "dev/Zeeq.AgentCmd.AppHost/Zeeq.AgentCmd.AppHost.csproj"
   }
 }

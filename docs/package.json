@@ -1,5 +1,5 @@
 {
-  "name": "zeeq-llmcmd-docs",
+  "name": "zeeq-agentcmd-docs",
   "private": true,
   "type": "module",
   "scripts": {

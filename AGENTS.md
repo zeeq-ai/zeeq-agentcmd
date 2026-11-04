@@ -1,8 +1,8 @@
-# Zeeq LlmCmd
+# Zeeq AgentCmd
 
 ## Overview
 
-`LlmCmd` is modeled after `SqlCommand`: typed commands encapsulate string-based prompts, parameters, execution, and results.  Key objective is to make it easier to surface parts of the command like the raw prompt, the parameters, etc. to allow emitters to store parts for eval calculation and surfacing of metrics in production.
+`AgentCmd` is modeled after `SqlCommand`: typed commands encapsulate string-based prompts, parameters, execution, and results.  Key objective is to make it easier to surface parts of the command like the raw prompt, the parameters, etc. to allow emitters to store parts for eval calculation and surfacing of metrics in production.
 
 - Keep call sites terse and fluent: `WithParameters(...).ExecuteAsync()`.
 - Generate boilerplate. Use `WithHeaderFrom(...)` and typed dependencies to compose a whole.
@@ -66,9 +66,9 @@ mise run test:live:runtime:azure      # Explicit paid generated-command test.
 mise run test:live:runtime:anthropic  # Explicit paid generated-command test.
 mise run test:live:composition       # Three prompts; read and grade only the whole.
 
-llmcmd_host=dev/Zeeq.LlmCmd.AppHost/Zeeq.LlmCmd.AppHost.csproj
-aspire start --non-interactive --apphost "$llmcmd_host"  # Dashboard; Langfuse stays stopped.
-aspire resource langfuse start --non-interactive --apphost "$llmcmd_host"
-aspire wait langfuse --non-interactive --apphost "$llmcmd_host"
+agentcmd_host=dev/Zeeq.AgentCmd.AppHost/Zeeq.AgentCmd.AppHost.csproj
+aspire start --non-interactive --apphost "$agentcmd_host"  # Dashboard; Langfuse stays stopped.
+aspire resource langfuse start --non-interactive --apphost "$agentcmd_host"
+aspire wait langfuse --non-interactive --apphost "$agentcmd_host"
 mise run test:langfuse:readback       # Verify local OTLP ingestion and stored generation.
 ```

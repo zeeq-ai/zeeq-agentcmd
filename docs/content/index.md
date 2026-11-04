@@ -1,8 +1,8 @@
 ---
-title: Zeeq LlmCmd
+title: Zeeq AgentCmd
 description: Typed prompt commands over Microsoft.Extensions.AI. Keep intent, telemetry, execution, and stored-output evaluation together.
 seo:
-  title: Zeeq LlmCmd — Prompts as typed commands
+  title: Zeeq AgentCmd — Prompts as typed commands
   description: A SqlCommand-inspired command layer over Microsoft.Extensions.AI. Stable prompt identity, captured parameters, closed outcomes, and evaluation of the exact stored whole.
 ---
 
@@ -17,7 +17,7 @@ orientation: horizontal
 Prompts as [typed commands]{.brand-gradient-text}.
 
 #description
-Give a prompt a name, typed inputs, and a result you can inspect. LlmCmd brings those pieces together over Microsoft.Extensions.AI, from one model call to a whole you can evaluate.
+Give a prompt a name, typed inputs, and a result you can inspect. AgentCmd brings those pieces together over Microsoft.Extensions.AI, from one model call to a whole you can evaluate.
 
 #links
   :::u-button
@@ -65,7 +65,7 @@ Give a prompt a name, typed inputs, and a result you can inspect. LlmCmd brings 
 
 ::u-page-section
 #headline
-Why LlmCmd?
+Why AgentCmd?
 
 #title
 The prompt is one part of the operation.
@@ -73,7 +73,7 @@ The prompt is one part of the operation.
 #description
 Your application asks a model to extract an invoice. Later, the total looks wrong. Which prompt and inputs produced it? Which model ran? Can you evaluate the exact invoice that was stored?
 
-MEAI already provides typed responses, schema helpers, and middleware. LlmCmd brings the rest of that operation together: a stable prompt identity, captured inputs, execution telemetry, a delivery receipt, and a result you can read back and evaluate.
+MEAI already provides typed responses, schema helpers, and middleware. AgentCmd brings the rest of that operation together: a stable prompt identity, captured inputs, execution telemetry, a delivery receipt, and a result you can read back and evaluate.
 
 #default
   :::u-page-grid{class="lg:grid-cols-2"}

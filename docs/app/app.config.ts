@@ -9,7 +9,7 @@ export default defineAppConfig({
     pageSection: { slots: { headline: 'text-center text-primary' } },
     footer: { slots: { root: 'border-t border-default', left: 'text-sm text-muted' } }
   },
-  seo: { siteName: 'Zeeq LlmCmd' },
+  seo: { siteName: 'Zeeq AgentCmd' },
   header: {
     title: '',
     to: '/',
@@ -20,11 +20,11 @@ export default defineAppConfig({
       'icon': 'i-simple-icons-github',
       'to': 'https://github.com/zeeq-ai/zeeq-llmcmd',
       'target': '_blank',
-      'aria-label': 'LlmCmd on GitHub'
+      'aria-label': 'AgentCmd on GitHub'
     }]
   },
   footer: {
-    credits: 'Zeeq LlmCmd · Built on Microsoft.Extensions.AI',
+    credits: 'Zeeq AgentCmd · Built on Microsoft.Extensions.AI',
     colorMode: false,
     links: [{
       label: 'MIT License',
@@ -34,7 +34,7 @@ export default defineAppConfig({
       'icon': 'i-simple-icons-github',
       'to': 'https://github.com/zeeq-ai/zeeq-llmcmd',
       'target': '_blank',
-      'aria-label': 'LlmCmd on GitHub'
+      'aria-label': 'AgentCmd on GitHub'
     }, {
       'icon': 'i-lucide-file-text',
       'to': '/llms.txt',

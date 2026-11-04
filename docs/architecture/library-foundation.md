@@ -4,7 +4,7 @@ The library starts from the contracts exercised by the research suites. This doc
 
 ## One coherent runtime package
 
-Commands, composition, actor/run checks, immutable output references, context and routing form one runtime assembly in `Zeeq.LlmCmd`. They were already mutually required by execution. Keeping their caller types in one namespace makes the fluent API readable and avoids exposing experiment names as package boundaries.
+Commands, composition, actor/run checks, immutable output references, context and routing form one runtime assembly in `Zeeq.AgentCmd`. They were already mutually required by execution. Keeping their caller types in one namespace makes the fluent API readable and avoids exposing experiment names as package boundaries.
 
 The source generators and analyzers ship in that same NuGet package. Generated descriptors call concrete runtime contracts, so separately versioning them would invite a compile-time version mismatch. A clean external package-consumer test is the distribution gate. No source project in `src` refers to the archived experiments. Optional provider mapping and OpenTelemetry packages stay separate so a basic application does not inherit exporter or provider SDK dependencies.
 
@@ -38,7 +38,7 @@ The aggregate is assembled at contract JSON names, checked through the whole con
 
 ## Honest boundaries and next work
 
-The archived execution-capture experiment also explored external runtime snapshots, override authorization, pricing and a different executor. That executor and its fake pricing types were not promoted as a second public execution system. Its 35 tests remain under `research/tests/LlmCmd.Tests` rather than being relabeled as tests of the new library.
+The archived execution-capture experiment also explored external runtime snapshots, override authorization, pricing and a different executor. That executor and its fake pricing types were not promoted as a second public execution system. Its 35 tests remain under `research/tests/AgentCmd.Tests` rather than being relabeled as tests of the new library.
 
 The first library has no durable database store, lease/fencing implementation, restart reconciler, general workflow engine, automatic serialization of callbacks or exactly-once billing guarantee. Runtime snapshot-provider integration and invoice reconciliation require further work. Native stream extraction and cloud collector acceptance need further integration evidence. These are explicit follow-on items, not implicit promises of the alpha.
 

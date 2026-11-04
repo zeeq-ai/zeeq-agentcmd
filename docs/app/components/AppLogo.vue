@@ -1,7 +1,7 @@
 <template>
   <span
     class="inline-flex items-center gap-2.5"
-    aria-label="Zeeq LlmCmd home"
+    aria-label="Zeeq AgentCmd home"
   >
     <svg
       width="32"
@@ -26,6 +26,6 @@
         stroke-linejoin="round"
       />
     </svg>
-    <span class="text-lg font-semibold tracking-tight text-highlighted">zeeq<span class="font-normal text-muted"> / </span>LlmCmd</span>
+    <span class="text-lg font-semibold tracking-tight text-highlighted">zeeq<span class="font-normal text-muted"> / </span>AgentCmd</span>
   </span>
 </template>

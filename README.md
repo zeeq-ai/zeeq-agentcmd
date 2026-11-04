@@ -1,17 +1,17 @@
-# Zeeq.LlmCmd
+# Zeeq.AgentCmd
 
 Typed prompt commands and aggregate composition over `Microsoft.Extensions.AI`. This is the first source library, version `0.1.0-alpha.1`, extracted from the tested designs in this repository. It targets .NET 11 and C# 15.
 
 [Documentation](https://zeeq-ai.github.io/zeeq-llmcmd/) · [Offline quick start](docs/content/1.getting-started/3.quick-start.md) · [Build the documentation site](docs/README.md)
 
-LlmCmd is available under the [MIT License](LICENSE).
+AgentCmd is available under the [MIT License](LICENSE).
 
 The core NuGet package includes the runtime, source generators and registration analyzers. Its generator emits AOT-safe serializer metadata directly. A consumer needs one `PackageReference`; it does not need a handwritten command constructor, serializer context, JSON schema, registration table or MSBuild import. Provider extraction and OpenTelemetry are separate optional packages.
 
 ## Author a command
 
 ```csharp
-using Zeeq.LlmCmd;
+using Zeeq.AgentCmd;
 
 namespace MyApp;
 
@@ -33,11 +33,11 @@ The host supplies an `IChatClient` and a trusted actor accessor. The following c
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
-using Zeeq.LlmCmd;
-using Zeeq.LlmCmd.Generated;
+using Zeeq.AgentCmd;
+using Zeeq.AgentCmd.Generated;
 
 services
-    .AddLlmCmd(options => options
+    .AddAgentCmd(options => options
         .UseChatClient(_ => chatClient)
         .AddProfile("extract", "model-id")
         .UseActor(_ => actor))
@@ -64,7 +64,7 @@ switch (result)
 
 A single configured profile becomes the default. With multiple profiles, select one with `UseDefaultProfile("fast")` or author a command-specific profile. Catalog registration validates these choices before the client factory runs.
 
-The complete [command example](examples/Zeeq.LlmCmd.CommandExample/Program.cs) includes host construction and an offline client. A generated public catalog remains available for registering commands declared in a different assembly.
+The complete [command example](examples/Zeeq.AgentCmd.CommandExample/Program.cs) includes host construction and an offline client. A generated public catalog remains available for registering commands declared in a different assembly.
 
 ### Multiple clients and models
 
@@ -78,7 +78,7 @@ services.AddKeyedChatClient("azure.luna", createAzureClient);
 services.AddKeyedChatClient("claude", createClaudeClient);
 
 services
-    .AddLlmCmd(options => options
+    .AddAgentCmd(options => options
         .AddChatClient("azure.luna", fixedModel: "gpt-6-luna")
         .AddChatClient("claude")
         .AddProfile("fast", "azure.luna", "gpt-6-luna",
@@ -110,9 +110,9 @@ runtime. Do not return a DI-owned client from that overload. `UseChatClient` and
 the existing two-argument `AddProfile` remain available for single-client hosts;
 mixing the two configuration modes is rejected.
 
-The bundled analyzer checks string references in straight-line `AddLlmCmd`
-lambdas. Unknown clients (`LLMCLIENT001`), duplicate client registrations
-(`LLMCLIENT002`) and constant fixed-model conflicts (`LLMCLIENT003`) fail the
+The bundled analyzer checks string references in straight-line `AddAgentCmd`
+lambdas. Unknown clients (`AGENTCLIENT001`), duplicate client registrations
+(`AGENTCLIENT002`) and constant fixed-model conflicts (`AGENTCLIENT003`) fail the
 build. Configuration values, helpers and control flow remain supported by the
 runtime; the analyzer reports only what its local scope can establish. See
 [registration analysis](docs/architecture/client-registration-analysis.md).
@@ -132,7 +132,7 @@ hosts must version request/trial keys when changing such external behavior.
 
 An experiment source can supply a new prompt, opted-in parameter values, and an allowed client, model and sampling configuration while the application is running. A/B selection returns the selected variant. Optional shadows run independently and retain their own output references for comparison. A composition pins its publication before executing parts, so a later update cannot switch the selected publication during execution. If a source fails before selection, the complete configured default runs.
 
-The host owns authorization, client pipelines, assignment and the side-effect policy for shadows. The default cache, scheduler and ledger are process-local. Composition shadows are offered explicitly after the primary is pinned. See the [runtime experiments guide](docs/content/2.guides/7.runtime-experiments.md) and run the [offline example](examples/Zeeq.LlmCmd.ExperimentsExample/README.md) with `mise run demo:experiments`.
+The host owns authorization, client pipelines, assignment and the side-effect policy for shadows. The default cache, scheduler and ledger are process-local. Composition shadows are offered explicitly after the primary is pinned. See the [runtime experiments guide](docs/content/2.guides/7.runtime-experiments.md) and run the [offline example](examples/Zeeq.AgentCmd.ExperimentsExample/README.md) with `mise run demo:experiments`.
 
 ## Compose an aggregate
 
@@ -156,13 +156,13 @@ var result = await root.ExecuteAsync(ct);
 
 The generated names come from the aggregate's properties. Registration changes the same construction handle and does no model work. Execute freezes and validates it. A dependency receives the exact stored `Pinned<T>` result. Duplicate registration is a configuration failure. A failed dependency blocks its dependent. Required-slot coverage, authorization, claims, attachment and finalization are runtime checks.
 
-The [composition example](examples/Zeeq.LlmCmd.CompositionExample/Program.cs) declares all types, builds DI, exercises both branches, publishes one aggregate version, replays the handle and grades that exact version. It runs with reflection serialization disabled.
+The [composition example](examples/Zeeq.AgentCmd.CompositionExample/Program.cs) declares all types, builds DI, exercises both branches, publishes one aggregate version, replays the handle and grades that exact version. It runs with reflection serialization disabled.
 
 ## Context, profiles and observability
 
-Use `LlmCmdContext.BeginScope(context)` for local defaults. `.InContext(context)` replaces that default as a whole; `.WithoutContext()` suppresses it. Ambient context is correlation, not authorization or slot membership. Explicit composition registration decides membership. Sinks receive captured envelopes and do not re-read AsyncLocal.
+Use `AgentCmdContext.BeginScope(context)` for local defaults. `.InContext(context)` replaces that default as a whole; `.WithoutContext()` suppresses it. Ambient context is correlation, not authorization or slot membership. Explicit composition registration decides membership. Sinks receive captured envelopes and do not re-read AsyncLocal.
 
-`ProfileRouter` supports typed profile keys, retry budgets and fallback with per-attempt records. `Zeeq.LlmCmd.Providers` supplies normalized accounting, protocol adapters, data-driven pricing and opt-in model request validation without taking a vendor SDK dependency. See [model policies and extension seams](docs/architecture/provider-model-policies.md). `Zeeq.LlmCmd.OpenTelemetry` supplies collector configuration, `AddLlmCmdInstrumentation()` and explicit wire propagation. Wire references must be resolved and authorized at the receiver. Private operation references do not enter W3C baggage by default.
+`ProfileRouter` supports typed profile keys, retry budgets and fallback with per-attempt records. `Zeeq.AgentCmd.Providers` supplies normalized accounting, protocol adapters, data-driven pricing and opt-in model request validation without taking a vendor SDK dependency. See [model policies and extension seams](docs/architecture/provider-model-policies.md). `Zeeq.AgentCmd.OpenTelemetry` supplies collector configuration, `AddAgentCmdInstrumentation()` and explicit wire propagation. Wire references must be resolved and authorized at the receiver. Private operation references do not enter W3C baggage by default.
 
 ## Build and verify
 
@@ -182,7 +182,7 @@ mise run demo:experiments
 mise run pack
 ```
 
-`build` compiles `Zeeq.LlmCmd.slnx`. `test` runs the maintained TUnit suites directly with dotnet. `test:package` packs the core and builds/runs an isolated consumer outside the checkout using only its NuGet package, with reflection disabled; it also checks wrong-slot compilation. `pack` writes three local alpha packages to `artifacts/packages`. No package is published. `mise run verify` runs the library checks and examples in order. These tasks do not need Python or Aspire.
+`build` compiles `Zeeq.AgentCmd.slnx`. `test` runs the maintained TUnit suites directly with dotnet. `test:package` packs the core and builds/runs an isolated consumer outside the checkout using only its NuGet package, with reflection disabled; it also checks wrong-slot compilation. `pack` writes three local alpha packages to `artifacts/packages`. No package is published. `mise run verify` runs the library checks and examples in order. These tasks do not need Python or Aspire.
 
 Formatting uses the same CSharpier pin as `zeeq-tmpl`. Its parser predates C# 15 `closed`/`union`, so an exact file list is formatted and checked by the pinned SDK instead. Production public XML documentation and a small SDK analyzer [quality floor](docs/architecture/quality-floor.md) fail builds on violations; no third-party analyzer bundle is added.
 
@@ -196,7 +196,7 @@ mise run test:live:runtime:azure
 mise run test:live:runtime:anthropic
 ```
 
-They retain `UserSecretsId=zeeq-llmcmd-live-tests` on `tests/LlmCmd.LiveProviders.Tests`. Their [setup guide](tests/LlmCmd.LiveProviders.Tests/README.md) shows key configuration. Ordinary test runs do not make paid calls.
+They retain `UserSecretsId=zeeq-llmcmd-live-tests` on `tests/AgentCmd.LiveProviders.Tests`. Their [setup guide](tests/AgentCmd.LiveProviders.Tests/README.md) shows key configuration. Ordinary test runs do not make paid calls.
 
 The runtime cases exercise a generated command, typed JSON, stored-output readback, and per-attempt events through the real Azure OpenAI and Anthropic SDKs. Sanitized accounting receipts can be replayed into an explicitly started local Langfuse instance without another model call:
 
@@ -207,13 +207,13 @@ mise run test:langfuse:readback artifacts/live-providers/anthropic.runtime.captu
 mise run test:langfuse:stop
 ```
 
-This checks the configured Langfuse target, OTLP export, and persisted generation readback. Docker is needed only for these explicit [local Langfuse tests](tests/LlmCmd.LangfuseReadback/README.md). Token estimates use [first-party rate cards](docs/research/provider-pricing.md) and explicit billing scope; they are not invoice reconciliation.
+This checks the configured Langfuse target, OTLP export, and persisted generation readback. Docker is needed only for these explicit [local Langfuse tests](tests/AgentCmd.LangfuseReadback/README.md). Token estimates use [first-party rate cards](docs/research/provider-pricing.md) and explicit billing scope; they are not invoice reconciliation.
 
 ## Source layout and design record
 
-- `src/Zeeq.LlmCmd`: commands, closed outcomes, composition, context, profiles, DI and evaluation contracts.
-- `src/Zeeq.LlmCmd.Generators`: command, composition and serialization generators plus registration analyzers, bundled in the core package.
-- `src/Zeeq.LlmCmd.Providers` and `src/Zeeq.LlmCmd.OpenTelemetry`: optional integration packages.
+- `src/Zeeq.AgentCmd`: commands, closed outcomes, composition, context, profiles, DI and evaluation contracts.
+- `src/Zeeq.AgentCmd.Generators`: command, composition and serialization generators plus registration analyzers, bundled in the core package.
+- `src/Zeeq.AgentCmd.Providers` and `src/Zeeq.AgentCmd.OpenTelemetry`: optional integration packages.
 - `tests`: maintained tests against these assemblies, generated fixtures and an isolated package consumer.
 - `examples`: runnable applications that use the source library.
 - `research`: the original executable spikes, tests and orchestration scripts, preserved independently.

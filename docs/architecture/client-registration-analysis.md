@@ -6,9 +6,9 @@ registration attributes. Diagnostics are errors by default.
 
 | Diagnostic | Meaning | Location |
 | --- | --- | --- |
-| `LLMCLIENT001` | A named profile refers to an unregistered client. The message lists the registered IDs. | Profile client argument |
-| `LLMCLIENT002` | A client ID is registered twice in one setup. | Repeated registration name |
-| `LLMCLIENT003` | A constant profile model differs from its client's constant `fixedModel`. | Profile model argument |
+| `AGENTCLIENT001` | A named profile refers to an unregistered client. The message lists the registered IDs. | Profile client argument |
+| `AGENTCLIENT002` | A client ID is registered twice in one setup. | Repeated registration name |
+| `AGENTCLIENT003` | A constant profile model differs from its client's constant `fixedModel`. | Profile model argument |
 
 IDs are case-sensitive, matching runtime routing. Literals, `const` fields,
 constant concatenation and `nameof` use Roslyn's evaluated constant value.
@@ -18,7 +18,7 @@ not a named-client reference.
 
 ## Scope
 
-Each direct `AddLlmCmd` lambda is independent. The supported shape is an
+Each direct `AddAgentCmd` lambda is independent. The supported shape is an
 expression-bodied chain or a block containing only straight-line builder calls.
 Every chain must start at that lambda's builder parameter. All registrations are
 collected before checking routes, so a profile can precede its client.
