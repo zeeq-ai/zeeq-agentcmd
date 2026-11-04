@@ -106,7 +106,8 @@ public sealed record TraceAnchor(string TraceId, string SpanId, bool Recorded, s
 /// <param name="SchemaVersion">Schema version supplied by the producer.</param>
 /// <param name="Origin">Optional trace anchor for the original output.</param>
 /// <param name="ParentVersionId">Prior version identifier, or null for an original output.</param>
-public sealed record OutputArtifact(OutputRef Reference, JsonElement Value, string SchemaVersion, TraceAnchor? Origin, Guid? ParentVersionId);
+/// <param name="Evidence">Experiment evidence committed with this exact output, when present.</param>
+public sealed record OutputArtifact(OutputRef Reference, JsonElement Value, string SchemaVersion, TraceAnchor? Origin, Guid? ParentVersionId, ExperimentEvidence? Evidence = null);
 /// <summary>A grade against an exact output version and expected field value.</summary>
 /// <param name="EventId">Idempotency identifier for this feedback event.</param>
 /// <param name="Target">Exact output version to grade.</param>
@@ -198,6 +199,20 @@ public interface IHumanFeedbackLedger
     /// <param name="origin">Activity context for optional trace linkage.</param>
     /// <param name="actor">Authenticated actor requesting the write.</param>
     LedgerResult<OutputArtifact> RecordProducedOutput(Guid runId, ProducerRef producer, JsonElement value, string schemaVersion, ActivityContext origin, Actor actor);
+    /// <summary>Atomically records an output and its experiment evidence under one producer identity.</summary>
+    /// <remarks>
+    /// Implementations must commit the output and evidence together and compare both on idempotent
+    /// replay. The default rejects rather than silently accepting an output without its evidence.
+    /// </remarks>
+    /// <param name="runId">Owning run.</param>
+    /// <param name="producer">Command or composition producer identity.</param>
+    /// <param name="value">Exact output JSON.</param>
+    /// <param name="schemaVersion">Output schema identity, independent of experiment version.</param>
+    /// <param name="origin">Optional trace linkage.</param>
+    /// <param name="actor">Authenticated actor requesting the write.</param>
+    /// <param name="evidence">Experiment evidence committed with this output.</param>
+    LedgerResult<OutputArtifact> RecordProducedOutputWithEvidence(Guid runId, ProducerRef producer, JsonElement value, string schemaVersion, ActivityContext origin, Actor actor, ExperimentEvidence evidence) =>
+        new LedgerResult<OutputArtifact>.Rejected("evidence_unsupported", "The ledger cannot atomically store experiment evidence");
     /// <summary>Reads an exact output version only when the actor is authorized and the full reference matches.</summary>
     /// <param name="target">Full exact version reference.</param>
     /// <param name="actor">Authenticated actor requesting access.</param>

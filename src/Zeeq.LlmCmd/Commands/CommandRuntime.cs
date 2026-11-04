@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Zeeq.LlmCmd;
 
@@ -23,6 +24,7 @@ public sealed partial class CommandRuntime : IDisposable
     readonly Action<ExecutionOutcomeRecord>? sink;
     readonly IExecutionEventSink? events;
     readonly string? defaultProfile;
+    internal ExperimentRuntimeOptions? Experiments { get; private set; }
     bool disposed;
 
     private CommandRuntime(
@@ -53,12 +55,13 @@ public sealed partial class CommandRuntime : IDisposable
         Action<ChatClientBuilder>? configure = null,
         Action<ExecutionOutcomeRecord>? sink = null,
         IExecutionEventSink? events = null,
-        ProfileKey? defaultProfile = null
+        ProfileKey? defaultProfile = null,
+        ExperimentRuntimeOptions? experiments = null
     )
     {
         var b = new ChatClientBuilder(factory());
         configure?.Invoke(b);
-        return new(
+        return new CommandRuntime(
             b.Build(),
             new Dictionary<string, Profile>(profiles),
             ledger,
@@ -66,7 +69,10 @@ public sealed partial class CommandRuntime : IDisposable
             sink,
             events,
             defaultProfile
-        );
+        )
+        {
+            Experiments = experiments,
+        };
     }
 
     private CommandRuntime(
@@ -101,8 +107,13 @@ public sealed partial class CommandRuntime : IDisposable
         Action<ExecutionOutcomeRecord>? sink = null,
         bool ownsRouter = false,
         IExecutionEventSink? events = null,
-        ProfileKey? defaultProfile = null
-    ) => new(router, ledger, actorProvider, sink, ownsRouter, events, defaultProfile);
+        ProfileKey? defaultProfile = null,
+        ExperimentRuntimeOptions? experiments = null
+    ) =>
+        new CommandRuntime(router, ledger, actorProvider, sink, ownsRouter, events, defaultProfile)
+        {
+            Experiments = experiments,
+        };
 
     static string? DefaultProfile(
         IReadOnlyDictionary<string, Profile> profiles,
@@ -145,10 +156,16 @@ public sealed partial class CommandRuntime : IDisposable
         CallSite caller,
         CancellationToken ct,
         IExecutionJournal? journal = null,
-        PreparedCommandInput? prepared = null
+        PreparedCommandInput? prepared = null,
+        FrozenExperimentInput<TP>? frozenExperiment = null,
+        bool explicitProfile = false,
+        PreparedExperiment<TP>? experimentPrepared = null,
+        Actor? capturedActor = null,
+        bool suppressShadows = false
     )
     {
         var id = context.ExecutionId;
+        var baseProfile = profile;
         var run = context.Operation.RunId;
         ExecutionSnapshot? snapshot = null;
         using var activity = Activity.StartActivity("llmcmd.execute");
@@ -182,6 +199,26 @@ public sealed partial class CommandRuntime : IDisposable
             Outcome<TR>.Success => "success",
             Outcome<TR>.Failed failed => failed.Failure.Kind,
         };
+        if (snapshot?.Experiment is { } experiment)
+        {
+            // Identifiers make traces useful for comparing arms without exporting prompt content.
+            activity?.SetTag("llmcmd.experiment.source", experiment.Source);
+            activity?.SetTag("llmcmd.experiment.revision", experiment.Revision);
+            activity?.SetTag("llmcmd.experiment.id", experiment.ExperimentId);
+            activity?.SetTag("llmcmd.experiment.variant", experiment.VariantId);
+            activity?.SetTag(
+                "llmcmd.experiment.role",
+                experiment.Role.ToString().ToLowerInvariant()
+            );
+            activity?.SetTag("llmcmd.experiment.fallback_reason", experiment.Reason);
+            if (ExperimentIdentifier.IsValid(experiment.ComparisonGroupId))
+            {
+                activity?.SetTag(
+                    "llmcmd.experiment.comparison_group",
+                    experiment.ComparisonGroupId
+                );
+            }
+        }
         activity?.SetTag("llmcmd.execution.outcome", kind);
         if (kind is not "success" and not "cancelled")
         {
@@ -219,7 +256,7 @@ public sealed partial class CommandRuntime : IDisposable
             Actor actor;
             try
             {
-                actor = actorProvider();
+                actor = capturedActor ?? actorProvider();
             }
             catch (Exception)
             {
@@ -238,11 +275,59 @@ public sealed partial class CommandRuntime : IDisposable
                 );
             }
 
+            Guid? experimentRun = null;
+            if (Experiments is not null && (prepared is null || experimentPrepared is not null))
+            {
+                if (ct.IsCancellationRequested)
+                {
+                    return new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context));
+                }
+                experimentRun = run ?? ledger.CreateRun(actor);
+                if (experimentRun == Guid.Empty || !ledger.CanAccessRun(experimentRun.Value, actor))
+                {
+                    return new Outcome<TR>.Failed(
+                        new ExecutionFailure.ConfigurationFailure(context, "Run not accessible")
+                    );
+                }
+                try
+                {
+                    if (experimentPrepared is null)
+                    {
+                        frozenExperiment ??= FreezeExperimentInput(descriptor, parameters);
+                        experimentPrepared = await PrepareExperimentAsync(
+                            descriptor,
+                            frozenExperiment,
+                            profile,
+                            temperature,
+                            explicitProfile,
+                            context,
+                            actor,
+                            null,
+                            ct
+                        );
+                    }
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    return new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context));
+                }
+                catch
+                {
+                    return new Outcome<TR>.Failed(
+                        new ExecutionFailure.ConfigurationFailure(
+                            context,
+                            "Experiment preparation failed"
+                        )
+                    );
+                }
+            }
+
             string? invalid;
             try
             {
                 invalid =
-                    prepared is null ? descriptor.ValidateInput(parameters)
+                    experimentPrepared is not null ? experimentPrepared.Invalid
+                    : prepared is null ? descriptor.ValidateInput(parameters)
                     : prepared.HookPhase == "ValidateInput" ? throw new InvalidOperationException()
                     : prepared.InvalidReason;
             }
@@ -257,7 +342,10 @@ public sealed partial class CommandRuntime : IDisposable
                 return new Outcome<TR>.Failed(new ExecutionFailure.InvalidInput(context, invalid));
             }
 
-            var settings = prepared?.Settings ?? FreezeSettings(descriptor, profile, temperature);
+            var settings =
+                experimentPrepared?.Settings
+                ?? prepared?.Settings
+                ?? FreezeSettings(descriptor, profile, temperature);
             profile = settings.Profile;
             if (settings.Error == "profile_invalid")
             {
@@ -288,12 +376,13 @@ public sealed partial class CommandRuntime : IDisposable
                 descriptor.Id,
                 descriptor.Revision,
                 descriptor.DefinitionHash,
-                descriptor.UserTemplate,
+                experimentPrepared?.Evidence.UserTemplate ?? descriptor.UserTemplate,
                 null,
                 Array.Empty<ParameterRecord>(),
                 profile,
                 settings.Model,
-                effective
+                effective,
+                Experiment: experimentPrepared?.Evidence
             );
             if (ct.IsCancellationRequested)
             {
@@ -337,7 +426,7 @@ public sealed partial class CommandRuntime : IDisposable
             Guid runId;
             try
             {
-                runId = run ?? ledger.CreateRun(actor);
+                runId = experimentRun ?? run ?? ledger.CreateRun(actor);
             }
             catch (Exception)
             {
@@ -380,8 +469,12 @@ public sealed partial class CommandRuntime : IDisposable
                     throw new InvalidOperationException();
                 }
 
-                prompt = prepared?.Prompt ?? descriptor.Render(parameters);
-                system = prepared?.System ?? descriptor.RenderSystem(parameters);
+                prompt =
+                    experimentPrepared?.Prompt ?? prepared?.Prompt ?? descriptor.Render(parameters);
+                system =
+                    experimentPrepared?.System
+                    ?? prepared?.System
+                    ?? descriptor.RenderSystem(parameters);
                 snapshot = snapshot with { FormattedPrompt = prompt };
             }
             catch (Exception)
@@ -398,7 +491,10 @@ public sealed partial class CommandRuntime : IDisposable
                     throw new InvalidOperationException();
                 }
 
-                projected = prepared?.Parameters ?? descriptor.Project(parameters);
+                projected =
+                    experimentPrepared?.Parameters
+                    ?? prepared?.Parameters
+                    ?? descriptor.Project(parameters);
                 snapshot = snapshot with { Parameters = projected };
             }
             catch (Exception)
@@ -425,6 +521,164 @@ public sealed partial class CommandRuntime : IDisposable
                     )
                 );
             }
+            if (
+                !suppressShadows
+                && experimentPrepared?.Resolution is ExperimentResolution.Treatment treatment
+                && treatment.Assignment.Role == ExperimentRole.Primary
+                && frozenExperiment?.SafeSnapshot == true
+                && Experiments
+                    is {
+                        Scheduler: not null,
+                        SelectShadows: not null,
+                        ShadowScopeFactory: not null,
+                        ShadowPolicy: not null
+                    } shadowOptions
+            )
+            {
+                try
+                {
+                    var group =
+                        treatment.Assignment.ComparisonGroupId ?? Guid.NewGuid().ToString("N");
+                    var names = shadowOptions.SelectShadows(actor, treatment.Assignment.View);
+                    if (ct.IsCancellationRequested)
+                    {
+                        return new Outcome<TR>.Failed(
+                            new ExecutionFailure.Cancelled(context, snapshot)
+                        );
+                    }
+                    var limit = Math.Clamp(shadowOptions.MaxShadows, 0, 16);
+                    experimentPrepared = experimentPrepared with
+                    {
+                        Evidence = experimentPrepared.Evidence with { ComparisonGroupId = group },
+                    };
+                    snapshot = snapshot with { Experiment = experimentPrepared.Evidence };
+                    foreach (
+                        var name in names
+                            .Distinct(StringComparer.Ordinal)
+                            .Where(name =>
+                                name != treatment.Assignment.VariantId
+                                && treatment.Assignment.View.Variants.ContainsKey(name)
+                                && shadowOptions.ShadowPolicy(
+                                    actor,
+                                    treatment.Assignment.View.Variants[name]
+                                )
+                            )
+                            .Take(limit)
+                    )
+                    {
+                        if (ct.IsCancellationRequested)
+                        {
+                            return new Outcome<TR>.Failed(
+                                new ExecutionFailure.Cancelled(context, snapshot)
+                            );
+                        }
+                        var shadow = new ExperimentResolution.Treatment(
+                            new ExperimentAssignment(
+                                treatment.Assignment.View,
+                                name,
+                                ExperimentRole.Shadow,
+                                group
+                            )
+                        );
+                        var capturedInput = frozenExperiment;
+                        var capturedOptions = shadowOptions;
+                        OutputRef? shadowOutput = null;
+                        capturedOptions.Scheduler.TrySchedule(
+                            new ShadowWork(
+                                async token =>
+                                {
+                                    using var scope =
+                                        capturedOptions.ShadowScopeFactory!.CreateScope();
+                                    var shadowRuntime =
+                                        scope.ServiceProvider.GetRequiredService<CommandRuntime>();
+                                    var shadowLedger =
+                                        scope.ServiceProvider.GetRequiredService<IHumanFeedbackLedger>();
+                                    var shadowRun = shadowLedger.CreateRun(actor);
+                                    if (
+                                        shadowRun == Guid.Empty
+                                        || !shadowLedger.CanAccessRun(shadowRun, actor)
+                                    )
+                                    {
+                                        throw new InvalidOperationException();
+                                    }
+                                    var shadowContext = new CommandExecutionContext(
+                                        Guid.NewGuid(),
+                                        descriptor.Id,
+                                        descriptor.Revision,
+                                        descriptor.DefinitionHash,
+                                        LlmCmdContext.Capture(OperationContext.ForRun(shadowRun))
+                                    );
+                                    var shadowPrepared = await shadowRuntime.PrepareExperimentAsync(
+                                        descriptor,
+                                        capturedInput,
+                                        baseProfile,
+                                        temperature,
+                                        explicitProfile,
+                                        shadowContext,
+                                        actor,
+                                        shadow,
+                                        token
+                                    );
+                                    var result = await shadowRuntime.ExecuteAsync(
+                                        descriptor,
+                                        capturedInput.Input,
+                                        baseProfile,
+                                        temperature,
+                                        shadowContext,
+                                        null,
+                                        caller,
+                                        token,
+                                        frozenExperiment: capturedInput,
+                                        explicitProfile: explicitProfile,
+                                        experimentPrepared: shadowPrepared,
+                                        capturedActor: actor,
+                                        suppressShadows: true
+                                    );
+                                    if (
+                                        result
+                                        is not Outcome<TR>.Success
+                                        {
+                                            Delivery: OutputDelivery.Stored storedShadow
+                                        }
+                                    )
+                                    {
+                                        throw new InvalidOperationException();
+                                    }
+                                    shadowOutput = storedShadow.Output.Reference;
+                                },
+                                capturedOptions.ShadowTimeout ?? TimeSpan.FromSeconds(30),
+                                disposition =>
+                                {
+                                    try
+                                    {
+                                        capturedOptions.ObserveShadow?.Invoke(disposition);
+                                    }
+                                    catch { }
+                                    try
+                                    {
+                                        capturedOptions.ObserveShadowResult?.Invoke(
+                                            new ShadowExecutionResult(
+                                                group,
+                                                name,
+                                                disposition,
+                                                shadowOutput
+                                            )
+                                        );
+                                    }
+                                    catch { }
+                                }
+                            )
+                        );
+                    }
+                }
+                catch
+                { /* A comparison cannot change the primary result. */
+                }
+            }
+            if (ct.IsCancellationRequested)
+            {
+                return new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context, snapshot));
+            }
             ChatResponse response;
             activity?.SetTag("llmcmd.run.id", runId.ToString());
             var messages =
@@ -435,13 +689,20 @@ public sealed partial class CommandRuntime : IDisposable
                         new ChatMessage(ChatRole.System, system),
                         new ChatMessage(ChatRole.User, prompt),
                     };
-            RoutedProfileClient? routed = router?.For(
-                ProfileKey.Declare(profile),
-                context,
-                events,
-                settings.DefaultTemperature,
-                journal
-            );
+            RoutedProfileClient? routed =
+                experimentPrepared?.Route?.For(
+                    context,
+                    events,
+                    settings.DefaultTemperature,
+                    journal
+                )
+                ?? router?.For(
+                    ProfileKey.Declare(profile),
+                    context,
+                    events,
+                    settings.DefaultTemperature,
+                    journal
+                );
             try
             {
                 response = await (
@@ -530,6 +791,16 @@ public sealed partial class CommandRuntime : IDisposable
                 );
             }
 
+            if (experimentPrepared is not null)
+            {
+                snapshot = snapshot with
+                {
+                    Experiment = experimentPrepared.Evidence with
+                    {
+                        Attempts = routed?.Capture?.Attempts,
+                    },
+                };
+            }
             OutputDelivery delivery;
             try
             {
@@ -537,14 +808,31 @@ public sealed partial class CommandRuntime : IDisposable
                 // is for consumers; reserializing it could erase unknown fields
                 // or explicit nulls needed by later audits and field-level grades.
                 using var wire = JsonDocument.Parse(response.Text);
-                var stored = ledger.RecordOutput(
-                    runId,
-                    id,
-                    wire.RootElement,
-                    descriptor.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    activity?.Context ?? default,
-                    actor
-                );
+                var stored = experimentPrepared is null
+                    ? ledger.RecordOutput(
+                        runId,
+                        id,
+                        wire.RootElement,
+                        descriptor.Revision.ToString(
+                            System.Globalization.CultureInfo.InvariantCulture
+                        ),
+                        activity?.Context ?? default,
+                        actor
+                    )
+                    : ledger.RecordProducedOutputWithEvidence(
+                        runId,
+                        new ProducerRef.CommandExecution(id),
+                        wire.RootElement,
+                        descriptor.Revision.ToString(
+                            System.Globalization.CultureInfo.InvariantCulture
+                        ),
+                        activity?.Context ?? default,
+                        actor,
+                        experimentPrepared.Evidence with
+                        {
+                            Attempts = routed?.Capture?.Attempts,
+                        }
+                    );
                 delivery = stored switch
                 {
                     LedgerResult<OutputArtifact>.Accepted ok => new OutputDelivery.Stored(ok.Value),

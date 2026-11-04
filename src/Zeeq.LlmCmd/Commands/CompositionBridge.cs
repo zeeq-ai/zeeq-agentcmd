@@ -35,15 +35,21 @@ internal sealed record InvocationIdentity(
 public sealed partial class Invocation<TP, TR>
 {
     readonly PreparedCommandInput? prepared;
+    readonly FrozenExperimentInput<TP>? frozenExperiment;
 
     private Invocation(
         CommandRuntime runtime,
         PromptDescriptor<TP, TR> descriptor,
         TP parameters,
         InvocationState state,
-        PreparedCommandInput? prepared
+        PreparedCommandInput? prepared,
+        FrozenExperimentInput<TP>? frozenExperiment = null
     )
-        : this(runtime, descriptor, parameters, state) => this.prepared = prepared;
+        : this(runtime, descriptor, parameters, state)
+    {
+        this.prepared = prepared;
+        this.frozenExperiment = frozenExperiment;
+    }
 
     internal CommandRuntime RuntimeOwner => runtime;
     internal JsonTypeInfo<TR> ResultContract =>
@@ -61,6 +67,42 @@ public sealed partial class Invocation<TP, TR>
         if (prepared is not null)
         {
             return this;
+        }
+
+        if (runtime.Experiments is not null && descriptor.RuntimeBinding is not null)
+        {
+            try
+            {
+                var experiment = runtime.FreezeExperimentInput(descriptor, parameters);
+                return new(
+                    runtime,
+                    descriptor,
+                    experiment.Input,
+                    state,
+                    new(
+                        experiment.Prompt,
+                        experiment.System,
+                        experiment.Parameters,
+                        experiment.Invalid,
+                        Settings: runtime.FreezeSettings(
+                            descriptor,
+                            state.Profile,
+                            state.Temperature
+                        )
+                    ),
+                    experiment
+                );
+            }
+            catch
+            {
+                return new(
+                    runtime,
+                    descriptor,
+                    parameters,
+                    state,
+                    new(null, null, Array.Empty<ParameterRecord>(), HookPhase: "ExperimentFreeze")
+                );
+            }
         }
 
         var records = Array.Empty<ParameterRecord>();
@@ -181,6 +223,71 @@ public sealed partial class Invocation<TP, TR>
         );
     }
 
+    internal async ValueTask<PreparedExperiment<TP>> PrepareCompositionExperimentAsync(
+        ExperimentDraftPin pin,
+        OperationContext operation,
+        Actor actor,
+        CancellationToken ct,
+        string? shadowGroup = null
+    )
+    {
+        if (frozenExperiment is null)
+        {
+            throw new InvalidOperationException("Frozen experiment input unavailable");
+        }
+        ExperimentResolution resolution;
+        if (pin.Snapshot is { } snapshot && snapshot.TryGetCommand(descriptor.Id, out var view))
+        {
+            if (!pin.Assignments.TryGetValue(descriptor.Id, out var encoded))
+            {
+                throw new InvalidOperationException("Pinned assignment unavailable");
+            }
+            var choice = CompositionExperimentChoices.Decode(encoded, view!);
+            resolution = choice switch
+            {
+                ExperimentChoice.Chosen chosen => new ExperimentResolution.Treatment(
+                    chosen.Assignment
+                ),
+                ExperimentChoice.UseDefault chosen => new ExperimentResolution.ConfiguredDefault(
+                    runtime.GetConfiguredExperimentDefault(descriptor),
+                    chosen.Reason
+                ),
+                _ => throw new InvalidOperationException("Pinned assignment invalid"),
+            };
+        }
+        else
+        {
+            resolution = new ExperimentResolution.ConfiguredDefault(
+                runtime.GetConfiguredExperimentDefault(descriptor),
+                pin.DefaultReason ?? ExperimentFallbackReason.NoOverride
+            );
+        }
+        var context = new CommandExecutionContext(
+            Guid.NewGuid(),
+            descriptor.Id,
+            descriptor.Revision,
+            descriptor.DefinitionHash,
+            LlmCmdContext.Capture(operation),
+            null,
+            null
+        );
+        return await runtime
+            .PrepareExperimentAsync(
+                descriptor,
+                frozenExperiment,
+                state.Profile,
+                state.Temperature,
+                state.ProfileExplicit,
+                context,
+                actor,
+                resolution,
+                ct,
+                prepared?.Settings,
+                shadowGroup
+            )
+            .ConfigureAwait(false);
+    }
+
     internal Task<Outcome<TR>> ExecuteComponentAsync(
         OperationContext operation,
         Guid executionId,
@@ -197,7 +304,9 @@ public sealed partial class Invocation<TP, TR>
         Guid stepId,
         CallSite caller,
         IExecutionJournal? journal,
-        CancellationToken ct
+        CancellationToken ct,
+        PreparedExperiment<TP>? experiment = null,
+        Actor? actor = null
     )
     {
         var frozen = FreezeForComposition();
@@ -235,7 +344,12 @@ public sealed partial class Invocation<TP, TR>
             caller,
             ct,
             journal,
-            frozen.prepared
+            frozen.prepared,
+            frozenExperiment: frozen.frozenExperiment,
+            explicitProfile: state.ProfileExplicit,
+            experimentPrepared: experiment,
+            capturedActor: actor,
+            suppressShadows: true
         );
     }
 }

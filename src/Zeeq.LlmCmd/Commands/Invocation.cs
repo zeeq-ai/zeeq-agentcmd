@@ -18,7 +18,8 @@ public sealed partial class Invocation<TP, TR>
         float? Temperature = null,
         OperationContext? Context = null,
         bool Suppressed = false,
-        string? Error = null
+        string? Error = null,
+        bool ProfileExplicit = false
     );
 
     readonly CommandRuntime runtime;
@@ -56,7 +57,7 @@ public sealed partial class Invocation<TP, TR>
     public Invocation<TP, TR> WithProfile(string name) =>
         string.IsNullOrWhiteSpace(name)
             ? Error("profile_invalid")
-            : Copy(state with { Profile = name });
+            : Copy(state with { Profile = name, ProfileExplicit = true });
 
     /// <summary>Returns an invocation using the declared profile key.</summary>
     public Invocation<TP, TR> WithProfile(ProfileKey key) =>
@@ -133,15 +134,30 @@ public sealed partial class Invocation<TP, TR>
             descriptor.DefinitionHash,
             captured
         );
+        FrozenExperimentInput<TP>? frozen = null;
+        var error = state.Error;
+        if (runtime.Experiments is not null)
+        {
+            try
+            {
+                frozen = runtime.FreezeExperimentInput(descriptor, parameters);
+            }
+            catch
+            {
+                error ??= "experiment_input_freeze_failed";
+            }
+        }
         return runtime.ExecuteAsync(
             descriptor,
             parameters,
             state.Profile,
             state.Temperature,
             context,
-            state.Error,
+            error,
             new(member, file, line),
-            ct
+            ct,
+            frozenExperiment: frozen,
+            explicitProfile: state.ProfileExplicit
         );
     }
 }

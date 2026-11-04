@@ -149,7 +149,9 @@ sealed record CompositionPlan<TWhole>(
     DraftRecord? Draft,
     CompositeOutcome<TWhole>? Early,
     IReadOnlyList<SlotRegistration> Registrations,
-    IReadOnlyList<string> Problems
+    IReadOnlyList<string> Problems,
+    ExperimentDraftPin? ShadowPin = null,
+    string? ShadowGroup = null
 );
 
 /// <summary>Deferred composition plan for assembling and publishing a typed whole.</summary>
@@ -163,6 +165,8 @@ public sealed class CompositionRoot<TWhole>
     readonly object gate = new();
     readonly List<SlotRegistration> registrations = [];
     readonly List<string> problems = [];
+    ExperimentDraftPin? shadowPin;
+    string? shadowGroup;
     TaskCompletionSource<CompositeOutcome<TWhole>>? execution;
 
     internal CompositionRoot(
@@ -179,6 +183,19 @@ public sealed class CompositionRoot<TWhole>
         this.draft = draft;
         this.early = early;
         Steps = new(descriptor);
+    }
+
+    internal void SetShadowPin(ExperimentDraftPin pin, string group)
+    {
+        lock (gate)
+        {
+            if (execution is not null || shadowPin is not null)
+            {
+                throw new InvalidOperationException("Shadow pin already set");
+            }
+            shadowPin = pin;
+            shadowGroup = group;
+        }
     }
 
     /// <summary>Typed references used to declare dependencies between slots.</summary>
@@ -324,7 +341,9 @@ public sealed class CompositionRoot<TWhole>
                 draft,
                 early,
                 registrations.ToArray(),
-                problems.ToArray()
+                problems.ToArray(),
+                shadowPin,
+                shadowGroup
             );
         }
         if (first)

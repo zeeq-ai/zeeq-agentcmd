@@ -70,6 +70,38 @@ public sealed class InMemoryFeedbackLedger : IHumanFeedbackLedger
         string schemaVersion,
         ActivityContext origin,
         Actor actor
+    ) => RecordProducedOutputCore(runId, producer, value, schemaVersion, origin, actor, null);
+
+    /// <inheritdoc/>
+    public LedgerResult<OutputArtifact> RecordProducedOutputWithEvidence(
+        Guid runId,
+        ProducerRef producer,
+        JsonElement value,
+        string schemaVersion,
+        ActivityContext origin,
+        Actor actor,
+        ExperimentEvidence evidence
+    ) =>
+        RecordProducedOutputCore(
+            runId,
+            producer,
+            value,
+            schemaVersion,
+            origin,
+            actor,
+            evidence,
+            requireEvidence: true
+        );
+
+    LedgerResult<OutputArtifact> RecordProducedOutputCore(
+        Guid runId,
+        ProducerRef producer,
+        JsonElement value,
+        string schemaVersion,
+        ActivityContext origin,
+        Actor actor,
+        ExperimentEvidence? evidence,
+        bool requireEvidence = false
     )
     {
         lock (gate)
@@ -85,11 +117,30 @@ public sealed class InMemoryFeedbackLedger : IHumanFeedbackLedger
                 || producer is ProducerRef.HumanCorrection
                 || string.IsNullOrWhiteSpace(schemaVersion)
                 || !JsonPointer.HasUniqueKeys(value)
+                || requireEvidence && evidence is null
             )
             {
                 return Reject<OutputArtifact>(
                     "invalid_output",
                     "Output needs a producer, schema version and unambiguous JSON"
+                );
+            }
+
+            ExperimentEvidence? snapshot;
+            try
+            {
+                snapshot = evidence is null ? null : SnapshotEvidence(evidence);
+            }
+            catch (Exception error)
+                when (error
+                        is ArgumentException
+                            or InvalidOperationException
+                            or NullReferenceException
+                )
+            {
+                return Reject<OutputArtifact>(
+                    "invalid_evidence",
+                    "Evidence contains invalid values"
                 );
             }
 
@@ -103,6 +154,7 @@ public sealed class InMemoryFeedbackLedger : IHumanFeedbackLedger
                 return
                     existing.SchemaVersion == schemaVersion
                     && JsonElement.DeepEquals(existing.Value, value)
+                    && EvidenceEquals(existing.Evidence, snapshot)
                     ? new LedgerResult<OutputArtifact>.Accepted(existing, true)
                     : Reject<OutputArtifact>(
                         "conflict",
@@ -116,7 +168,8 @@ public sealed class InMemoryFeedbackLedger : IHumanFeedbackLedger
                 value.Clone(),
                 schemaVersion,
                 TraceAnchor.From(origin),
-                null
+                null,
+                snapshot
             );
             outputs.Add(reference.VersionId, artifact);
             return new LedgerResult<OutputArtifact>.Accepted(artifact);
@@ -301,7 +354,8 @@ public sealed class InMemoryFeedbackLedger : IHumanFeedbackLedger
                 corrected,
                 output.SchemaVersion,
                 output.Origin,
-                output.Reference.VersionId
+                output.Reference.VersionId,
+                output.Evidence
             );
             using var activity = StartFeedback(
                 "correction",
@@ -327,6 +381,93 @@ public sealed class InMemoryFeedbackLedger : IHumanFeedbackLedger
             return new LedgerResult<CorrectionReceipt>.Accepted(receipt);
         }
     }
+
+    // Lists and JSON values must not remain owned by the caller after the atomic write.
+    static ExperimentEvidence SnapshotEvidence(ExperimentEvidence evidence)
+    {
+        var parameters = evidence
+            .Parameters?.Select(parameter =>
+            {
+                ArgumentNullException.ThrowIfNull(parameter);
+                if (
+                    parameter.Value.ValueKind == JsonValueKind.Undefined
+                    || !JsonPointer.HasUniqueKeys(parameter.Value)
+                )
+                {
+                    throw new ArgumentException("Invalid parameter JSON");
+                }
+                return parameter with { Value = parameter.Value.Clone() };
+            })
+            .ToArray();
+        var attempts = evidence.Attempts?.ToArray();
+        var members = evidence.Members?.ToArray();
+        var compositionMembers = evidence.CompositionMembers?.ToArray();
+        if (
+            attempts?.Any(item => item is null) == true
+            || members?.Any(item => item is null) == true
+            || compositionMembers?.Any(item => item is null || item.Output is null) == true
+        )
+        {
+            throw new ArgumentException("Invalid evidence collection");
+        }
+        return evidence with
+        {
+            Parameters = parameters is null ? null : Array.AsReadOnly(parameters),
+            Attempts = attempts is null ? null : Array.AsReadOnly(attempts),
+            Members = members is null ? null : Array.AsReadOnly(members),
+            CompositionMembers = compositionMembers is null
+                ? null
+                : Array.AsReadOnly(compositionMembers),
+        };
+    }
+
+    static bool EvidenceEquals(ExperimentEvidence? left, ExperimentEvidence? right)
+    {
+        if (left is null || right is null)
+        {
+            return left is null && right is null;
+        }
+        if (
+            left with
+            {
+                Parameters = null,
+                Attempts = null,
+                Members = null,
+                CompositionMembers = null,
+            }
+            != right with
+            {
+                Parameters = null,
+                Attempts = null,
+                Members = null,
+                CompositionMembers = null,
+            }
+        )
+        {
+            return false;
+        }
+        if (
+            !SequenceEquals(left.Attempts, right.Attempts)
+            || !SequenceEquals(left.Members, right.Members)
+            || !SequenceEquals(left.CompositionMembers, right.CompositionMembers)
+        )
+        {
+            return false;
+        }
+        if (left.Parameters is null || right.Parameters is null)
+        {
+            return left.Parameters is null && right.Parameters is null;
+        }
+        return left.Parameters.Count == right.Parameters.Count
+            && left.Parameters.Zip(right.Parameters)
+                .All(pair =>
+                    pair.First with { Value = default } == pair.Second with { Value = default }
+                    && JsonElement.DeepEquals(pair.First.Value, pair.Second.Value)
+                );
+    }
+
+    static bool SequenceEquals<T>(IReadOnlyList<T>? left, IReadOnlyList<T>? right) =>
+        left is null || right is null ? left is null && right is null : left.SequenceEqual(right);
 
     static bool ValidActor(Actor? actor) =>
         actor is not null

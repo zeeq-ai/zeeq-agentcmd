@@ -26,6 +26,7 @@ internal static class AnalyzerHarness
             public sealed class ProfileKey { }
             public sealed class ProfileDefaults { }
             public sealed class RetryPolicy { }
+            public sealed class ExperimentRuntimeOptions { }
             public enum FailureKind { Permanent }
             public sealed class LlmCmdBuilder
             {
@@ -35,6 +36,8 @@ internal static class AnalyzerHarness
                 public LlmCmdBuilder AddProfile(ProfileKey key, string model, float? temperature = null) => this;
                 public LlmCmdBuilder AddProfile(string name, string client, string model, ProfileDefaults? defaults = null, RetryPolicy? retry = null, ProfileKey? fallback = null, System.TimeSpan? attemptTimeout = null) => this;
                 public LlmCmdBuilder AddProfile(ProfileKey key, string client, string model, ProfileDefaults? defaults = null, RetryPolicy? retry = null, ProfileKey? fallback = null, System.TimeSpan? attemptTimeout = null) => this;
+                public LlmCmdBuilder UseExperiments(ExperimentRuntimeOptions options) => this;
+                public LlmCmdBuilder UseExperiments(System.Func<System.IServiceProvider, ExperimentRuntimeOptions> factory) => this;
             }
             public static class LlmCmdServiceCollectionExtensions
             {

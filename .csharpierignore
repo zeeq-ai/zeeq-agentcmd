@@ -19,3 +19,5 @@ src/Zeeq.LlmCmd.OpenTelemetry/Targets.cs
 src/Zeeq.LlmCmd.OpenTelemetry/Propagation/PropagationAdapter.cs
 src/Zeeq.LlmCmd/Commands/Composition/CompositionStore.cs
 src/Zeeq.LlmCmd/Evaluation/Contracts.cs
+src/Zeeq.LlmCmd/Experiments/SourceContracts.cs
+src/Zeeq.LlmCmd/Experiments/CatalogView.cs

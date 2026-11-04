@@ -33,7 +33,9 @@ sealed record RunScope(
     int Revision,
     string DefinitionHash,
     string InputRevision,
-    string? TrialId
+    string? TrialId,
+    ExperimentDraftPin? ExperimentPin = null,
+    string? ShadowGroup = null
 );
 
 sealed class CompositionEngine(
@@ -41,7 +43,8 @@ sealed class CompositionEngine(
     Func<Actor> actorProvider,
     ICompositionStore store,
     TimeProvider clock,
-    IExecutionEventSink? events = null
+    IExecutionEventSink? events = null,
+    CommandRuntime? runtime = null
 )
 {
     // Highest stored outbox sequence already projected to the runtime event sink, per draft. A second Execute projects only what is new.
@@ -91,7 +94,7 @@ sealed class CompositionEngine(
         CompositeOutcome<TWhole> outcome;
         try
         {
-            outcome = await CoreAsync(plan, ct).ConfigureAwait(false);
+            outcome = await CoreAsync(plan, root?.Context, ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -381,9 +384,11 @@ sealed class CompositionEngine(
 
     async Task<CompositeOutcome<TWhole>> CoreAsync<TWhole>(
         CompositionPlan<TWhole> plan,
+        OperationContext? rootContext,
         CancellationToken ct
     )
     {
+        var capturedRoot = rootContext is null ? null : LlmCmdContext.Capture(rootContext);
         if (plan.Early is not null)
         {
             return plan.Early;
@@ -432,6 +437,251 @@ sealed class CompositionEngine(
             );
         }
 
+        if (
+            plan.ShadowPin is not null
+            && plan.Registrations.Any(registration => registration.Kind == RegistrationKind.Reuse)
+        )
+        {
+            return new CompositeOutcome<TWhole>.ConfigurationFailure(
+                ["shadow_reuse_forbidden"],
+                draftId,
+                plan.Request
+            );
+        }
+
+        ExperimentDraftPin? experimentPin = fresh.ExperimentPin;
+        if (runtime?.Experiments is { } experimentOptions)
+        {
+            if (rootContext is null || capturedRoot is null)
+            {
+                return new CompositeOutcome<TWhole>.Unavailable(
+                    draftId,
+                    "experiment_context_invalid",
+                    []
+                );
+            }
+            if (string.IsNullOrWhiteSpace(experimentOptions.DefaultConfigurationFingerprint))
+            {
+                return new CompositeOutcome<TWhole>.Unavailable(
+                    draftId,
+                    "experiment_default_identity_missing",
+                    []
+                );
+            }
+            try
+            {
+                if (experimentPin is null && plan.ShadowPin is not null)
+                {
+                    var pinnedShadow = await store
+                        .PinExperimentAsync(draftId, plan.ShadowPin, ct)
+                        .ConfigureAwait(false);
+                    experimentPin = pinnedShadow switch
+                    {
+                        ExperimentPinResult.Applied applied => applied.Pin,
+                        ExperimentPinResult.Existing existing
+                            when existing.Pin.Fingerprint == plan.ShadowPin.Fingerprint =>
+                            existing.Pin,
+                        _ => null,
+                    };
+                    if (experimentPin is null)
+                    {
+                        return new CompositeOutcome<TWhole>.Unavailable(
+                            draftId,
+                            "shadow_pin_rejected",
+                            []
+                        );
+                    }
+                }
+                if (
+                    plan.ShadowPin is not null
+                    && experimentPin?.Fingerprint != plan.ShadowPin.Fingerprint
+                )
+                {
+                    return new CompositeOutcome<TWhole>.Unavailable(
+                        draftId,
+                        "shadow_pin_conflict",
+                        []
+                    );
+                }
+                if (experimentPin is null)
+                {
+                    if (!ExperimentLookup.TryCreate(actor!.Tenant, null, out var lookup))
+                    {
+                        return new CompositeOutcome<TWhole>.Unavailable(
+                            draftId,
+                            "experiment_partition_invalid",
+                            []
+                        );
+                    }
+                    var unit = experimentOptions.AssignmentUnit?.Invoke(actor);
+                    var loaded = await experimentOptions
+                        .Resolver.LoadAsync(lookup!, ct)
+                        .ConfigureAwait(false);
+                    ExperimentDraftPin candidate;
+                    if (loaded is ExperimentSnapshotResult.Loaded available)
+                    {
+                        var selected = await experimentOptions
+                            .Resolver.PreselectAsync(
+                                lookup!,
+                                available.Snapshot,
+                                capturedRoot,
+                                actor.Subject,
+                                unit,
+                                ct
+                            )
+                            .ConfigureAwait(false);
+                        if (
+                            selected
+                                .Choices.Values.OfType<ExperimentChoice.Chosen>()
+                                .Any(choice => choice.Assignment.Role != ExperimentRole.Primary)
+                        )
+                        {
+                            // A returned whole is a primary exposure, never a shadow comparison.
+                            candidate = ExperimentDraftPin.ForDefault(
+                                ExperimentFallbackReason.InvalidRelease,
+                                actor.Tenant,
+                                experimentOptions.DefaultConfigurationFingerprint,
+                                unit
+                            );
+                        }
+                        else
+                        {
+                            var assignments = selected.Choices.ToDictionary(
+                                pair => pair.Key,
+                                pair => CompositionExperimentChoices.Encode(pair.Value),
+                                StringComparer.Ordinal
+                            );
+                            candidate = ExperimentDraftPin.ForSnapshot(
+                                selected.Snapshot,
+                                actor.Tenant,
+                                unit,
+                                experimentOptions.DefaultConfigurationFingerprint,
+                                assignments
+                            );
+                        }
+                    }
+                    else
+                    {
+                        candidate = ExperimentDraftPin.ForDefault(
+                            ((ExperimentSnapshotResult.Unavailable)loaded).Reason,
+                            actor.Tenant,
+                            experimentOptions.DefaultConfigurationFingerprint,
+                            unit
+                        );
+                    }
+                    // Known direct inputs are validated before publication. If a treatment is invalid,
+                    // select one complete configured-default view before any claim or provider send.
+                    if (
+                        !await DirectInputsValid(
+                                candidate,
+                                plan.Registrations,
+                                runtime,
+                                actor,
+                                rootContext,
+                                ct
+                            )
+                            .ConfigureAwait(false)
+                    )
+                    {
+                        if (candidate.Snapshot is null)
+                        {
+                            return new CompositeOutcome<TWhole>.Unavailable(
+                                draftId,
+                                "experiment_default_invalid",
+                                []
+                            );
+                        }
+                        candidate = ExperimentDraftPin.ForDefault(
+                            ExperimentFallbackReason.InvalidRelease,
+                            actor.Tenant,
+                            experimentOptions.DefaultConfigurationFingerprint,
+                            unit
+                        );
+                        if (
+                            !await DirectInputsValid(
+                                    candidate,
+                                    plan.Registrations,
+                                    runtime,
+                                    actor,
+                                    rootContext,
+                                    ct
+                                )
+                                .ConfigureAwait(false)
+                        )
+                        {
+                            return new CompositeOutcome<TWhole>.Unavailable(
+                                draftId,
+                                "experiment_default_invalid",
+                                []
+                            );
+                        }
+                    }
+                    var pinned = await store
+                        .PinExperimentAsync(draftId, candidate, ct)
+                        .ConfigureAwait(false);
+                    experimentPin = pinned switch
+                    {
+                        ExperimentPinResult.Applied applied => applied.Pin,
+                        ExperimentPinResult.Existing existing => existing.Pin,
+                        _ => null,
+                    };
+                    if (
+                        experimentPin is null
+                        && pinned is ExperimentPinResult.Rejected { Code: "draft_sealed" }
+                    )
+                    {
+                        // The winner may have sealed between our read and CAS. Its retained pin is still authoritative.
+                        experimentPin = (
+                            await store.GetDraftAsync(draftId, ct).ConfigureAwait(false)
+                        )?.ExperimentPin;
+                    }
+                    if (experimentPin is null)
+                    {
+                        return new CompositeOutcome<TWhole>.Unavailable(
+                            draftId,
+                            "experiment_pin_rejected",
+                            []
+                        );
+                    }
+                }
+                if (
+                    experimentPin.Partition != actor!.Tenant
+                    || (
+                        experimentPin.Snapshot is null
+                            ? experimentPin.DefaultConfigurationFingerprint
+                            : experimentPin.AssignmentId
+                    ) != experimentOptions.DefaultConfigurationFingerprint
+                )
+                {
+                    return new CompositeOutcome<TWhole>.Unavailable(
+                        draftId,
+                        "experiment_default_identity_changed",
+                        []
+                    );
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return new CompositeOutcome<TWhole>.Unavailable(
+                    draftId,
+                    "experiment_pin_unavailable",
+                    []
+                );
+            }
+        }
+        else if (experimentPin is not null)
+        {
+            return new CompositeOutcome<TWhole>.Unavailable(
+                draftId,
+                "experiment_runtime_unavailable",
+                []
+            );
+        }
+
         var scope = new RunScope(
             actor!,
             draftId,
@@ -440,7 +690,9 @@ sealed class CompositionEngine(
             descriptor.Revision,
             descriptor.DefinitionHash,
             plan.Request.InputRevision,
-            plan.Request.TrialId
+            plan.Request.TrialId,
+            experimentPin,
+            plan.ShadowGroup
         );
 
         // Slots already attached by an earlier handle are known facts: dependents may use them without any claim.
@@ -493,6 +745,50 @@ sealed class CompositionEngine(
         {
             return new CompositeOutcome<TWhole>.Unavailable(draftId, "engine_failure", steps);
         }
+    }
+
+    private static async Task<bool> DirectInputsValid(
+        ExperimentDraftPin candidate,
+        IReadOnlyList<SlotRegistration> registrations,
+        CommandRuntime runtime,
+        Actor actor,
+        OperationContext rootContext,
+        CancellationToken ct
+    )
+    {
+        foreach (
+            var registration in registrations.Where(r =>
+                r.Kind == RegistrationKind.Execute && r.Source is { Dependencies.Count: 0 }
+            )
+        )
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                var call = registration.Source!.Build(
+                    new Dictionary<string, DependencyInput>(StringComparer.Ordinal)
+                );
+                if (!ReferenceEquals(call.Runtime, runtime) || !call.UsesExperiments)
+                {
+                    return false;
+                }
+                var prepared = await call.PrepareExperimentAsync(candidate, rootContext, actor, ct)
+                    .ConfigureAwait(false);
+                if (prepared.ExperimentInvalid)
+                {
+                    return false;
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     async Task<CompositeOutcome<TWhole>> CompleteAsync<TWhole>(
@@ -864,6 +1160,56 @@ sealed class CompositionEngine(
             return prepared.Failure;
         }
 
+        if (prepared.Call is { } call)
+        {
+            if (scope.ExperimentPin is { } pin)
+            {
+                if (
+                    runtime is null
+                    || !ReferenceEquals(call.Runtime, runtime)
+                    || !call.UsesExperiments
+                )
+                {
+                    return new(
+                        new(id, StepStatus.Failed, stepId, Code: "experiment_runtime_mismatch"),
+                        null
+                    );
+                }
+                try
+                {
+                    prepared = prepared with
+                    {
+                        Call = await call.PrepareExperimentAsync(
+                                pin,
+                                operation,
+                                scope.Actor,
+                                ct,
+                                scope.ShadowGroup
+                            )
+                            .ConfigureAwait(false),
+                    };
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception)
+                {
+                    return new(
+                        new(id, StepStatus.Failed, stepId, Code: "pinned_experiment_invalid"),
+                        null
+                    );
+                }
+            }
+            else if (call.UsesExperiments)
+            {
+                return new(
+                    new(id, StepStatus.Failed, stepId, Code: "experiment_runtime_missing"),
+                    null
+                );
+            }
+        }
+
         var intent = new SlotIntent(reg.Kind, prepared.Call?.Fingerprint, reg.Pinned);
 
         for (var round = 0; ; round++)
@@ -1228,6 +1574,26 @@ sealed class CompositionEngine(
                     Infrastructure: true
                 );
             }
+            if (scope.ExperimentPin is not null && run.Kind == ComponentKind.Stored)
+            {
+                var evidence = Read(run.Output!, scope.Actor).Artifact?.Evidence;
+                if (evidence is null)
+                {
+                    // The model may have spent; keep the claim pending rather than making this send retryable.
+                    return new(
+                        new(
+                            id,
+                            StepStatus.Pending,
+                            stepId,
+                            observed,
+                            run.Output,
+                            "output_evidence_unavailable"
+                        ),
+                        null,
+                        Infrastructure: true
+                    );
+                }
+            }
             switch (run.Kind)
             {
                 case ComponentKind.Stored when run.Output!.RunId == scope.RunId:
@@ -1418,9 +1784,38 @@ sealed class CompositionEngine(
         // The ledger read is the authorization for returning the whole.
         if (latest.Status == DraftStatus.Sealed && latest.Aggregate is { } sealedAggregate)
         {
-            return Read(sealedAggregate.Reference.Output, actor).Artifact is null
-                ? new(null, null, "unavailable", "aggregate_unreadable", null, false)
-                : Parse(descriptor, sealedAggregate, replayed: true);
+            var authoritative = Read(sealedAggregate.Reference.Output, actor).Artifact;
+            if (authoritative is null)
+            {
+                return new(null, null, "unavailable", "aggregate_unreadable", null, false);
+            }
+            if (
+                latest.ExperimentPin is not null
+                && (
+                    authoritative.Evidence?.CompositionMembers is not { } manifest
+                    || !manifest.SequenceEqual(sealedAggregate.Members)
+                )
+            )
+            {
+                return new(
+                    null,
+                    null,
+                    "unavailable",
+                    "aggregate_evidence_unavailable",
+                    null,
+                    false
+                );
+            }
+            // The ledger's exact authorized output is what later grading reads. A separate store's
+            // stale or corrupt JSON must never substitute another value during replay.
+            return Parse(
+                descriptor,
+                sealedAggregate with
+                {
+                    Json = authoritative.Value.GetRawText(),
+                },
+                replayed: true
+            );
         }
 
         var members = new List<CompositeMember>();
@@ -1479,20 +1874,71 @@ sealed class CompositionEngine(
         try
         {
             using var document = JsonDocument.Parse(json);
-            var recorded = ledger.RecordProducedOutput(
-                scope.RunId,
-                new ProducerRef.Composition(scope.DraftId),
-                document.RootElement.Clone(),
-                scope.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                default(ActivityContext),
-                actor
-            );
+            var producer = new ProducerRef.Composition(scope.DraftId);
+            var recorded = scope.ExperimentPin is { } pin
+                ? ledger.RecordProducedOutputWithEvidence(
+                    scope.RunId,
+                    producer,
+                    document.RootElement.Clone(),
+                    scope.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    default(ActivityContext),
+                    actor,
+                    new ExperimentEvidence(
+                        "composition",
+                        Revision: pin.Snapshot?.Revision.Value,
+                        Reason: pin.DefaultReason?.ToString(),
+                        Role: scope.ShadowGroup is null
+                            ? ExperimentRole.Primary
+                            : ExperimentRole.Shadow,
+                        ComparisonGroupId: scope.ShadowGroup
+                            ?? CompositionExperimentChoices.PrimaryGroup(pin),
+                        Members: members.Select(member => member.Output).ToArray(),
+                        CompositionMembers: members.ToArray(),
+                        CommandId: descriptor.Id,
+                        CommandRevision: descriptor.Revision,
+                        DefinitionHash: descriptor.DefinitionHash
+                    )
+                )
+                : ledger.RecordProducedOutput(
+                    scope.RunId,
+                    producer,
+                    document.RootElement.Clone(),
+                    scope.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    default(ActivityContext),
+                    actor
+                );
             if (recorded is not LedgerResult<OutputArtifact>.Accepted ok)
             {
                 return new(null, null, "unavailable", "aggregate_not_stored", null, false);
             }
 
             stored = ok.Value;
+            if (
+                stored.Reference.RunId != scope.RunId
+                || stored.Reference.Producer is not ProducerRef.Composition composition
+                || composition.Id != scope.DraftId
+                || stored.Value.GetRawText() != json
+            )
+            {
+                return new(null, null, "unavailable", "aggregate_value_mismatch", null, false);
+            }
+            if (
+                scope.ExperimentPin is not null
+                && (
+                    stored.Evidence?.CompositionMembers is not { } recordedMembers
+                    || !recordedMembers.SequenceEqual(members)
+                )
+            )
+            {
+                return new(
+                    null,
+                    null,
+                    "unavailable",
+                    "aggregate_evidence_unavailable",
+                    null,
+                    false
+                );
+            }
         }
         catch (Exception)
         {
@@ -1528,7 +1974,7 @@ sealed class CompositionEngine(
             SealResult.Sealed => Parse(descriptor, aggregate, replayed: false),
             SealResult.AlreadySealed s when s.Draft.Aggregate is { } winner =>
                 winner.Members.SequenceEqual(members)
-                    ? Parse(descriptor, winner, replayed: true)
+                    ? await FinishCoreAsync(scope, descriptor, s.Draft, actor).ConfigureAwait(false)
                     : new(
                         null,
                         null,

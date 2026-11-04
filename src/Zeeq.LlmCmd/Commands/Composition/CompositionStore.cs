@@ -1,4 +1,7 @@
 using System.Collections.Immutable;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 namespace Zeeq.LlmCmd;
 
 // WHY a store SPI at all: the authoritative record of "which exact output fills which slot" must not be derived from
@@ -87,6 +90,256 @@ public static class AggregateProjection
     public const string ExactComponentWire = "component-wire-v1";
 }
 
+/// <summary>
+/// Retained experiment publication or explicit default and host assignment for one draft.
+/// </summary>
+/// <remarks>
+/// The factory detaches source-owned collections and JSON before a pin can enter a store.
+/// Assignment is host supplied and is neither authorization nor evidence of actor identity.
+/// </remarks>
+public sealed class ExperimentDraftPin
+{
+    private ExperimentDraftPin(ExperimentSnapshot? snapshot, ExperimentFallbackReason? defaultReason,
+        string partition, string? unitId, string? assignmentId, IReadOnlyDictionary<string, string>? assignments, string? defaultConfigurationFingerprint)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(partition);
+        Snapshot = snapshot is null ? null : CopySnapshot(snapshot);
+        DefaultReason = defaultReason;
+        DefaultConfigurationFingerprint = defaultConfigurationFingerprint;
+        Partition = partition;
+        UnitId = unitId;
+        AssignmentId = assignmentId;
+        Assignments = (assignments ?? ImmutableDictionary<string, string>.Empty)
+            .ToImmutableDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+        if (Assignments.Any(pair => pair.Key is null || pair.Value is null))
+        {
+            throw new ArgumentException("Assignment keys and values are required.", nameof(assignments));
+        }
+        Fingerprint = ComputeFingerprint();
+    }
+
+    /// <summary>Gets the retained complete publication, or null for a configured default.</summary>
+    public ExperimentSnapshot? Snapshot
+    {
+        get;
+    }
+    /// <summary>Gets the reason for selecting the configured default, or null for a publication.</summary>
+    public ExperimentFallbackReason? DefaultReason
+    {
+        get;
+    }
+    /// <summary>Gets the host fingerprint of the complete configured default, or null for a publication.</summary>
+    /// <remarks>The host must retain or verify this exact default identity before executing a replay.</remarks>
+    public string? DefaultConfigurationFingerprint
+    {
+        get;
+    }
+    /// <summary>Gets the host-authorized partition at selection time.</summary>
+    public string Partition
+    {
+        get;
+    }
+    /// <summary>Gets the host-supplied assignment unit, when supplied.</summary>
+    public string? UnitId
+    {
+        get;
+    }
+    /// <summary>Gets a host-supplied assignment identity, when supplied.</summary>
+    public string? AssignmentId
+    {
+        get;
+    }
+    /// <summary>Gets host-selected command or experiment assignments by ordinal key.</summary>
+    public IReadOnlyDictionary<string, string> Assignments
+    {
+        get;
+    }
+    /// <summary>Gets the SHA-256 fingerprint of the entire retained pin and assignment context.</summary>
+    public string Fingerprint
+    {
+        get;
+    }
+
+    /// <summary>Freezes a complete source publication and its host-selected assignments.</summary>
+    /// <param name="snapshot">Complete publication selected before any part runs.</param>
+    /// <param name="partition">Host-authorized source partition.</param>
+    /// <param name="unitId">Host-supplied assignment unit, if any.</param>
+    /// <param name="assignmentId">Host-supplied assignment identity, if any.</param>
+    /// <param name="assignments">Host-selected command or experiment assignments, if any.</param>
+    /// <returns>A detached immutable pin.</returns>
+    public static ExperimentDraftPin ForSnapshot(ExperimentSnapshot snapshot, string partition,
+        string? unitId = null, string? assignmentId = null, IReadOnlyDictionary<string, string>? assignments = null)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        return new(snapshot, null, partition, unitId, assignmentId, assignments, null);
+    }
+
+    /// <summary>Records that the draft selected the complete configured default.</summary>
+    /// <param name="reason">Sanitized reason for selecting the default.</param>
+    /// <param name="partition">Host-authorized source partition.</param>
+    /// <param name="defaultConfigurationFingerprint">Host identity of the complete configured default, retained and checked on replay.</param>
+    /// <param name="unitId">Host-supplied assignment unit, if any.</param>
+    /// <param name="assignmentId">Host-supplied assignment identity, if any.</param>
+    /// <param name="assignments">Host-selected command or experiment assignments, if any.</param>
+    /// <returns>An immutable default pin.</returns>
+    public static ExperimentDraftPin ForDefault(ExperimentFallbackReason reason, string partition,
+        string defaultConfigurationFingerprint, string? unitId = null, string? assignmentId = null,
+        IReadOnlyDictionary<string, string>? assignments = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(defaultConfigurationFingerprint);
+        return new(null, reason, partition, unitId, assignmentId, assignments, defaultConfigurationFingerprint);
+    }
+
+    private static ExperimentSnapshot CopySnapshot(ExperimentSnapshot snapshot)
+    {
+        var commands = snapshot.Commands.ToImmutableDictionary(pair => pair.Key, pair =>
+        {
+            var view = pair.Value;
+            var variants = view.Variants.ToImmutableDictionary(v => v.Key, v => v.Value with
+            {
+                ParameterValues = v.Value.ParameterValues.ToImmutableDictionary(
+                    p => p.Key, p => p.Value.Clone(), StringComparer.Ordinal)
+            }, StringComparer.Ordinal);
+            return view with
+            {
+                Variants = variants
+            };
+        }, StringComparer.Ordinal);
+        return new(snapshot.Revision, commands);
+    }
+
+    // BinaryWriter's length-prefixed UTF-8 preserves field boundaries and explicit nulls.
+    // Ordering every dictionary makes the identity independent of source enumeration order.
+    private string ComputeFingerprint()
+    {
+        using var buffer = new MemoryStream();
+        using (var writer = new BinaryWriter(buffer, Encoding.UTF8, leaveOpen: true))
+        {
+            void Write(string? value)
+            {
+                writer.Write(value is not null);
+                if (value is not null)
+                {
+                    writer.Write(value);
+                }
+            }
+            void Change(TemplateChange change)
+            {
+                switch (change)
+                {
+                    case TemplateChange.Inherited:
+                        writer.Write((byte)0);
+                        break;
+                    case TemplateChange.Removed:
+                        writer.Write((byte)1);
+                        break;
+                    case TemplateChange.Replaced text:
+                        writer.Write((byte)2);
+                        Write(text.Text);
+                        break;
+                    default:
+                        throw new ArgumentException("Unknown template change.");
+                }
+            }
+            void Route(ExecutionProfile? route)
+            {
+                writer.Write(route is not null);
+                if (route is null)
+                {
+                    return;
+                }
+                Write(route.Key.Id);
+                Write(route.Provider);
+                Write(route.Model);
+                Write(route.Temperature is float temperature ? BitConverter.SingleToInt32Bits(temperature).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
+                writer.Write(route.Retry is not null);
+                if (route.Retry is { } retry)
+                {
+                    writer.Write(retry.MaxRetries);
+                    Write(retry.InitialDelay?.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    writer.Write(retry.UseJitter);
+                }
+                Write(route.Fallback?.Id);
+                Write(route.AttemptTimeout?.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                writer.Write(route.Defaults is not null);
+                if (route.Defaults is { } defaults)
+                {
+                    Write(defaults.Temperature is float t ? BitConverter.SingleToInt32Bits(t).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
+                    Write(defaults.MaxOutputTokens?.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    Write(defaults.ReasoningEffort?.ToString());
+                    Write(defaults.TopP is float p ? BitConverter.SingleToInt32Bits(p).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
+                    Write(defaults.TopK?.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    Write(defaults.ReasoningOutput?.ToString());
+                }
+            }
+            Write("composition-experiment-pin-v1");
+            Write(Partition);
+            Write(UnitId);
+            Write(AssignmentId);
+            writer.Write(Assignments.Count);
+            foreach (var pair in Assignments.OrderBy(p => p.Key, StringComparer.Ordinal))
+            {
+                Write(pair.Key);
+                Write(pair.Value);
+            }
+            writer.Write(Snapshot is not null);
+            if (Snapshot is { } snapshot)
+            {
+                Write(snapshot.Revision.Value);
+                writer.Write(snapshot.Commands.Count);
+                foreach (var pair in snapshot.Commands.OrderBy(p => p.Key, StringComparer.Ordinal))
+                {
+                    var view = pair.Value;
+                    Write(pair.Key);
+                    Write(view.CommandId);
+                    writer.Write(view.CommandRevision);
+                    Write(view.ContractSignature);
+                    Write(view.Revision.Value);
+                    Write(view.ExperimentId);
+                    Write(view.ControlVariantId);
+                    writer.Write(view.Variants.Count);
+                    foreach (var item in view.Variants.OrderBy(p => p.Key, StringComparer.Ordinal))
+                    {
+                        var variant = item.Value;
+                        Write(item.Key);
+                        Write(variant.VariantId);
+                        writer.Write(variant.Weight);
+                        Change(variant.Prompt.System);
+                        Change(variant.Prompt.User);
+                        writer.Write(variant.ParameterValues.Count);
+                        foreach (var parameter in variant.ParameterValues.OrderBy(p => p.Key, StringComparer.Ordinal))
+                        {
+                            Write(parameter.Key);
+                            Write(parameter.Value.GetRawText());
+                        }
+                        Route(variant.Route);
+                    }
+                }
+            }
+            else
+            {
+                writer.Write((int)DefaultReason!.Value);
+                Write(DefaultConfigurationFingerprint);
+            }
+        }
+        return Convert.ToHexStringLower(SHA256.HashData(buffer.ToArray()));
+    }
+}
+
+/// <summary>Result of atomically pinning a draft's experiment publication.</summary>
+public closed record ExperimentPinResult
+{
+    /// <summary>This call installed the pin.</summary>
+    /// <param name="Pin">The stored authoritative pin.</param>
+    public sealed record Applied(ExperimentDraftPin Pin) : ExperimentPinResult;
+    /// <summary>Another call already installed the authoritative pin.</summary>
+    /// <param name="Pin">The existing authoritative pin.</param>
+    public sealed record Existing(ExperimentDraftPin Pin) : ExperimentPinResult;
+    /// <summary>The store refused the transition.</summary>
+    /// <param name="Code">Bounded machine-readable reason.</param>
+    public sealed record Rejected(string Code) : ExperimentPinResult;
+}
+
 /// <summary>Immutable state and outbox snapshot of a composition draft.</summary>
 /// <param name="DraftId">Stable draft identifier.</param>
 /// <param name="Key">Idempotency identity.</param>
@@ -98,9 +351,10 @@ public static class AggregateProjection
 /// <param name="Slots">Slot state by slot key.</param>
 /// <param name="Aggregate">Sealed aggregate, if any.</param>
 /// <param name="Events">Append-only transition events.</param>
+/// <param name="ExperimentPin">Retained publication or default selection, when pinned.</param>
 public sealed record DraftRecord(Guid DraftId, DraftKey Key, int Revision, string DefinitionHash, int Generation,
     DraftStatus Status, long Version, IReadOnlyDictionary<string, SlotRecord> Slots,
-    AggregateArtifact? Aggregate, IReadOnlyList<CompositionOutboxEvent> Events);
+    AggregateArtifact? Aggregate, IReadOnlyList<CompositionOutboxEvent> Events, ExperimentDraftPin? ExperimentPin = null);
 
 /// <summary>Request to open or replay a draft.</summary>
 /// <param name="Key">Idempotency identity.</param>
@@ -211,6 +465,16 @@ public interface ICompositionStore
     ValueTask<OpenDraftResult> OpenDraftAsync(OpenDraft request, CancellationToken ct);
     /// <summary>Reads the current immutable draft snapshot, or null if absent.</summary>
     ValueTask<DraftRecord?> GetDraftAsync(Guid draftId, CancellationToken ct);
+    /// <summary>Atomically installs the first experiment pin, or returns the existing authoritative pin.</summary>
+    /// <param name="draftId">Draft to pin before any slot claim.</param>
+    /// <param name="candidate">Detached candidate publication or configured default.</param>
+    /// <param name="ct">Caller cancellation.</param>
+    /// <returns>The applied or existing pin, or a rejection.</returns>
+    ValueTask<ExperimentPinResult> PinExperimentAsync(Guid draftId, ExperimentDraftPin candidate, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        return ValueTask.FromResult<ExperimentPinResult>(new ExperimentPinResult.Rejected("experiment_pin_unsupported"));
+    }
     /// <summary>Atomically reserves a slot or reports its existing state.</summary>
     ValueTask<ClaimResult> ClaimSlotAsync(ClaimSlot request, CancellationToken ct);
     /// <summary>Attaches an exact output if the step still owns the claim.</summary>
@@ -236,6 +500,7 @@ public sealed class InMemoryCompositionStore(TimeProvider? clock = null) : IComp
         public DraftStatus Status; public long Version; public ImmutableDictionary<string, SlotRecord> Slots = ImmutableDictionary<string, SlotRecord>.Empty;
         public AggregateArtifact? Aggregate; public ImmutableList<CompositionOutboxEvent> Events = ImmutableList<CompositionOutboxEvent>.Empty;
         public long Sequence;
+        public ExperimentDraftPin? ExperimentPin;
     }
     readonly object gate = new();
     readonly TimeProvider time = clock ?? TimeProvider.System;
@@ -270,6 +535,37 @@ public sealed class InMemoryCompositionStore(TimeProvider? clock = null) : IComp
         lock (gate)
         {
             return ValueTask.FromResult(drafts.TryGetValue(draftId, out var s) ? Snapshot(s) : null);
+        }
+    }
+
+    /// <inheritdoc />
+    public ValueTask<ExperimentPinResult> PinExperimentAsync(Guid draftId, ExperimentDraftPin candidate, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(candidate);
+        ct.ThrowIfCancellationRequested();
+        lock (gate)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!drafts.TryGetValue(draftId, out var draft))
+            {
+                return Done<ExperimentPinResult>(new ExperimentPinResult.Rejected("draft_missing"));
+            }
+            if (draft.Status == DraftStatus.Sealed)
+            {
+                return Done<ExperimentPinResult>(new ExperimentPinResult.Rejected("draft_sealed"));
+            }
+            if (draft.ExperimentPin is { } existing)
+            {
+                return Done<ExperimentPinResult>(new ExperimentPinResult.Existing(existing));
+            }
+            // A pin cannot be retrofitted after any slot has been claimed or attached.
+            if (draft.Slots.Values.Any(slot => slot.Attempts != 0 || slot.Status != SlotStatus.Empty))
+            {
+                return Done<ExperimentPinResult>(new ExperimentPinResult.Rejected("draft_already_started"));
+            }
+            draft.ExperimentPin = candidate;
+            Log(draft, "draft.experiment_pinned", null, null, null, candidate.Fingerprint);
+            return Done<ExperimentPinResult>(new ExperimentPinResult.Applied(candidate));
         }
     }
 
@@ -457,6 +753,6 @@ public sealed class InMemoryCompositionStore(TimeProvider? clock = null) : IComp
         d.Events = d.Events.Add(new(++d.Sequence, kind, d.DraftId, slotId, stepId, executionId, detail, time.GetUtcNow()));
     }
 
-    static DraftRecord Snapshot(State s) => new(s.DraftId, s.Key, s.Revision, s.Hash, 1, s.Status, s.Version, s.Slots, s.Aggregate, s.Events);
+    static DraftRecord Snapshot(State s) => new(s.DraftId, s.Key, s.Revision, s.Hash, 1, s.Status, s.Version, s.Slots, s.Aggregate, s.Events, s.ExperimentPin);
     static ValueTask<T> Done<T>(T value) => ValueTask.FromResult(value);
 }

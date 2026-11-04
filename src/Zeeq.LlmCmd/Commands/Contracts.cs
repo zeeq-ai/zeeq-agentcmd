@@ -45,6 +45,7 @@ public sealed record ParameterRecord(string Name, string TypeId, JsonElement Val
 /// <param name="ValidateResult">Returns a result validation error, or null.</param>
 /// <param name="Contract">Typed JSON serialization contract, when supplied.</param>
 /// <param name="ConfigureDefaults">Optional command-level settings defaults.</param>
+/// <param name="RuntimeBinding">Generated reflection-free runtime template and parameter binding, when supplied.</param>
 public sealed record PromptDescriptor<TP, TR>(
     string Id,
     int Revision,
@@ -61,7 +62,8 @@ public sealed record PromptDescriptor<TP, TR>(
     Func<TP, string?> ValidateInput,
     Func<TR, string?> ValidateResult,
     CommandJsonContract<TP, TR>? Contract = null,
-    Action<ChatSettingsPatch>? ConfigureDefaults = null);
+    Action<ChatSettingsPatch>? ConfigureDefaults = null,
+    IRuntimeBinding<TP>? RuntimeBinding = null);
 
 /// <summary>Application call site associated with an invocation.</summary>
 /// <param name="Member">Calling member name.</param>
@@ -80,6 +82,7 @@ public sealed record CallSite(string Member, string File, int Line);
 /// <param name="Model">Selected model, if set.</param>
 /// <param name="Temperature">Selected temperature, if set.</param>
 /// <param name="Routing">Routing and attempt capture, if available.</param>
+/// <param name="Experiment">Effective experiment and source evidence, when configured.</param>
 public sealed record ExecutionSnapshot(
     string PromptId,
     int Revision,
@@ -90,7 +93,8 @@ public sealed record ExecutionSnapshot(
     string Profile,
     string? Model,
     float? Temperature,
-    RouteCapture? Routing = null);
+    RouteCapture? Routing = null,
+    ExperimentEvidence? Experiment = null);
 
 /// <summary>Named runtime settings supplied by the host.</summary>
 /// <param name="Model">Model identifier, if specified.</param>

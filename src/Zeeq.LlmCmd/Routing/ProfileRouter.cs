@@ -116,9 +116,10 @@ public sealed record ProviderRegistration(Func<IChatClient> Factory, Func<Except
 /// <param name="DurationSeconds">Elapsed attempt duration in seconds.</param>
 /// <param name="Context">Optional execution context associated with the attempt.</param>
 /// <param name="AttemptId">Identifier used to correlate attempt events.</param>
+/// <param name="RequestSettings">Portable settings sent to the configured client pipeline, when captured.</param>
 public sealed record Attempt(int Number, string Profile, string Provider, string RequestModel, float? Temperature, string Kind, string Outcome,
     FailureKind? Failure, string? ResponseModel, string? ResponseId, long? InputTokens, long? OutputTokens, double DurationSeconds,
-    CommandExecutionContext? Context = null, Guid AttemptId = default);
+    CommandExecutionContext? Context = null, Guid AttemptId = default, ProfileDefaults? RequestSettings = null);
 /// <summary>Evidence of the requested profile, serving profile and attempts for one route.</summary>
 /// <param name="RequestedProfile">Initially requested profile identifier.</param>
 /// <param name="ServedProfile">Profile that succeeded, or null when no attempt succeeded.</param>
@@ -163,7 +164,9 @@ public sealed class ProfileRouter : IDisposable
 {
     readonly IReadOnlyDictionary<string, ExecutionProfile> profiles;
     sealed record RegisteredClient(IChatClient Client, Func<Exception, FailureKind> Classify, bool Owned, string? FixedModel);
-    readonly IReadOnlyDictionary<string, RegisteredClient> providers;
+    readonly Dictionary<string, RegisteredClient> providers;
+    readonly IReadOnlyDictionary<string, ProviderRegistration> registrations;
+    readonly object gate = new();
     readonly ExecutionBudget budget;
     bool disposed;
     /// <summary>Snapshot of the configured profiles.</summary>
@@ -175,7 +178,9 @@ public sealed class ProfileRouter : IDisposable
     /// <summary>Computes a deterministic fingerprint of the requested route and effective retry budget.</summary>
     /// <param name="key">Configured profile key at the start of the fallback chain.</param>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public string GetRouteFingerprint(ProfileKey key)
+    public string GetRouteFingerprint(ProfileKey key) => Fingerprint(key, profiles);
+
+    string Fingerprint(ProfileKey key, IReadOnlyDictionary<string, ExecutionProfile> routeProfiles)
     {
         var value = new StringBuilder();
         void Part(string? text)
@@ -186,7 +191,7 @@ public sealed class ProfileRouter : IDisposable
         string Number<T>(T number) where T : IFormattable => number.ToString(null, CultureInfo.InvariantCulture);
         Part(Number(budget.MaxAttempts));
         Part(Number((budget.Timeout ?? TimeSpan.FromSeconds(30)).Ticks));
-        var profile = profiles[key.Id];
+        var profile = routeProfiles[key.Id];
         while (true)
         {
             Part(profile.Key.Id);
@@ -198,12 +203,12 @@ public sealed class ProfileRouter : IDisposable
             Part(retry.InitialDelay?.Ticks.ToString(CultureInfo.InvariantCulture));
             Part(retry.UseJitter ? "true" : "false");
             Part(profile.AttemptTimeout?.Ticks.ToString(CultureInfo.InvariantCulture));
-            if (profile.Defaults is { IsEmpty: false } || providers[profile.Provider].FixedModel is not null)
+            if (profile.Defaults is { IsEmpty: false } || registrations[profile.Provider].FixedModel is not null)
             {
                 // Append only for the new configuration surface. Existing
                 // routes must keep their exact fingerprints across this upgrade.
                 Part("profile-defaults-v1");
-                Part(providers[profile.Provider].FixedModel);
+                Part(registrations[profile.Provider].FixedModel);
                 Part(profile.Defaults?.Temperature?.ToString("R", CultureInfo.InvariantCulture));
                 Part(profile.Defaults?.MaxOutputTokens?.ToString(CultureInfo.InvariantCulture));
                 Part(profile.Defaults?.ReasoningEffort?.ToString());
@@ -216,15 +221,16 @@ public sealed class ProfileRouter : IDisposable
                 break;
             }
 
-            profile = profiles[profile.Fallback.Id];
+            profile = routeProfiles[profile.Fallback.Id];
         }
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value.ToString())));
     }
     private ProfileRouter(Dictionary<string, ExecutionProfile> profiles,
-        Dictionary<string, RegisteredClient> providers, ExecutionBudget budget)
+        Dictionary<string, RegisteredClient> providers, IReadOnlyDictionary<string, ProviderRegistration> registrations, ExecutionBudget budget)
     {
         this.profiles = new ReadOnlyDictionary<string, ExecutionProfile>(profiles);
         this.providers = providers;
+        this.registrations = registrations;
         this.budget = budget;
     }
 
@@ -278,7 +284,7 @@ public sealed class ProfileRouter : IDisposable
             DisposeOwned(clients.Values);
             return new RouterBuildResult.Invalid(Array.AsReadOnly(new[] { "A provider factory or model binding failed" }));
         }
-        return new RouterBuildResult.Ready(new(profiles, clients, budget));
+        return new RouterBuildResult.Ready(new(profiles, clients, configuredRegistrations, budget));
     }
 
     // Setup validation must run without creating SDK clients or resolving DI.
@@ -355,6 +361,85 @@ public sealed class ProfileRouter : IDisposable
         }
         return errors.AsReadOnly();
     }
+    /// <summary>Validates and freezes a dynamic route against host registrations and policy.</summary>
+    /// <param name="route">Primary route and optional configured fallback.</param>
+    /// <param name="modelPolicy">Host authorization and compatibility check for every route in the fallback chain.</param>
+    /// <returns>A frozen route or bounded validation errors; no provider call is made.</returns>
+    public DynamicRouteResult TryResolveRoute(ExecutionProfile route, Func<ExecutionProfile, bool> modelPolicy)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(modelPolicy);
+        var routes = profiles.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+        if (route.Key is null || routes.ContainsKey(route.Key.Id))
+        {
+            return new DynamicRouteResult.Invalid(Array.AsReadOnly(new[] { "Dynamic route key conflicts with a configured profile" }));
+        }
+        routes.Add(route.Key.Id, route);
+        var errors = ValidateConfiguration(routes.Values.ToArray(), registrations.ToDictionary(pair => pair.Key, pair => pair.Value.FixedModel, StringComparer.Ordinal), budget);
+        if (errors.Count > 0)
+        {
+            return new DynamicRouteResult.Invalid(errors);
+        }
+        try
+        {
+            // The fallback may use another client or model. Authorize every reachable
+            // route before sending, even when its definition was configured at startup.
+            var candidate = route;
+            while (true)
+            {
+                if (!modelPolicy(candidate))
+                {
+                    return new DynamicRouteResult.Invalid(Array.AsReadOnly(new[] { "Dynamic route rejected by host policy" }));
+                }
+                if (candidate.Fallback is null)
+                {
+                    break;
+                }
+                candidate = routes[candidate.Fallback.Id];
+            }
+            lock (gate)
+            {
+                if (disposed)
+                {
+                    return new DynamicRouteResult.Invalid(Array.AsReadOnly(new[] { "Router is disposed" }));
+                }
+                if (!providers.ContainsKey(route.Provider))
+                {
+                    var registration = registrations[route.Provider];
+                    var client = registration.Factory() ?? throw new InvalidOperationException();
+                    try
+                    {
+                        var registered = new RegisteredClient(client, registration.Classify ?? ClassifyDefault, registration.OwnsClient, registration.FixedModel);
+                        if (registration.FixedModel is { } fixedModel && client.GetService<ChatClientMetadata>()?.DefaultModelId is { } actual && !string.Equals(fixedModel, actual, StringComparison.Ordinal))
+                        {
+                            throw new InvalidOperationException();
+                        }
+                        providers.Add(route.Provider, registered);
+                    }
+                    catch
+                    {
+                        // A client that fails metadata validation never enters the pool.
+                        // Do not dispose an alias still owned or borrowed by another registration.
+                        if (registration.OwnsClient && !providers.Values.Any(item => ReferenceEquals(item.Client, client)))
+                        {
+                            try
+                            {
+                                client.Dispose();
+                            }
+                            catch { }
+                        }
+                        throw new InvalidOperationException();
+                    }
+                }
+                return new DynamicRouteResult.Ready(new ResolvedRoute(this, route, new ReadOnlyDictionary<string, ExecutionProfile>(routes), Fingerprint(route.Key, routes)));
+            }
+        }
+        catch
+        {
+            return new DynamicRouteResult.Invalid(Array.AsReadOnly(new[] { "Dynamic route policy or client initialization failed" }));
+        }
+    }
+
     /// <summary>Creates an independent non-owning request view for one route execution.</summary>
     /// <param name="key">Initially requested profile.</param>
     /// <param name="context">Optional execution identity for attempt events.</param>
@@ -366,13 +451,15 @@ public sealed class ProfileRouter : IDisposable
     /// <summary>Disposes each distinct provider client owned by this router.</summary>
     public void Dispose()
     {
-        if (disposed)
+        lock (gate)
         {
-            return;
+            if (disposed)
+            {
+                return;
+            }
+            disposed = true;
+            DisposeOwned(providers.Values);
         }
-
-        disposed = true;
-        DisposeOwned(providers.Values);
     }
 
     static void DisposeOwned(IEnumerable<RegisteredClient> registrations)
@@ -432,7 +519,8 @@ public sealed class ProfileRouter : IDisposable
                 throw new RouteException(FailureKind.Permanent, "router_disposed");
             }
 
-            if (!profiles.TryGetValue(requested, out var profile))
+            var routeProfiles = view.RouteProfiles ?? profiles;
+            if (!routeProfiles.TryGetValue(requested, out var profile))
             {
                 throw new RouteException(FailureKind.Permanent, "profile_not_configured");
             }
@@ -446,6 +534,11 @@ public sealed class ProfileRouter : IDisposable
             parent?.SetTag("llmcmd.profile.requested", requested);
             while (true)
             {
+                RegisteredClient provider;
+                lock (gate)
+                {
+                    provider = providers[profile.Provider];
+                }
                 var retry = profile.Retry ?? new();
                 FailureKind failure = FailureKind.Permanent;
                 Exception? last = null;
@@ -472,6 +565,9 @@ public sealed class ProfileRouter : IDisposable
                     options.ModelId = profile.Model;
                     options.Temperature = patch?.Temperature ?? profile.Temperature ?? profile.Defaults?.Temperature ?? view.DefaultTemperature;
                     profile.Defaults?.Apply(options);
+                    // Snapshot before the client pipeline runs: middleware or the provider may mutate its options.
+                    var requestSettings = new ProfileDefaults(options.Temperature, options.MaxOutputTokens,
+                        options.Reasoning?.Effort, options.TopP, options.TopK, options.Reasoning?.Output);
                     var number = records.Count + 1;
                     var attemptId = Guid.NewGuid();
                     var started = Stopwatch.StartNew();
@@ -495,7 +591,7 @@ public sealed class ProfileRouter : IDisposable
                         span?.SetTag("llmcmd.attempt.kind", kind);
                         try
                         {
-                            observed = await AwaitProvider(providers[profile.Provider].Client.GetResponseAsync(messages.Select(m => m.Clone()), options, attemptToken.Token), attemptToken.Token).ConfigureAwait(false);
+                            observed = await AwaitProvider(provider.Client.GetResponseAsync(messages.Select(m => m.Clone()), options, attemptToken.Token), attemptToken.Token).ConfigureAwait(false);
                             callerToken.ThrowIfCancellationRequested();
                             if (attemptToken.IsCancellationRequested)
                             {
@@ -520,7 +616,7 @@ public sealed class ProfileRouter : IDisposable
                             {
                                 try
                                 {
-                                    failure = providers[profile.Provider].Classify(error);
+                                    failure = provider.Classify(error);
                                     if (failure == FailureKind.Cancelled)
                                     {
                                         failure = FailureKind.Timeout;
@@ -538,8 +634,8 @@ public sealed class ProfileRouter : IDisposable
                         ProfileTelemetry.AttemptDuration.Record(started.Elapsed.TotalSeconds, attemptTags);
                         span?.SetTag("gen_ai.response.model", observed?.ModelId);
                         span?.SetTag("gen_ai.response.id", observed?.ResponseId);
-                        records.Add(new(number, profile.Key.Id, profile.Provider, profile.Model, options.Temperature, kind, outcome, response is null ? failure : null,
-                            observed?.ModelId, observed?.ResponseId, observed?.Usage?.InputTokenCount, observed?.Usage?.OutputTokenCount, started.Elapsed.TotalSeconds, view.Context, attemptId));
+                        records.Add(new(number, profile.Key.Id, profile.Provider, profile.Model, requestSettings.Temperature, kind, outcome, response is null ? failure : null,
+                            observed?.ModelId, observed?.ResponseId, observed?.Usage?.InputTokenCount, observed?.Usage?.OutputTokenCount, started.Elapsed.TotalSeconds, view.Context, attemptId, requestSettings));
                         if (view.Context is { } completed)
                         {
                             var finished = new ExecutionEvent("attempt.finished", completed, attemptId, number, profile.Provider, outcome, observed?.Usage?.InputTokenCount, observed?.Usage?.OutputTokenCount);
@@ -613,7 +709,7 @@ public sealed class ProfileRouter : IDisposable
                     throw new RouteException(FailureKind.Timeout, "execution_deadline");
                 }
 
-                var next = profiles[profile.Fallback.Id];
+                var next = routeProfiles[profile.Fallback.Id];
                 var tags = new TagList { { "llmcmd.profile.requested", requested }, { "llmcmd.profile.from", profile.Key.Id },
                     { "llmcmd.profile.to", next.Key.Id }, { "llmcmd.fallback.reason", failure.ToString() } };
                 parent?.AddEvent(new ActivityEvent("llmcmd.profile.fallback", tags: new ActivityTagsCollection(tags)));
@@ -632,6 +728,10 @@ public sealed class RoutedProfileClient : IChatClient
     readonly ProfileRouter router; internal ProfileKey Key
     {
         get;
+    }
+    internal IReadOnlyDictionary<string, ExecutionProfile>? RouteProfiles
+    {
+        get; private set;
     }
     internal CommandExecutionContext? Context
     {
@@ -663,6 +763,11 @@ public sealed class RoutedProfileClient : IChatClient
         DefaultTemperature = defaultTemperature;
         Journal = journal;
     }
+    internal RoutedProfileClient(ProfileRouter router, ProfileKey key, IReadOnlyDictionary<string, ExecutionProfile> routes, CommandExecutionContext? context, IExecutionEventSink? events, float? defaultTemperature, IExecutionJournal? journal)
+        : this(router, key, context, events, defaultTemperature, journal)
+    {
+        RouteProfiles = routes;
+    }
     // Create one view per execution; provider clients and policies are shared by the owning router.
     /// <inheritdoc/>
     public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default) => router.ExecuteAsync(this, messages, options, cancellationToken);
@@ -675,4 +780,46 @@ public sealed class RoutedProfileClient : IChatClient
     public void Dispose()
     {
     } // View never disposes router-owned provider clients.
+}
+
+/// <summary>Result of validating a dynamic route before any provider send.</summary>
+public closed record DynamicRouteResult
+{
+    /// <summary>A route with a frozen fallback graph.</summary>
+    /// <param name="Route">Validated route.</param>
+    public sealed record Ready(ResolvedRoute Route) : DynamicRouteResult;
+    /// <summary>Validation or initialization failed.</summary>
+    /// <param name="Errors">Bounded error descriptions.</param>
+    public sealed record Invalid(IReadOnlyList<string> Errors) : DynamicRouteResult;
+}
+
+/// <summary>Immutable route bound to its owning router and frozen fallback graph.</summary>
+public sealed class ResolvedRoute
+{
+    readonly ProfileRouter router;
+    readonly IReadOnlyDictionary<string, ExecutionProfile> routes;
+    /// <summary>The validated primary route.</summary>
+    public ExecutionProfile Profile
+    {
+        get;
+    }
+    /// <summary>Fingerprint of the frozen graph and budget.</summary>
+    public string Fingerprint
+    {
+        get;
+    }
+    internal ResolvedRoute(ProfileRouter router, ExecutionProfile profile, IReadOnlyDictionary<string, ExecutionProfile> routes, string fingerprint)
+    {
+        this.router = router;
+        this.routes = routes;
+        Profile = profile;
+        Fingerprint = fingerprint;
+    }
+    /// <summary>Creates an independent non-owning execution view.</summary>
+    /// <param name="context">Optional execution identity.</param>
+    /// <param name="events">Optional observational sink.</param>
+    /// <param name="defaultTemperature">Temperature used only when no route or invocation value exists.</param>
+    /// <param name="journal">Optional authoritative execution journal.</param>
+    /// <returns>A request view over the router-owned clients.</returns>
+    public RoutedProfileClient For(CommandExecutionContext? context = null, IExecutionEventSink? events = null, float? defaultTemperature = null, IExecutionJournal? journal = null) => new(router, Profile.Key, routes, context, events, defaultTemperature, journal);
 }

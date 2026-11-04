@@ -21,6 +21,7 @@
   <Folder Name="/examples/">
     <Project Path="examples/Zeeq.LlmCmd.CommandExample/Zeeq.LlmCmd.CommandExample.csproj" />
     <Project Path="examples/Zeeq.LlmCmd.CompositionExample/Zeeq.LlmCmd.CompositionExample.csproj" />
+    <Project Path="examples/Zeeq.LlmCmd.ExperimentsExample/Zeeq.LlmCmd.ExperimentsExample.csproj" />
   </Folder>
   <Folder Name="/dev/">
     <Project Path="dev/Zeeq.LlmCmd.AppHost/Zeeq.LlmCmd.AppHost.csproj" />

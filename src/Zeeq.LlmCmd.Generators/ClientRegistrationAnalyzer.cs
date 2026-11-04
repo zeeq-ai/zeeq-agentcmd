@@ -369,7 +369,13 @@ public sealed class ClientRegistrationAnalyzer : DiagnosticAnalyzer
         }
         else if (
             call.TargetMethod.Name
-            is not ("UseActor" or "UseBudget" or "UseDefaultProfile" or "UseChatClient")
+            is not (
+                "UseActor"
+                or "UseBudget"
+                or "UseDefaultProfile"
+                or "UseChatClient"
+                or "UseExperiments"
+            )
         )
         {
             return false;
@@ -419,6 +425,9 @@ public sealed class ClientRegistrationAnalyzer : DiagnosticAnalyzer
                 == "factory:System.Func`2<System.IServiceProvider,Zeeq.LlmCmd.Actor>",
             "UseBudget" => signature == "value:Zeeq.LlmCmd.ExecutionBudget",
             "UseDefaultProfile" => signature == stringProfile || signature == typedProfile,
+            "UseExperiments" => signature == "options:Zeeq.LlmCmd.ExperimentRuntimeOptions"
+                || signature
+                    == "factory:System.Func`2<System.IServiceProvider,Zeeq.LlmCmd.ExperimentRuntimeOptions>",
             _ => false,
         };
     }

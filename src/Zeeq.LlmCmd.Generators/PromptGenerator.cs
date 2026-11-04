@@ -235,6 +235,22 @@ public sealed class PromptGenerator : IIncrementalGenerator
             Fail("Parameter type must expose public properties.");
         }
 
+        var overrides = model
+            .ParametersShape.Where(RuntimeBindingGenerator.IsOverridable)
+            .ToArray();
+        if (
+            overrides.Length > 0
+            && (
+                !RuntimeBindingGenerator.IsSafeRecord(model.Parameters)
+                || overrides.Any(p => p.Ignored || !CommandModels.Scalar(p.Symbol.Type))
+            )
+        )
+        {
+            Fail(
+                "Runtime overrides require non-ignored scalar properties on a sealed positional record with no authored members or base type and only scalar positional properties."
+            );
+        }
+
         var names = model.ParametersShape.ToDictionary(p => p.Symbol.Name, StringComparer.Ordinal);
         if (Render(model.User, names) is null || Render(model.System, names) is null)
         {
@@ -452,6 +468,9 @@ public sealed class PromptGenerator : IIncrementalGenerator
                         "",
                         c.Properties.Select(p =>
                             Frame(p.Symbol.Name)
+                            + Frame(
+                                RuntimeBindingGenerator.IsOverridable(p) ? "overridable" : "caller"
+                            )
                             + Frame(CommandModels.Type(p.Symbol.Type))
                             + Frame(p.Required ? "required" : "optional")
                             + Frame(p.Ignored ? "ignored" : "included")
@@ -547,6 +566,54 @@ public sealed class PromptGenerator : IIncrementalGenerator
         );
         b.Append("internal static void __ValidateContract()=>__contract.Validate();\n");
         EmitValidation(b, model);
+        var bindingSignature = Hash(
+            Frame("runtime-binding-v1")
+                + Frame(tp)
+                + Frame(tr)
+                + shape
+                + policy
+                + string.Join(
+                    "",
+                    model
+                        .ParametersShape.OrderBy(p => p.Symbol.Name, StringComparer.Ordinal)
+                        .Select(p =>
+                            Frame(p.Symbol.Name)
+                            + Frame(
+                                p.Ignored ? "ignored"
+                                : CommandModels.Scalar(p.Symbol.Type) ? "scalar"
+                                : "unsupported"
+                            )
+                        )
+                )
+        );
+        b.Append("private sealed class __RuntimeBinding : global::Zeeq.LlmCmd.IRuntimeBinding<")
+            .Append(tp)
+            .Append("> { public string ContractSignature => ")
+            .Append(Quote(bindingSignature))
+            .Append(
+                "; public global::System.Collections.Generic.IReadOnlyDictionary<string,string?> Freeze("
+            )
+            .Append(tp)
+            .Append(
+                " p) { var values = new global::System.Collections.Generic.Dictionary<string,string?>(global::System.StringComparer.Ordinal); "
+            );
+        foreach (
+            var p in model.ParametersShape.Where(p =>
+                !p.Ignored && CommandModels.Scalar(p.Symbol.Type)
+            )
+        )
+        {
+            b.Append("values.Add(")
+                .Append(Quote(p.Symbol.Name))
+                .Append(",global::System.Convert.ToString(p.@")
+                .Append(p.Symbol.Name)
+                .Append(",global::System.Globalization.CultureInfo.InvariantCulture));");
+        }
+        b.Append(
+                "return new global::System.Collections.ObjectModel.ReadOnlyDictionary<string,string?>(values); } public bool TryApplyOverrides("
+            )
+            .Append(tp);
+        RuntimeBindingGenerator.EmitOverrides(b, model);
         b.Append("private static global::Zeeq.LlmCmd.PromptDescriptor<")
             .Append(tp)
             .Append(',')
@@ -586,7 +653,7 @@ public sealed class PromptGenerator : IIncrementalGenerator
         }
 
         b.Append(
-                "return values.AsReadOnly(); },p=>__ValidateInput(p),p=>__ValidateResult(p),__contract,__ApplyDefaults);\n"
+                "return values.AsReadOnly(); },p=>__ValidateInput(p),p=>__ValidateResult(p),__contract,__ApplyDefaults,new __RuntimeBinding());\n"
             )
             .Append("[global::System.CodeDom.Compiler.GeneratedCode(\"LlmCmd\",\"1\")] public ")
             .Append(model.Type.Name)

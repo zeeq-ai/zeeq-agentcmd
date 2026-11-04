@@ -174,7 +174,8 @@ public sealed class RootCommands : IRootCommands
         ICompositionStore store,
         CompositionRegistry registry,
         TimeProvider? clock = null,
-        IExecutionEventSink? events = null
+        IExecutionEventSink? events = null,
+        CommandRuntime? runtime = null
     )
     {
         this.ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
@@ -182,7 +183,19 @@ public sealed class RootCommands : IRootCommands
             actorProvider ?? throw new ArgumentNullException(nameof(actorProvider));
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
-        engine = new(ledger, actorProvider, store, clock ?? TimeProvider.System, events);
+        engine = new(ledger, actorProvider, store, clock ?? TimeProvider.System, events, runtime);
+    }
+
+    internal async Task<CompositionRoot<TWhole>> BeginShadowAsync<TWhole>(
+        CompositionRequest request,
+        ExperimentDraftPin pin,
+        string group,
+        CancellationToken ct
+    )
+    {
+        var root = await BeginAsync<TWhole>(request, ct).ConfigureAwait(false);
+        root.SetShadowPin(pin, group);
+        return root;
     }
 
     /// <inheritdoc />
@@ -339,7 +352,8 @@ public static class CompositionServiceCollectionExtensions
             sp.GetRequiredService<ICompositionStore>(),
             sp.GetRequiredService<CompositionRegistry>(),
             sp.GetService<TimeProvider>(),
-            sp.GetService<IExecutionEventSink>()
+            sp.GetService<IExecutionEventSink>(),
+            sp.GetService<CommandRuntime>()
         ));
         return services;
     }

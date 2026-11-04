@@ -140,7 +140,7 @@ run = "dotnet run --project tests/LlmCmd.Composition.Tests/LlmCmd.Composition.Te
 
 [tasks.verify]
 description = "Build and verify the real library, tests, packed consumer and examples"
-run = [{ task = "build" }, { task = "format:check" }, { task = "test" }, { task = "test:package" }, { task = "demo:command" }, { task = "demo:composition" }]
+run = [{ task = "build" }, { task = "format:check" }, { task = "test" }, { task = "test:package" }, { task = "demo:command" }, { task = "demo:composition" }, { task = "demo:experiments" }]
 
 [tasks."demo:command"]
 description = "Run the generated single-command demo"
@@ -149,6 +149,10 @@ run = "dotnet run --project examples/Zeeq.LlmCmd.CommandExample/Zeeq.LlmCmd.Comm
 [tasks."demo:composition"]
 description = "Run the four-pass aggregate demo; pass --quick for its other branch"
 run = "dotnet run --project examples/Zeeq.LlmCmd.CompositionExample/Zeeq.LlmCmd.CompositionExample.csproj --"
+
+[tasks."demo:experiments"]
+description = "Run the offline file-backed A/B and shadow experiment demo"
+run = "dotnet run --project examples/Zeeq.LlmCmd.ExperimentsExample/Zeeq.LlmCmd.ExperimentsExample.csproj --"
 
 # Service tests are separate entry points, never dependencies of `test`.
 # Existing wrappers own readiness checks, explicit resource starts and cleanup.

@@ -19,6 +19,15 @@ public abstract class PromptCommand<TP, TR>
         this.descriptor = descriptor;
     }
 
+    /// <summary>
+    /// Gets the contract identity that an experiment source must publish for this command.
+    /// Null means the command does not provide a runtime experiment binding.
+    /// </summary>
+    public ExperimentCommandContract? ExperimentContract =>
+        descriptor.RuntimeBinding is { } binding
+            ? new(descriptor.Id, descriptor.Revision, binding.ContractSignature)
+            : null;
+
     /// <summary>Creates an immutable invocation with the supplied typed parameters; no provider call is made.</summary>
     public Invocation<TP, TR> WithParameters(TP parameters) =>
         Invocation<TP, TR>.Create(runtime, descriptor, parameters);

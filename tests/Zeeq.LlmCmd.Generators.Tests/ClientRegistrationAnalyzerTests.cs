@@ -6,6 +6,27 @@ namespace Zeeq.LlmCmd.Generators.Tests;
 public sealed class ClientRegistrationAnalyzerTests
 {
     [Test]
+    public async Task ExperimentSetupDoesNotHideClientDiagnostics()
+    {
+        await AnalyzerHarness.ExpectAsync(
+            """
+            services.AddLlmCmd(b => b.AddChatClient("known")
+                .UseExperiments(new ExperimentRuntimeOptions())
+                .AddProfile("p", "missing", "model"));
+            """,
+            "LLMCLIENT001:\"missing\""
+        );
+        await AnalyzerHarness.ExpectAsync(
+            """
+            services.AddLlmCmd(b => b.AddChatClient("known")
+                .UseExperiments(_ => new ExperimentRuntimeOptions())
+                .AddProfile("p", "missing", "model"));
+            """,
+            "LLMCLIENT001:\"missing\""
+        );
+    }
+
+    [Test]
     public async Task ValidFluentAndStatementsAllowForwardDeclarationsAndBothClientOverloads()
     {
         await AnalyzerHarness.ExpectAsync(

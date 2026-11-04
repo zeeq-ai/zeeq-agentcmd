@@ -15,6 +15,7 @@ public sealed class LlmCmdBuilder
     private readonly Dictionary<string, ClientRegistration> clients = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ExecutionProfile> routes = new(StringComparer.Ordinal);
     private ExecutionBudget budget = new();
+    private Func<IServiceProvider, ExperimentRuntimeOptions>? experimentsFactory;
 
     private sealed record ClientRegistration(
         Func<IServiceProvider, IChatClient> Factory,
@@ -244,8 +245,42 @@ public sealed class LlmCmdBuilder
         return this;
     }
 
+    /// <summary>Enables host-controlled versioned experiment resolution for typed commands.</summary>
+    /// <param name="options">Singleton-safe source and authorization policies.</param>
+    /// <returns>This builder.</returns>
+    public LlmCmdBuilder UseExperiments(ExperimentRuntimeOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return UseExperiments(_ => options);
+    }
+
+    /// <summary>Enables experiments using a singleton options factory resolved from host DI.</summary>
+    /// <param name="factory">Creates singleton-safe options, including any host-owned scope factory.</param>
+    /// <returns>This builder.</returns>
+    public LlmCmdBuilder UseExperiments(Func<IServiceProvider, ExperimentRuntimeOptions> factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        if (experimentsFactory is not null)
+        {
+            throw new InvalidOperationException("Experiments are already configured.");
+        }
+        experimentsFactory = factory;
+        return this;
+    }
+
     internal void Register(IServiceCollection services)
     {
+        if (experimentsFactory is { } factory)
+        {
+            if (services.Any(d => d.ServiceType == typeof(ExperimentRuntimeOptions)))
+            {
+                throw new InvalidOperationException("Experiment options are already registered.");
+            }
+            services.AddSingleton(sp =>
+                factory(sp)
+                ?? throw new InvalidOperationException("Experiment options factory returned null.")
+            );
+        }
         var actorFactory =
             actor ?? throw new InvalidOperationException("An actor accessor must be configured.");
         if (client is null && clients.Count == 0)
@@ -324,6 +359,9 @@ public sealed class LlmCmdBuilder
             var ledger = sp.GetRequiredService<IHumanFeedbackLedger>();
             var actors = sp.GetRequiredService<Func<Actor>>();
             var events = sp.GetRequiredService<IExecutionEventSink>();
+            var experiments = experimentsFactory is null
+                ? null
+                : sp.GetRequiredService<ExperimentRuntimeOptions>();
             if (clientFactory is not null)
             {
                 // Preserve the established single-client behavior and replay
@@ -338,7 +376,8 @@ public sealed class LlmCmdBuilder
                     ledger,
                     actors,
                     events: events,
-                    defaultProfile: selectedDefault
+                    defaultProfile: selectedDefault,
+                    experiments: experiments
                 );
             }
 
@@ -368,7 +407,8 @@ public sealed class LlmCmdBuilder
                     actors,
                     ownsRouter: true,
                     events: events,
-                    defaultProfile: selectedDefault
+                    defaultProfile: selectedDefault,
+                    experiments: experiments
                 );
             }
             catch
