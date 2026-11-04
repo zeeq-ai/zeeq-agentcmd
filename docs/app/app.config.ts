@@ -18,7 +18,7 @@ export default defineAppConfig({
     colorMode: true,
     links: [{
       'icon': 'i-simple-icons-github',
-      'to': 'https://github.com/zeeq-ai/zeeq-llmcmd',
+      'to': 'https://github.com/zeeq-ai/zeeq-agentcmd',
       'target': '_blank',
       'aria-label': 'AgentCmd on GitHub'
     }]
@@ -28,11 +28,11 @@ export default defineAppConfig({
     colorMode: false,
     links: [{
       label: 'MIT License',
-      to: 'https://github.com/zeeq-ai/zeeq-llmcmd/blob/main/LICENSE',
+      to: 'https://github.com/zeeq-ai/zeeq-agentcmd/blob/main/LICENSE',
       target: '_blank'
     }, {
       'icon': 'i-simple-icons-github',
-      'to': 'https://github.com/zeeq-ai/zeeq-llmcmd',
+      'to': 'https://github.com/zeeq-ai/zeeq-agentcmd',
       'target': '_blank',
       'aria-label': 'AgentCmd on GitHub'
     }, {
@@ -45,11 +45,11 @@ export default defineAppConfig({
     title: 'On this page',
     bottom: {
       title: 'Links',
-      edit: 'https://github.com/zeeq-ai/zeeq-llmcmd/edit/main/docs/content',
+      edit: 'https://github.com/zeeq-ai/zeeq-agentcmd/edit/main/docs/content',
       links: [{
         icon: 'i-lucide-code',
         label: 'Runnable examples',
-        to: 'https://github.com/zeeq-ai/zeeq-llmcmd/tree/main/examples',
+        to: 'https://github.com/zeeq-ai/zeeq-agentcmd/tree/main/examples',
         target: '_blank'
       }]
     }

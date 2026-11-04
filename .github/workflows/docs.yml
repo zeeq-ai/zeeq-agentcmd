@@ -35,7 +35,7 @@ jobs:
       - run: pnpm check
       - run: pnpm generate
         env:
-          NUXT_APP_BASE_URL: /zeeq-llmcmd/
+          NUXT_APP_BASE_URL: /zeeq-agentcmd/
           NUXT_PUBLIC_SITE_URL: https://zeeq-ai.github.io
       - run: node scripts/check-static.mjs
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5

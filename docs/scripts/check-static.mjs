@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = new URL('../', import.meta.url)
 const output = new URL('.output/public/', root)
-const base = process.env.NUXT_APP_BASE_URL || '/zeeq-llmcmd/'
+const base = process.env.NUXT_APP_BASE_URL || '/zeeq-agentcmd/'
 const site = process.env.NUXT_PUBLIC_SITE_URL || 'https://zeeq-ai.github.io'
 
 function routes(dir, prefix = '') {

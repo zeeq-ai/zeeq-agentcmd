@@ -3,7 +3,7 @@ import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://zeeq-ai.github.io'
-const baseURL = process.env.NUXT_APP_BASE_URL || '/zeeq-llmcmd/'
+const baseURL = process.env.NUXT_APP_BASE_URL || '/zeeq-agentcmd/'
 
 // Pages has no application server. Emit both HTML and Markdown for every route
 // so direct links, search, and the copy controls work after static deployment.

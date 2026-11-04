@@ -2,7 +2,7 @@
 
 Typed prompt commands and aggregate composition over `Microsoft.Extensions.AI`. This is the first source library, version `0.1.0-alpha.1`, extracted from the tested designs in this repository. It targets .NET 11 and C# 15.
 
-[Documentation](https://zeeq-ai.github.io/zeeq-llmcmd/) · [Offline quick start](docs/content/1.getting-started/3.quick-start.md) · [Build the documentation site](docs/README.md)
+[Documentation](https://zeeq-ai.github.io/zeeq-agentcmd/) · [Offline quick start](docs/content/1.getting-started/3.quick-start.md) · [Build the documentation site](docs/README.md)
 
 AgentCmd is available under the [MIT License](LICENSE).
 

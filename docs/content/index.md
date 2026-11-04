@@ -31,7 +31,7 @@ Give a prompt a name, typed inputs, and a result you can inspect. AgentCmd bring
 
   :::u-button
   ---
-  to: https://github.com/zeeq-ai/zeeq-llmcmd
+  to: https://github.com/zeeq-ai/zeeq-agentcmd
   target: _blank
   size: xl
   variant: outline

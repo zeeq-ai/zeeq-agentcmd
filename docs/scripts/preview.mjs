@@ -4,7 +4,7 @@ import { extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const output = resolve(fileURLToPath(new URL('../.output/public/', import.meta.url)))
-const base = process.env.NUXT_APP_BASE_URL || '/zeeq-llmcmd/'
+const base = process.env.NUXT_APP_BASE_URL || '/zeeq-agentcmd/'
 const port = Number(process.env.PORT || 4173)
 const mime = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',

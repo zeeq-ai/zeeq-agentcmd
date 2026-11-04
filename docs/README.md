@@ -11,14 +11,14 @@ mise run docs:install    # Restore the pinned lockfile.
 mise run docs:dev        # Development server; serves from /.
 mise run docs:check      # ESLint and TypeScript.
 mise run docs:build      # Static Pages artifact and route/link checks.
-mise exec -- pnpm --dir docs preview # Preview the artifact at /zeeq-llmcmd/.
+mise exec -- pnpm --dir docs preview # Preview the artifact at /zeeq-agentcmd/.
 
 # Validate copied C# examples against freshly packed local packages.
 mise run pack
 mise run docs:examples
 ```
 
-The release build uses `/zeeq-llmcmd/`. Set `NUXT_APP_BASE_URL=/` to generate for
+The release build uses `/zeeq-agentcmd/`. Set `NUXT_APP_BASE_URL=/` to generate for
 a domain root. `NUXT_PUBLIC_SITE_URL` controls canonical and Markdown URLs.
 Both variables must be set consistently when running `docs:build`.
 
