@@ -171,15 +171,24 @@ public sealed class PromptGenerator : IIncrementalGenerator
             Fail("The generator owns the command constructor; omit the authored constructor.");
         }
 
+        // A declared but unreadable setting must not silently become a default:
+        // that can discard a system instruction or change routing and identity.
+        var validId = DeclaredConstant(type, "Id", SpecialType.System_String, Fail);
+        var validRevision = DeclaredConstant(type, "Revision", SpecialType.System_Int32, Fail);
+        DeclaredConstant(type, "Profile", SpecialType.System_String, Fail);
+        DeclaredConstant(type, "SystemTemplate", SpecialType.System_String, Fail);
+        var declaredId = CommandModels.Constant(type, "Id");
+        var declaredRevision = CommandModels.Integer(type, "Revision");
+        var declaredProfile = CommandModels.Constant(type, "Profile");
         var model = new CommandModel
         {
             Type = type,
             Syntax = syntax,
             Parameters = type.BaseType!.TypeArguments[0],
             Result = type.BaseType.TypeArguments[1],
-            Id = CommandModels.Constant(type, "Id") ?? "",
-            Revision = CommandModels.Integer(type, "Revision") ?? 1,
-            Profile = CommandModels.Constant(type, "Profile") ?? "",
+            Id = declaredId ?? "",
+            Revision = declaredRevision ?? 1,
+            Profile = declaredProfile ?? "",
             System = CommandModels.Constant(type, "SystemTemplate") ?? "",
             User = CommandModels.Constant(type, "UserTemplate") ?? "",
         };
@@ -187,7 +196,7 @@ public sealed class PromptGenerator : IIncrementalGenerator
         if (attribute is not null)
         {
             var id = attribute.ConstructorArguments.FirstOrDefault().Value as string;
-            if (model.Id.Length > 0 && model.Id != id)
+            if (declaredId is not null && declaredId != id)
             {
                 Fail("Authored Id and [PromptCommand] ID disagree.");
             }
@@ -197,12 +206,27 @@ public sealed class PromptGenerator : IIncrementalGenerator
             {
                 if (item.Key == "Revision" && item.Value.Value is int revision)
                 {
+                    if (declaredRevision is not null && declaredRevision.Value != revision)
+                    {
+                        Fail("Authored Revision and [PromptCommand] Revision disagree.");
+                    }
                     model.Revision = revision;
                 }
 
-                if (item.Key == "Profile" && item.Value.Value is string profile)
+                if (item.Key == "Profile")
                 {
-                    model.Profile = profile;
+                    if (item.Value.Value is not string profile)
+                    {
+                        Fail("[PromptCommand] Profile must be a non-null string.");
+                    }
+                    else
+                    {
+                        if (declaredProfile is not null && declaredProfile != profile)
+                        {
+                            Fail("Authored Profile and [PromptCommand] Profile disagree.");
+                        }
+                        model.Profile = profile;
+                    }
                 }
 
                 if (item.Key == "JsonContext")
@@ -211,16 +235,24 @@ public sealed class PromptGenerator : IIncrementalGenerator
                 }
             }
         }
-        if (string.IsNullOrWhiteSpace(model.Id) || model.Revision < 1)
+        if (
+            (validId && string.IsNullOrWhiteSpace(model.Id))
+            || (validRevision && model.Revision < 1)
+        )
         {
             Fail(
                 "A stable const string Id (or [PromptCommand] ID) and a positive revision are required."
             );
         }
 
-        if (CommandModels.Constant(type, "UserTemplate") is null)
+        var userTemplate = CommandModels.Constant(type, "UserTemplate");
+        if (userTemplate is null)
         {
             Fail("UserTemplate must be a const string.");
+        }
+        else if (string.IsNullOrWhiteSpace(userTemplate))
+        {
+            Fail("UserTemplate must contain non-whitespace text.");
         }
 
         model.Contracts = CommandModels.ContractGraph(model.Parameters, model.Result, Fail);
@@ -356,6 +388,34 @@ public sealed class PromptGenerator : IIncrementalGenerator
             return null;
         }
         return model;
+    }
+
+    static bool DeclaredConstant(
+        INamedTypeSymbol command,
+        string name,
+        SpecialType expected,
+        Action<string> error
+    )
+    {
+        var members = command.GetMembers(name);
+        if (members.Length == 0)
+        {
+            return true;
+        }
+        if (
+            members.Length == 1
+            && members[0] is IFieldSymbol field
+            && field.IsConst
+            && field.Type.SpecialType == expected
+            && field.ConstantValue is not null
+        )
+        {
+            return true;
+        }
+
+        var type = expected == SpecialType.System_String ? "non-null const string" : "const int";
+        error(name + " must be a " + type + " if declared.");
+        return false;
     }
 
     static string? Validator(

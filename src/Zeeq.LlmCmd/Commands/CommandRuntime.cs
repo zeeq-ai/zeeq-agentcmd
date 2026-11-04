@@ -14,6 +14,8 @@ namespace Zeeq.LlmCmd;
 /// </summary>
 public sealed partial class CommandRuntime : IDisposable
 {
+    internal const string EmptyUserPromptReason = "Rendered user prompt is empty.";
+
     static readonly ActivitySource Activity = new("Zeeq.LlmCmd");
     readonly IChatClient? client;
     readonly ProfileRouter? router;
@@ -499,6 +501,12 @@ public sealed partial class CommandRuntime : IDisposable
             {
                 return new Outcome<TR>.Failed(
                     new ExecutionFailure.HookFailure(context, "Render", snapshot)
+                );
+            }
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                return new Outcome<TR>.Failed(
+                    new ExecutionFailure.InvalidInput(context, EmptyUserPromptReason, snapshot)
                 );
             }
             IReadOnlyList<ParameterRecord> projected;

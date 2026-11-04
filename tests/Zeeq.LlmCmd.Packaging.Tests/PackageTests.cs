@@ -209,6 +209,7 @@ public partial class PackageTests
             );
 
             await VerifyClientRegistrationAnalyzer(consumer, reports);
+            await VerifyTemplateDeclarations(consumer, reports);
             await VerifyNativeConsumer(root, consumer, reports, version);
             await VerifyNativeExperimentConsumer(root, consumer, reports, version);
             await VerifyUnsupportedMetadataIsDiagnosed(consumer, reports);

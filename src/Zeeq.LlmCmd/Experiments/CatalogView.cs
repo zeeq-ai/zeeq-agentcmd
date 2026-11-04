@@ -87,7 +87,7 @@ public sealed record ExperimentCatalogView(
 /// <param name="CommandId">Command the default targets.</param>
 /// <param name="ContractSignature">Command contract the default was authored against.</param>
 /// <param name="SystemTemplate">Compiled or host-configured system template, or null.</param>
-/// <param name="UserTemplate">Compiled or host-configured user template.</param>
+/// <param name="UserTemplate">Compiled or host-configured user template, which must contain non-whitespace text.</param>
 /// <param name="ParameterValues">Default parameter overrides, usually empty.</param>
 /// <param name="Route">Default route, or null to use the command's authored profile.</param>
 /// <param name="CommandRevision">

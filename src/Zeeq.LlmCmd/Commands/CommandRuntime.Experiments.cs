@@ -88,7 +88,7 @@ public sealed partial class CommandRuntime
             configured.CommandId != descriptor.Id
             || configured.CommandRevision != descriptor.Revision
             || configured.ContractSignature != binding.ContractSignature
-            || configured.UserTemplate is null
+            || string.IsNullOrWhiteSpace(configured.UserTemplate)
         )
         {
             throw new InvalidOperationException("Configured default contract invalid");
@@ -254,6 +254,17 @@ public sealed partial class CommandRuntime
                 }
                 var user = RuntimeTemplate.Render(userTemplate, scalars);
                 var system = RuntimeTemplate.Render(systemTemplate ?? "", scalars);
+                if (string.IsNullOrWhiteSpace(user))
+                {
+                    // A fresh treatment may fall back as a unit. A candidate or
+                    // existing pin keeps its identity so composition can decide
+                    // before pinning, and attached results can still replay.
+                    if (assignment is not null && pinned is null)
+                    {
+                        return null;
+                    }
+                    invalid ??= EmptyUserPromptReason;
+                }
                 var settings = frozenSettings ?? FreezeSettings(descriptor, profile, temperature);
                 if (settings.Error is not null)
                 {

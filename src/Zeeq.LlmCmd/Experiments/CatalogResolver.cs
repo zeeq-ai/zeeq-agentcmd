@@ -196,6 +196,11 @@ internal static class ExperimentSnapshotValidator
             return false;
         }
 
+        if (prompt.User is TemplateChange.Replaced user && string.IsNullOrWhiteSpace(user.Text))
+        {
+            return false;
+        }
+
         return IsValidChange(prompt.System, maxTemplateCharacters)
             && IsValidChange(prompt.User, maxTemplateCharacters);
     }

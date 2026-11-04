@@ -193,7 +193,7 @@ public closed record TemplateChange
     /// <summary>The slot is explicitly removed. Valid only for the system template.</summary>
     public sealed record Removed : TemplateChange;
 
-    /// <summary>The slot is replaced by nonempty text.</summary>
+    /// <summary>The slot is replaced by nonempty text. A user template must contain non-whitespace text.</summary>
     /// <param name="Text">Replacement template text.</param>
     public sealed record Replaced(string Text) : TemplateChange;
 }
@@ -201,6 +201,6 @@ public closed record TemplateChange
 /// <summary>Prompt template changes for one variant.</summary>
 /// <param name="System">Change to the system template.</param>
 /// <param name="User">
-/// Change to the user template. Removal is rejected because a command needs a user message.
+/// Change to the user template. Removal and whitespace-only replacement are rejected because a command needs a user message.
 /// </param>
 public sealed record PromptTemplateOverride(TemplateChange System, TemplateChange User);

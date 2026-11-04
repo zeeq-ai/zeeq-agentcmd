@@ -32,13 +32,13 @@ public sealed record ParameterRecord(string Name, string TypeId, JsonElement Val
 /// <param name="Id">Stable command key.</param>
 /// <param name="Revision">Definition revision.</param>
 /// <param name="Profile">Optional profile override.</param>
-/// <param name="SystemTemplate">Unrendered system template.</param>
-/// <param name="UserTemplate">Unrendered user template.</param>
+/// <param name="SystemTemplate">Optional unrendered system template; an empty rendered system message is omitted.</param>
+/// <param name="UserTemplate">Unrendered user template; generated commands require non-whitespace text.</param>
 /// <param name="DefinitionHash">Hash identifying the definition.</param>
 /// <param name="SchemaName">Provider-compatible schema name.</param>
 /// <param name="Schema">Lazy result JSON schema.</param>
 /// <param name="ResultType">Result serializer metadata, when supplied.</param>
-/// <param name="Render">Renders the user message from parameters.</param>
+/// <param name="Render">Renders the user message from parameters; execution rejects a blank result before sending.</param>
 /// <param name="RenderSystem">Renders the system message from parameters.</param>
 /// <param name="Project">Captures serialized input parameters.</param>
 /// <param name="ValidateInput">Returns an input validation error, or null.</param>

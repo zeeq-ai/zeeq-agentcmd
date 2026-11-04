@@ -5,6 +5,7 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 LLMCMD001 | LlmCmd | Error | Invalid typed command or serialization contract
+LLMCMD002 | LlmCmd | Warning | Possible misspelled prompt template declaration
 LLMPROFILE001 | LlmCmd | Error | Invalid typed profile catalog
 LLMCLIENT001 | LlmCmd | Error | Unknown named client
 LLMCLIENT002 | LlmCmd | Error | Duplicate named client

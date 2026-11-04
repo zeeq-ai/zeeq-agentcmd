@@ -125,6 +125,17 @@ public class RuntimeExperimentTests
     sealed class CommandV2(CommandRuntime runtime)
         : PromptCommand<Input, Result>(runtime, Command.Descriptor with { Revision = 2 });
 
+    sealed class PromptOnlyCommand(CommandRuntime runtime)
+        : PromptCommand<Input, Result>(
+            runtime,
+            Command.Descriptor with
+            {
+                UserTemplate = "{Text}",
+                Render = input => input.Text,
+                ValidateInput = _ => null,
+            }
+        );
+
     sealed class Client : IChatClient
     {
         public ConcurrentQueue<(string Prompt, string? Model, float? Temperature)> Calls { get; } =
@@ -268,6 +279,136 @@ public class RuntimeExperimentTests
                 )
         );
         return services.BuildServiceProvider();
+    }
+
+    [Test]
+    public async Task EffectiveUserPromptIsCheckedAfterTreatmentSelection()
+    {
+        var source = new Source { Snapshot = Release("v1", "fr", "treatment {Locale}") };
+        var baseline = new Client();
+        var treatment = new Client();
+        using var provider = Build(source, baseline, treatment, (_, _) => true);
+        var command = new PromptOnlyCommand(provider.GetRequiredService<CommandRuntime>());
+
+        var repaired = await command.WithParameters(new(" ", "en")).ExecuteAsync();
+        await Assert.That(repaired is Outcome<Result>.Success).IsTrue();
+        await Assert.That(treatment.Calls.Single().Prompt).IsEqualTo("treatment fr");
+        await Assert.That(baseline.Calls.Count).IsEqualTo(0);
+
+        source.Snapshot = Release("v2", " \t", "{Locale}");
+        var fallback = (Outcome<Result>.Success)
+            await command.WithParameters(new(" invoice ", "en")).ExecuteAsync();
+        await Assert.That(fallback.Snapshot.Experiment!.Reason).IsEqualTo("InvalidRelease");
+        await Assert.That(baseline.Calls.Single().Prompt).IsEqualTo(" invoice ");
+        await Assert.That(treatment.Calls.Count).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task BlankTreatmentAndDefaultNeverOfferShadowsOrSend()
+    {
+        var source = new Source { Snapshot = Release("v1", " \t", "{Locale}") };
+        var scheduler = new CountingScheduler();
+        var baseline = new Client();
+        var treatment = new Client();
+        var services = new ServiceCollection();
+        services.AddLlmCmd(b =>
+            b.AddChatClient("base", _ => baseline)
+                .AddChatClient("dynamic", _ => treatment)
+                .AddProfile("base", "base", "base-model")
+                .UseDefaultProfile("base")
+                .UseActor(_ => new Actor("tenant", "user"))
+                .UseExperiments(sp => new ExperimentRuntimeOptions(
+                    new ExperimentResolver(source),
+                    RoutePolicy: (_, _) => true,
+                    Scheduler: scheduler,
+                    ShadowScopeFactory: sp.GetRequiredService<IServiceScopeFactory>(),
+                    SelectShadows: (_, _) => ["v"],
+                    ShadowPolicy: (_, _) => true
+                ))
+        );
+        using var provider = services.BuildServiceProvider();
+        var result = await new PromptOnlyCommand(provider.GetRequiredService<CommandRuntime>())
+            .WithParameters(new("\u2003", "en"))
+            .ExecuteAsync();
+
+        await Assert
+            .That(result is Outcome<Result>.Failed { Failure: ExecutionFailure.InvalidInput })
+            .IsTrue();
+        await Assert.That(scheduler.Offered).IsEqualTo(0);
+        await Assert.That(treatment.Calls.Count + baseline.Calls.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task BlankUserReplacementFallsBackButWhitespaceSystemReplacementIsPreserved()
+    {
+        var source = new Source { Snapshot = Release("v1", "fr", " \t") };
+        var baseline = new Client();
+        var treatment = new Client();
+        using var provider = Build(source, baseline, treatment, (_, _) => true);
+        var command = new PromptOnlyCommand(provider.GetRequiredService<CommandRuntime>());
+
+        var fallback = (Outcome<Result>.Success)
+            await command.WithParameters(new("invoice", "en")).ExecuteAsync();
+        await Assert.That(fallback.Snapshot.Experiment!.Reason).IsEqualTo("InvalidRelease");
+        await Assert.That(baseline.Calls.Single().Prompt).IsEqualTo("invoice");
+        await Assert.That(treatment.Calls.Count).IsEqualTo(0);
+
+        var release = Release("v2", "fr", "treatment {Text}");
+        var view = release.Commands["experiment.test"];
+        var variant = view.Variants["v"] with
+        {
+            Prompt = new(
+                new TemplateChange.Replaced(" \t "),
+                new TemplateChange.Replaced("treatment {Text}")
+            ),
+        };
+        source.Snapshot = release with
+        {
+            Commands = new Dictionary<string, ExperimentCatalogView>
+            {
+                [view.CommandId] = view with
+                {
+                    Variants = new Dictionary<string, ExperimentVariant> { ["v"] = variant },
+                },
+            },
+        };
+        var selected = await command.WithParameters(new("invoice", "en")).ExecuteAsync();
+        await Assert.That(selected is Outcome<Result>.Success).IsTrue();
+        await Assert.That(treatment.Calls.Single().Prompt).IsEqualTo(" \t |treatment invoice");
+    }
+
+    [Test]
+    public async Task BlankConfiguredDefaultIsRejectedWithoutSending()
+    {
+        var source = new Source { Snapshot = Release("v1", "fr") };
+        var baseline = new Client();
+        var treatment = new Client();
+        var services = new ServiceCollection();
+        services.AddLlmCmd(b =>
+            b.AddChatClient("base", _ => baseline)
+                .AddChatClient("dynamic", _ => treatment)
+                .AddProfile("base", "base", "base-model")
+                .UseDefaultProfile("base")
+                .UseActor(_ => new Actor("tenant", "user"))
+                .UseExperiments(
+                    new ExperimentRuntimeOptions(
+                        new ExperimentResolver(source),
+                        ConfigureDefault: view => view with { UserTemplate = " \t" },
+                        RoutePolicy: (_, _) => true
+                    )
+                )
+        );
+        using var provider = services.BuildServiceProvider();
+        var result = await new PromptOnlyCommand(provider.GetRequiredService<CommandRuntime>())
+            .WithParameters(new("invoice", "en"))
+            .ExecuteAsync();
+
+        await Assert
+            .That(
+                result is Outcome<Result>.Failed { Failure: ExecutionFailure.ConfigurationFailure }
+            )
+            .IsTrue();
+        await Assert.That(baseline.Calls.Count + treatment.Calls.Count).IsEqualTo(0);
     }
 
     [Test]

@@ -749,7 +749,9 @@ public sealed class ExperimentCompositionTests
     }
 
     [Test]
-    public async Task InvalidKnownTreatmentFallsBackForEntireDraftBeforeAnyClaim()
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task InvalidKnownTreatmentFallsBackForEntireDraftBeforeAnyClaim(bool blankPrompt)
     {
         var ledger = new InMemoryFeedbackLedger();
         var actor = new Actor("tenant", "subject");
@@ -761,7 +763,7 @@ public sealed class ExperimentCompositionTests
         {
             Prompt = new(
                 new TemplateChange.Inherited(),
-                new TemplateChange.Replaced("HEADER:{Unknown}")
+                new TemplateChange.Replaced(blankPrompt ? "{Text}" : "HEADER:{Unknown}")
             ),
         };
         var client = new FakeClient();
@@ -789,7 +791,8 @@ public sealed class ExperimentCompositionTests
         var root = await roots.BeginAsync<Doc>(new(run, "input", "key"));
         root.WithPartFrom(
             DocSlots.Header,
-            Make(runtime, "header", "HEADER", DocJson.Default.Header).WithParameters(new("doc"))
+            Make(runtime, "header", "HEADER", DocJson.Default.Header)
+                .WithParameters(new(blankPrompt ? " \t" : "doc"))
         );
         root.WithPartFrom(
             DocSlots.Parties,
@@ -817,7 +820,11 @@ public sealed class ExperimentCompositionTests
     }
 
     [Test]
-    public async Task InvalidDeferredTreatmentFailsWithoutRepinningOrSendingThatStep()
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task InvalidDeferredTreatmentFailsWithoutRepinningOrSendingThatStep(
+        bool blankPrompt
+    )
     {
         var ledger = new InMemoryFeedbackLedger();
         var actor = new Actor("tenant", "subject");
@@ -828,7 +835,7 @@ public sealed class ExperimentCompositionTests
         {
             Prompt = new(
                 new TemplateChange.Inherited(),
-                new TemplateChange.Replaced("TOTALS:{Unknown}")
+                new TemplateChange.Replaced(blankPrompt ? "{Text}" : "TOTALS:{Unknown}")
             ),
         };
         var client = new FakeClient();
@@ -870,13 +877,16 @@ public sealed class ExperimentCompositionTests
         root.WithPartFrom(
             DocSlots.Totals,
             root.Steps.Of(DocSlots.Header)
-                .Then<Totals, Input>(_ => totals.WithParameters(new("doc")))
+                .Then<Totals, Input>(_ => totals.WithParameters(new(blankPrompt ? " \t" : "doc")))
         );
         var outcome = await root.ExecuteAsync();
         await Assert.That(outcome is CompositeOutcome<Doc>.Incomplete).IsTrue();
         var draft = (await store.GetDraftAsync(root.DraftId!.Value, default))!;
         await Assert.That(draft.ExperimentPin!.Snapshot!.Revision.Value).IsEqualTo("v1");
-        await Assert.That(draft.Slots["totals"].Attempts).IsEqualTo(0);
+        if (!blankPrompt)
+        {
+            await Assert.That(draft.Slots["totals"].Attempts).IsEqualTo(0);
+        }
         await Assert.That(client.CallsFor("TOTALS")).IsEqualTo(0);
         await Assert.That(client.Total).IsEqualTo(3);
     }
