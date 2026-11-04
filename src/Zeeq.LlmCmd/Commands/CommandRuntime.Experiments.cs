@@ -6,6 +6,12 @@ using System.Text.Json;
 
 namespace Zeeq.LlmCmd;
 
+/// <summary>
+/// Separates a hook failure from an invalid release, so fallback cannot hide the
+/// exception and spend on a call the author intended to reject.
+/// </summary>
+internal sealed class ValidationHookException : Exception { }
+
 // A composition freezes these values at registration, before async source resolution.
 internal sealed record FrozenExperimentInput<T>(
     T Input,
@@ -42,7 +48,7 @@ public sealed partial class CommandRuntime
             ?? throw new InvalidOperationException("Runtime binding unavailable");
         var safe = binding.TrySnapshot(input, out var frozen);
         var current = safe ? frozen : input;
-        var invalid = descriptor.ValidateInput(current);
+        var invalid = ValidateExperimentInput(descriptor, current);
         return new(
             current,
             safe,
@@ -213,7 +219,9 @@ public sealed partial class CommandRuntime
                     return null;
                 }
                 var invalid =
-                    overrides.Count > 0 ? descriptor.ValidateInput(input) : frozen.Invalid;
+                    overrides.Count > 0
+                        ? ValidateExperimentInput(descriptor, input)
+                        : frozen.Invalid;
                 if (invalid is not null && assignment is not null)
                 {
                     return null;
@@ -388,10 +396,29 @@ public sealed partial class CommandRuntime
                     invalid
                 );
             }
+            catch (ValidationHookException)
+            {
+                throw;
+            }
             catch (Exception error) when (error is not OperationCanceledException)
             {
                 return null;
             }
+        }
+    }
+
+    private static string? ValidateExperimentInput<TP, TR>(
+        PromptDescriptor<TP, TR> descriptor,
+        TP input
+    )
+    {
+        try
+        {
+            return descriptor.ValidateInput(input);
+        }
+        catch (Exception)
+        {
+            throw new ValidationHookException();
         }
     }
 

@@ -100,6 +100,16 @@ sealed class CompositionEngine(
         {
             outcome = new CompositeOutcome<TWhole>.Cancelled(draftId, []);
         }
+        catch (ValidationHookException)
+        {
+            outcome = ct.IsCancellationRequested
+                ? new CompositeOutcome<TWhole>.Cancelled(draftId, [])
+                : new CompositeOutcome<TWhole>.Unavailable(
+                    draftId,
+                    "hook_failure:ValidateInput",
+                    []
+                );
+        }
         // Exception text is never copied into an outcome: it may carry parameter or provider content.
         catch (Exception)
         {
@@ -664,6 +674,10 @@ sealed class CompositionEngine(
             {
                 throw;
             }
+            catch (ValidationHookException)
+            {
+                throw;
+            }
             catch (Exception)
             {
                 return new CompositeOutcome<TWhole>.Unavailable(
@@ -780,6 +794,10 @@ sealed class CompositionEngine(
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (ValidationHookException)
             {
                 throw;
             }
@@ -1192,6 +1210,14 @@ sealed class CompositionEngine(
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
                     throw;
+                }
+                catch (ValidationHookException)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    return new(
+                        new(id, StepStatus.Failed, stepId, Code: "hook_failure:ValidateInput"),
+                        null
+                    );
                 }
                 catch (Exception)
                 {

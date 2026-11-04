@@ -93,6 +93,16 @@ public sealed partial class Invocation<TP, TR>
                     experiment
                 );
             }
+            catch (ValidationHookException)
+            {
+                return new(
+                    runtime,
+                    descriptor,
+                    parameters,
+                    state,
+                    new(null, null, Array.Empty<ParameterRecord>(), HookPhase: "ValidateInput")
+                );
+            }
             catch
             {
                 return new(
@@ -233,6 +243,10 @@ public sealed partial class Invocation<TP, TR>
     {
         if (frozenExperiment is null)
         {
+            if (prepared?.HookPhase == "ValidateInput")
+            {
+                throw new ValidationHookException();
+            }
             throw new InvalidOperationException("Frozen experiment input unavailable");
         }
         ExperimentResolution resolution;

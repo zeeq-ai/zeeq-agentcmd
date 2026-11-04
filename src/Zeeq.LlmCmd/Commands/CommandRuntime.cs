@@ -161,7 +161,8 @@ public sealed partial class CommandRuntime : IDisposable
         bool explicitProfile = false,
         PreparedExperiment<TP>? experimentPrepared = null,
         Actor? capturedActor = null,
-        bool suppressShadows = false
+        bool suppressShadows = false,
+        string? pendingHookPhase = null
     )
     {
         var id = context.ExecutionId;
@@ -246,6 +247,15 @@ public sealed partial class CommandRuntime : IDisposable
                 );
             }
 
+            if (pendingHookPhase is not null)
+            {
+                return ct.IsCancellationRequested
+                    ? new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context))
+                    : new Outcome<TR>.Failed(
+                        new ExecutionFailure.HookFailure(context, pendingHookPhase)
+                    );
+            }
+
             if (disposed)
             {
                 return new Outcome<TR>.Failed(
@@ -310,6 +320,14 @@ public sealed partial class CommandRuntime : IDisposable
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
                     return new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context));
+                }
+                catch (ValidationHookException)
+                {
+                    return ct.IsCancellationRequested
+                        ? new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context))
+                        : new Outcome<TR>.Failed(
+                            new ExecutionFailure.HookFailure(context, "ValidateInput")
+                        );
                 }
                 catch
                 {

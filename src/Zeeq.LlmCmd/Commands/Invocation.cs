@@ -136,11 +136,16 @@ public sealed partial class Invocation<TP, TR>
         );
         FrozenExperimentInput<TP>? frozen = null;
         var error = state.Error;
+        string? hookPhase = null;
         if (runtime.Experiments is not null)
         {
             try
             {
                 frozen = runtime.FreezeExperimentInput(descriptor, parameters);
+            }
+            catch (ValidationHookException)
+            {
+                hookPhase = "ValidateInput";
             }
             catch
             {
@@ -157,7 +162,8 @@ public sealed partial class Invocation<TP, TR>
             new(member, file, line),
             ct,
             frozenExperiment: frozen,
-            explicitProfile: state.ProfileExplicit
+            explicitProfile: state.ProfileExplicit,
+            pendingHookPhase: hookPhase
         );
     }
 }

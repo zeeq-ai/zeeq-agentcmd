@@ -146,6 +146,51 @@ try
         );
     }
 
+    // Compile the exact validation-interface example in its own app: it shares
+    // names and an ID with the quick start but intentionally has a richer contract.
+    var anatomy = Path.Combine(
+        repository,
+        "docs",
+        "content",
+        "1.getting-started",
+        "4.command-anatomy.md"
+    );
+    var anatomyApp = Path.Combine(tempRoot, "anatomy-app");
+    Directory.CreateDirectory(anatomyApp);
+    File.WriteAllText(Path.Combine(anatomyApp, "anatomy-app.csproj"), projectText);
+    File.Copy(Path.Combine(app, "NuGet.Config"), Path.Combine(anatomyApp, "NuGet.Config"));
+    File.Copy(
+        Path.Combine(app, "ReflectionProbe.cs"),
+        Path.Combine(anatomyApp, "ReflectionProbe.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(anatomyApp, "ExtractInvoice.cs"),
+        Fence(anatomy, "csharp", "ExtractInvoice.cs")
+    );
+    File.WriteAllText(
+        Path.Combine(anatomyApp, "Program.cs"),
+        Fence(quickStart, "csharp", "Program.cs")
+    );
+    await Run(
+        anatomyApp,
+        "build",
+        "anatomy-app.csproj",
+        "-p:TreatWarningsAsErrors=true",
+        "-p:JsonSerializerIsReflectionEnabledByDefault=false",
+        "-p:RestorePackagesPath=" + packages
+    );
+    var anatomyOutput = await Run(
+        anatomyApp,
+        "run",
+        "--no-build",
+        "--project",
+        "anatomy-app.csproj"
+    );
+    if (!anatomyOutput.Contains("12.50 USD", StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException("The command anatomy example did not run.");
+    }
+
     File.WriteAllText(
         Path.Combine(app, "ExplicitContext.cs"),
         Fence(serialization, "csharp", "ExplicitContext.cs")
@@ -334,7 +379,7 @@ try
     }
 
     Console.WriteLine(
-        "Exact quick-start and telemetry examples ran; context, support, outcome, composition, experiment and exporter fences compiled; JSON reflection is disabled."
+        "Exact quick-start, command anatomy and telemetry examples ran; context, support, outcome, composition, experiment and exporter fences compiled; JSON reflection is disabled."
     );
 }
 finally

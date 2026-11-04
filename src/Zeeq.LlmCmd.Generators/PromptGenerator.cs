@@ -65,7 +65,7 @@ public sealed class PromptGenerator : IIncrementalGenerator
                 continue;
             }
 
-            var model = Build(type, attribute, output);
+            var model = Build(type, attribute, compilation, output);
             if (model is null)
             {
                 continue;
@@ -137,6 +137,7 @@ public sealed class PromptGenerator : IIncrementalGenerator
     static CommandModel? Build(
         INamedTypeSymbol type,
         AttributeData? attribute,
+        Compilation compilation,
         SourceProductionContext output
     )
     {
@@ -304,8 +305,22 @@ public sealed class PromptGenerator : IIncrementalGenerator
                 );
             }
         }
-        model.InputValidator = Validator(type, "ValidateInput", model.Parameters, Fail);
-        model.ResultValidator = Validator(type, "ValidateResult", model.Result, Fail);
+        model.InputValidator = Validator(
+            type,
+            "ValidateInput",
+            model.Parameters,
+            compilation.GetTypeByMetadataName("Zeeq.LlmCmd.IInputValidator`1"),
+            out model.InputValidatorInterface,
+            Fail
+        );
+        model.ResultValidator = Validator(
+            type,
+            "ValidateResult",
+            model.Result,
+            compilation.GetTypeByMetadataName("Zeeq.LlmCmd.IResultValidator`1"),
+            out model.ResultValidatorInterface,
+            Fail
+        );
         foreach (var hook in type.GetMembers("ConfigureDefaults"))
         {
             if (
@@ -347,9 +362,12 @@ public sealed class PromptGenerator : IIncrementalGenerator
         INamedTypeSymbol command,
         string specific,
         ITypeSymbol parameter,
+        INamedTypeSymbol? interfaceDefinition,
+        out bool interfaceHook,
         Action<string> error
     )
     {
+        interfaceHook = false;
         var methods = command
             .GetMembers(specific)
             .OfType<IMethodSymbol>()
@@ -360,8 +378,61 @@ public sealed class PromptGenerator : IIncrementalGenerator
                 && m.ReturnType.SpecialType == SpecialType.System_String
                 && SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, parameter)
             )
-            .ToArray();
-        if (methods.Length > 1)
+            .ToList();
+        var interfaces = interfaceDefinition is null
+            ? Array.Empty<INamedTypeSymbol>()
+            : command
+                .AllInterfaces.Where(i =>
+                    SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, interfaceDefinition)
+                )
+                .ToArray();
+        if (interfaces.Length > 0)
+        {
+            if (
+                interfaces.Length != 1
+                || !SymbolEqualityComparer.IncludeNullability.Equals(
+                    interfaces[0].TypeArguments[0],
+                    parameter
+                )
+            )
+            {
+                error(specific + " interface must use the command's exact corresponding type.");
+                return null;
+            }
+
+            if (
+                !command.Interfaces.Any(i =>
+                    SymbolEqualityComparer.Default.Equals(i, interfaces[0])
+                )
+            )
+            {
+                error(specific + " interface must be declared directly on the command.");
+                return null;
+            }
+
+            var member = interfaces[0].GetMembers(specific).OfType<IMethodSymbol>().Single();
+            var implementation =
+                command.FindImplementationForInterfaceMember(member) as IMethodSymbol;
+            if (
+                implementation is null
+                || !SymbolEqualityComparer.Default.Equals(implementation.ContainingType, command)
+            )
+            {
+                error(specific + " interface must be implemented on the command.");
+                return null;
+            }
+
+            if (
+                !methods.Any(method =>
+                    SymbolEqualityComparer.Default.Equals(method, implementation)
+                )
+            )
+            {
+                methods.Add(implementation);
+            }
+            interfaceHook = true;
+        }
+        if (methods.Count > 1)
         {
             error(
                 "Ambiguous validation hooks; use distinct ValidateInput and ValidateResult names."
@@ -792,10 +863,27 @@ public sealed class PromptGenerator : IIncrementalGenerator
 
             b.Append("return null; }\n");
         }
-        Root("Input", model.Parameters, model.InputValidator);
-        Root("Result", model.Result, model.ResultValidator);
-        void Root(string suffix, ITypeSymbol type, string? hook)
+        Root("Input", model.Parameters, model.InputValidator, model.InputValidatorInterface);
+        Root("Result", model.Result, model.ResultValidator, model.ResultValidatorInterface);
+        void Root(string suffix, ITypeSymbol type, string? hook, bool interfaceHook)
         {
+            if (interfaceHook)
+            {
+                // Static interface dispatch is needed for explicit implementations; the
+                // structural checks remain in the descriptor's generated wrapper.
+                b.Append("private static string? __Invoke")
+                    .Append(suffix)
+                    .Append("Validator<TCommand>(")
+                    .Append(CommandModels.Type(type))
+                    .Append(" value) where TCommand:global::Zeeq.LlmCmd.I")
+                    .Append(suffix)
+                    .Append("Validator<")
+                    .Append(CommandModels.Type(type))
+                    .Append("> => TCommand.Validate")
+                    .Append(suffix)
+                    .Append("(value);\n");
+            }
+
             b.Append("private static string? __Validate")
                 .Append(suffix)
                 .Append('(')
@@ -822,7 +910,16 @@ public sealed class PromptGenerator : IIncrementalGenerator
                 Check("value", type);
             }
 
-            b.Append("return ").Append(hook is null ? "null" : hook + "(value!)").Append("; }\n");
+            var call =
+                interfaceHook
+                    ? "__Invoke"
+                        + suffix
+                        + "Validator<"
+                        + CommandModels.Type(model.Type)
+                        + ">(value!)"
+                : hook is null ? "null"
+                : hook + "(value!)";
+            b.Append("return ").Append(call).Append("; }\n");
         }
         void Check(string expression, ITypeSymbol type)
         {

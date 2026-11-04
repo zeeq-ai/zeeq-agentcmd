@@ -333,7 +333,8 @@ public sealed class ExperimentCompositionTests
         CommandRuntime runtime,
         string id,
         string prefix,
-        JsonTypeInfo<TR> result
+        JsonTypeInfo<TR> result,
+        Func<Input, string?>? validate = null
     ) =>
         new(
             runtime,
@@ -360,11 +361,87 @@ public sealed class ExperimentCompositionTests
                             null
                         ),
                     ],
-                _ => null,
+                validate ?? (_ => null),
                 _ => null,
                 RuntimeBinding: new Binding()
             )
         );
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task ThrowingInputHookStopsExperimentWithoutSendingThatPart(bool deferred)
+    {
+        static string? Throw(Input _) => throw new InvalidOperationException("private hook detail");
+
+        var ledger = new InMemoryFeedbackLedger();
+        var actor = new Actor("tenant", "subject");
+        var run = ledger.CreateRun(actor);
+        var client = new FakeClient();
+        var options = new ExperimentRuntimeOptions(
+            new ExperimentResolver(new RotatingSource(View("v1"))),
+            DefaultConfigurationFingerprint: "defaults-v1"
+        );
+        using var runtime = CommandRuntime.Create(
+            () => client,
+            new Dictionary<string, Profile> { ["extraction"] = new("model") },
+            ledger,
+            () => actor,
+            experiments: options
+        );
+        var store = new InMemoryCompositionStore();
+        var registry = new CompositionRegistry([
+            new CompositeDescriptor<Doc>(
+                "document.extraction",
+                1,
+                "hash",
+                DocJson.Default.Doc,
+                DocSlots.All
+            ),
+        ]);
+        var roots = new RootCommands(ledger, () => actor, store, registry, runtime: runtime);
+        var header = Make(
+            runtime,
+            "header",
+            "HEADER",
+            DocJson.Default.Header,
+            deferred ? null : Throw
+        );
+        var parties = Make(runtime, "parties", "PARTIES", DocJson.Default.Parties);
+        var lines = Make(runtime, "lines", "LINES", DocJson.Default.LineItems);
+        var totals = Make(
+            runtime,
+            "totals",
+            "TOTALS",
+            DocJson.Default.Totals,
+            deferred ? Throw : null
+        );
+        var root = await roots.BeginAsync<Doc>(new(run, "input", "hook-error"));
+        root.WithPartFrom(DocSlots.Header, header.WithParameters(new("header")));
+        root.WithPartFrom(DocSlots.Parties, parties.WithParameters(new("parties")));
+        root.WithPartFrom(DocSlots.Lines, lines.WithParameters(new("lines")));
+        root.WithPartFrom(
+            DocSlots.Totals,
+            root.Steps.Of(DocSlots.Header)
+                .Then<Totals, Input>(_ => totals.WithParameters(new("totals")))
+        );
+
+        var outcome = await root.ExecuteAsync();
+        if (deferred)
+        {
+            var incomplete = (CompositeOutcome<Doc>.Incomplete)outcome;
+            await Assert
+                .That(incomplete.Steps.Single(step => step.SlotId == "totals").Code)
+                .IsEqualTo("hook_failure:ValidateInput");
+            await Assert.That(client.CallsFor("TOTALS")).IsEqualTo(0);
+        }
+        else
+        {
+            var unavailable = (CompositeOutcome<Doc>.Unavailable)outcome;
+            await Assert.That(unavailable.Reason).IsEqualTo("hook_failure:ValidateInput");
+            await Assert.That(client.Total).IsEqualTo(0);
+        }
+    }
 
     [Test]
     public async Task PinsVersionAcrossMutationRotationAndDeferredStepAndStoresAggregateEvidence()

@@ -229,7 +229,10 @@ sealed class DemoClient : IChatClient
                     "Explicit context did not control the response schema."
                 );
             }
-            body = """{"receipt_total":42,"future":7}""";
+            body =
+                prompt == "OVERRIDE reject-result"
+                    ? """{"receipt_total":-1,"future":7}"""
+                    : """{"receipt_total":42,"future":7}""";
         }
         else if (prompt.StartsWith("HEADER ", StringComparison.Ordinal))
         {

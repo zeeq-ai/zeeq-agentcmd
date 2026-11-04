@@ -703,6 +703,130 @@ public class RuntimeExperimentTests
     }
 
     [Test]
+    public async Task InterfaceValidatorChecksTheEffectiveExperimentOverride()
+    {
+        var source = new Source();
+        var client = new Client();
+        var services = new ServiceCollection();
+        services.AddLlmCmd(b =>
+            b.AddChatClient("base", _ => client)
+                .AddProfile("base", "base", "base-model")
+                .UseDefaultProfile("base")
+                .UseActor(_ => new Actor("tenant", "user"))
+                .UseExperiments(new ExperimentRuntimeOptions(new ExperimentResolver(source)))
+        );
+        using var provider = services.BuildServiceProvider();
+        var command = new ExperimentValidatedCommand(provider.GetRequiredService<CommandRuntime>());
+        var contract = command.ExperimentContract!;
+        ExperimentRevision.TryCreate("v1", out var revision);
+        var variant = new ExperimentVariant(
+            "v",
+            1,
+            new(
+                new TemplateChange.Inherited(),
+                new TemplateChange.Replaced("TREATMENT {Document} {Locale}")
+            ),
+            new Dictionary<string, JsonElement> { ["Locale"] = J("\"fr\"") },
+            null
+        );
+        var view = ExperimentCatalogView.Freeze(
+            contract.CommandId,
+            contract.CommandRevision,
+            contract.ContractSignature,
+            revision!,
+            "trial",
+            "v",
+            [variant]
+        );
+        source.Snapshot = new(
+            revision!,
+            new Dictionary<string, ExperimentCatalogView> { [contract.CommandId] = view }
+        );
+
+        var result = await command
+            .WithParameters(new ExperimentValidatedInput("invoice", "en"))
+            .ExecuteAsync();
+
+        await Assert.That(result is Outcome<ExperimentValidatedResult>.Success).IsTrue();
+        await Assert.That(client.Calls.Single().Prompt).IsEqualTo("CONTROL invoice en");
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task ThrowingInterfaceValidatorDoesNotFallBackOrSend(bool throwsAfterOverride)
+    {
+        var source = new Source();
+        var client = new Client();
+        var services = new ServiceCollection();
+        services.AddLlmCmd(b =>
+            b.AddChatClient("base", _ => client)
+                .AddProfile("base", "base", "base-model")
+                .UseDefaultProfile("base")
+                .UseActor(_ => new Actor("tenant", "user"))
+                .UseExperiments(new ExperimentRuntimeOptions(new ExperimentResolver(source)))
+        );
+        using var provider = services.BuildServiceProvider();
+        var command = new ExperimentValidatedCommand(provider.GetRequiredService<CommandRuntime>());
+        var contract = command.ExperimentContract!;
+        ExperimentRevision.TryCreate("v1", out var revision);
+        var variant = new ExperimentVariant(
+            "v",
+            1,
+            new(new TemplateChange.Inherited(), new TemplateChange.Inherited()),
+            new Dictionary<string, JsonElement> { ["Locale"] = J("\"boom\"") },
+            null
+        );
+        var view = ExperimentCatalogView.Freeze(
+            contract.CommandId,
+            contract.CommandRevision,
+            contract.ContractSignature,
+            revision!,
+            "trial",
+            "v",
+            [variant]
+        );
+        source.Snapshot = new(
+            revision!,
+            new Dictionary<string, ExperimentCatalogView> { [contract.CommandId] = view }
+        );
+
+        var result = await command
+            .WithParameters(
+                new ExperimentValidatedInput("invoice", throwsAfterOverride ? "en" : "boom")
+            )
+            .ExecuteAsync();
+
+        await Assert
+            .That(
+                result
+                    is Outcome<ExperimentValidatedResult>.Failed
+                    {
+                        Failure: ExecutionFailure.HookFailure { Phase: "ValidateInput" },
+                    }
+            )
+            .IsTrue();
+        await Assert.That(client.Calls.Count).IsEqualTo(0);
+        await Assert.That(source.Reads).IsEqualTo(throwsAfterOverride ? 1 : 0);
+
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        var cancelledResult = await command
+            .WithParameters(new ExperimentValidatedInput("invoice", "boom"))
+            .ExecuteAsync(cancelled.Token);
+        await Assert
+            .That(
+                cancelledResult
+                    is Outcome<ExperimentValidatedResult>.Failed
+                    {
+                        Failure: ExecutionFailure.Cancelled,
+                    }
+            )
+            .IsTrue();
+        await Assert.That(client.Calls.Count).IsEqualTo(0);
+    }
+
+    [Test]
     [Arguments(false)]
     [Arguments(true)]
     public async Task PolicySeesEffectiveTemperaturePerRouteAndFallback(bool explicitTemperature)

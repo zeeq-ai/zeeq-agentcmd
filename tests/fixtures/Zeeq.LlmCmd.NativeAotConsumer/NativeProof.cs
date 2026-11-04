@@ -51,6 +51,26 @@ internal static class NativeProof
         );
 
         var command = services.GetRequiredService<OverrideCommand>();
+        var rejectedInput = await command.WithParameters(new OverrideInput("")).ExecuteAsync();
+        Require(
+            rejectedInput
+                is Outcome<OverrideOutput>.Failed
+                {
+                    Failure: ExecutionFailure.InvalidInput { Reason: "Document is required" },
+                },
+            "The native interface input validator did not run."
+        );
+        var rejectedResult = await command
+            .WithParameters(new OverrideInput("reject-result"))
+            .ExecuteAsync();
+        Require(
+            rejectedResult
+                is Outcome<OverrideOutput>.Failed
+                {
+                    Failure: ExecutionFailure.InvalidOutput { Reason: "Receipt total is negative" },
+                },
+            "The native interface result validator did not run."
+        );
         var outcome = await command.WithParameters(new OverrideInput("document")).ExecuteAsync();
         Require(
             outcome is Outcome<OverrideOutput>.Success { Value.ReceiptTotal: 42 } explicitResult

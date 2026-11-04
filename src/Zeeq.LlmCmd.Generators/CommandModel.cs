@@ -37,6 +37,8 @@ internal sealed class CommandModel
         ResultAlias = "";
     public string? InputValidator,
         ResultValidator;
+    public bool InputValidatorInterface,
+        ResultValidatorInterface;
 }
 
 internal static class CommandModels
