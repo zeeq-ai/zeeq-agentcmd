@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AgentCmdGenerateCommands>true</AgentCmdGenerateCommands>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Zeeq.AgentCmd/Zeeq.AgentCmd.csproj" />
+  </ItemGroup>
+  <Import Project="../../../scripts/AgentCmd.Manifest.targets" />
+</Project>

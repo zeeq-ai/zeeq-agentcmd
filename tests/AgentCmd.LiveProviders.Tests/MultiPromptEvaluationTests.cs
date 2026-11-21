@@ -323,8 +323,7 @@ internal static class MultiPromptProof
             throw new InvalidOperationException("Aggregate read failed.");
         }
 
-        var whole =
-            read.Value.Value.Deserialize(MultiWholeJson.Default.MultiWhole)
+        var whole = read.Value.Value.Deserialize(MultiWholeJson.Default.MultiWhole)
             ?? throw new InvalidOperationException("Aggregate decode failed.");
         if (
             whole.Header.Currency != "USD"

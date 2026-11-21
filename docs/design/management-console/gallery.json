@@ -1,0 +1,56 @@
+[
+  {
+    "screen": 1,
+    "title": "Command workspace",
+    "path": "docs/design/management-console/mockups/01-command-workspace-v2.png",
+    "revision": 2
+  },
+  {
+    "screen": 2,
+    "title": "Draft publication editor",
+    "path": "docs/design/management-console/mockups/02-draft-publication-v3.png",
+    "revision": 3
+  },
+  {
+    "screen": 3,
+    "title": "Production performance monitor",
+    "path": "docs/design/management-console/mockups/03-production-monitor-v3.png",
+    "revision": 3
+  },
+  {
+    "screen": 4,
+    "title": "Matched evaluation",
+    "path": "docs/design/management-console/mockups/04-matched-evaluation-v3.png",
+    "revision": 3
+  },
+  {
+    "screen": 5,
+    "title": "Exact-output review",
+    "path": "docs/design/management-console/mockups/05-output-review-v4.png",
+    "revision": 4
+  },
+  {
+    "screen": 6,
+    "title": "Dataset and case inspector",
+    "path": "docs/design/management-console/mockups/06-dataset-explorer-v4.png",
+    "revision": 4
+  },
+  {
+    "screen": 7,
+    "title": "Traces and attempt details",
+    "path": "docs/design/management-console/mockups/07-traces-v3.png",
+    "revision": 3
+  },
+  {
+    "screen": 8,
+    "title": "Cross-contract study",
+    "path": "docs/design/management-console/mockups/08-cross-contract-study-v3.png",
+    "revision": 3
+  },
+  {
+    "screen": 9,
+    "title": "System settings: storage and sources",
+    "path": "docs/design/management-console/mockups/09-system-settings-v2.png",
+    "revision": 2
+  }
+]

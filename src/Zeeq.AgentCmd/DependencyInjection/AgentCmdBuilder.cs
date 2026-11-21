@@ -281,8 +281,8 @@ public sealed class AgentCmdBuilder
                 ?? throw new InvalidOperationException("Experiment options factory returned null.")
             );
         }
-        var actorFactory =
-            actor ?? throw new InvalidOperationException("An actor accessor must be configured.");
+        var actorFactory = actor
+            ?? throw new InvalidOperationException("An actor accessor must be configured.");
         if (client is null && clients.Count == 0)
         {
             throw new InvalidOperationException("A chat client must be configured.");

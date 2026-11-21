@@ -1,11 +1,15 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Zeeq.AgentCmd.ControlPlane/Zeeq.AgentCmd.ControlPlane.csproj" />
+    <Project Path="src/Zeeq.AgentCmd.ControlPlane.Host/Zeeq.AgentCmd.ControlPlane.Host.csproj" />
     <Project Path="src/Zeeq.AgentCmd/Zeeq.AgentCmd.csproj" />
     <Project Path="src/Zeeq.AgentCmd.Generators/Zeeq.AgentCmd.Generators.csproj" />
     <Project Path="src/Zeeq.AgentCmd.OpenTelemetry/Zeeq.AgentCmd.OpenTelemetry.csproj" />
     <Project Path="src/Zeeq.AgentCmd.Providers/Zeeq.AgentCmd.Providers.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/fixtures/AgentCmd.ControlPlane.OfflineSeed/OfflineSeed.csproj" />
+    <Project Path="tests/AgentCmd.ControlPlane.Tests/AgentCmd.ControlPlane.Tests.csproj" />
     <Project Path="tests/AgentCmd.CollectorAdapters.Tests/AgentCmd.CollectorAdapters.Tests.csproj" />
     <Project Path="tests/AgentCmd.CommandRoot.Tests/AgentCmd.CommandRoot.Tests.csproj" />
     <Project Path="tests/AgentCmd.Composition.Tests/AgentCmd.Composition.Tests.csproj" />

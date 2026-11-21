@@ -1,0 +1,69 @@
+{
+  "status": "passed",
+  "images": [
+    {
+      "screen": 1,
+      "file": "docs/design/management-console/mockups/01-command-workspace-v2.png",
+      "width": 1585,
+      "height": 992,
+      "bytes": 1693714
+    },
+    {
+      "screen": 2,
+      "file": "docs/design/management-console/mockups/02-draft-publication-v3.png",
+      "width": 1584,
+      "height": 993,
+      "bytes": 1721895
+    },
+    {
+      "screen": 3,
+      "file": "docs/design/management-console/mockups/03-production-monitor-v3.png",
+      "width": 1717,
+      "height": 916,
+      "bytes": 1752279
+    },
+    {
+      "screen": 4,
+      "file": "docs/design/management-console/mockups/04-matched-evaluation-v3.png",
+      "width": 1717,
+      "height": 916,
+      "bytes": 1738732
+    },
+    {
+      "screen": 5,
+      "file": "docs/design/management-console/mockups/05-output-review-v4.png",
+      "width": 1585,
+      "height": 992,
+      "bytes": 1592898
+    },
+    {
+      "screen": 6,
+      "file": "docs/design/management-console/mockups/06-dataset-explorer-v4.png",
+      "width": 1717,
+      "height": 916,
+      "bytes": 1804466
+    },
+    {
+      "screen": 7,
+      "file": "docs/design/management-console/mockups/07-traces-v3.png",
+      "width": 1585,
+      "height": 992,
+      "bytes": 1719471
+    },
+    {
+      "screen": 8,
+      "file": "docs/design/management-console/mockups/08-cross-contract-study-v3.png",
+      "width": 1586,
+      "height": 992,
+      "bytes": 1739610
+    },
+    {
+      "screen": 9,
+      "file": "docs/design/management-console/mockups/09-system-settings-v2.png",
+      "width": 1585,
+      "height": 992,
+      "bytes": 1764321
+    }
+  ],
+  "selectedCount": 9
+}

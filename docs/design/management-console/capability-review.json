@@ -1,0 +1,39 @@
+{
+  "status": "Design gap audit; no console services implemented",
+  "reviewers": [
+    "DMTS: domain, identity, evidence and execution correctness",
+    "Product designer: workflow surfaces and navigation",
+    "Customer advocate: complete journeys and acceptance claims",
+    "Lead: source verification and consolidated decisions"
+  ],
+  "columns": ["Missing capability", "What it adds"],
+  "coreGaps": [
+    ["Backtest and reassessment jobs", "Durable progress, cancellation, safe recovery, per-case results and separate candidate/judge spend."],
+    ["Build-pinned execution targets", "Typed preview and execution on the intended build; reject or flag unplanned configured-default fallback."],
+    ["Replay-ready inputs and assets", "Frozen typed inputs and source documents, content identities, retention and approved tool/dependency behavior."],
+    ["Execution history and workload origin", "Search failures and outputs; link attempts, assessments and traces. Keep backtest/judge traffic out of production metrics."],
+    ["Variant/version evidence history", "Diff configurations, compare selected versions, choose a baseline and retain the exact results and decisions for each pin."],
+    ["Dataset purpose and comparison protocol", "Separate tuning, calibration and holdouts; track exposure, pin repeats and use contemporaneous baselines by default."],
+    ["Promotion and adoption", "Specify allocation versus control/default/build changes. Review target compatibility and show what hosts actually adopted."],
+    ["Owned review operations", "Assigned grading, reference-gap and judge-audit tasks, with evidence gaps, disputes, deduplication and decision provenance."]
+  ],
+  "foundations": [
+    "Durable stores, publication delivery/conflict reconciliation, query projections and asset retention.",
+    "Authentication, scoped data/actions, service identity and audit before shared use.",
+    "Paid-launch permissions, concurrency/attempt limits and explicit unknown pricing; no guaranteed exact spend cap.",
+    "Task calibration before judge-led acceptance; intended-assignment and elapsed evidence before stronger online/latency claims."
+  ],
+  "importantNewFindings": [
+    "Primary experiment evidence does not identify production: current evidence has no production/backtest/judge marker.",
+    "No stored output does not prove no provider call happened. Uncertain sends must not be automatically retried.",
+    "A new benchmark version does not invalidate an older frozen report. Report relevance against the selected protocol explicitly.",
+    "A revealed or tuning-exposed case is not an untouched holdout; split related documents and corrections together."
+  ],
+  "later": [
+    "CI regression gates and scheduled backtests",
+    "Production guardrail alerts and failure clustering",
+    "Automatic cross-environment promotion and garbage collection",
+    "Statistical winner claims beyond bounded regression evidence"
+  ],
+  "scope": "Complete author → backtest → compare → publish → observe → trace → regression case. Scoped LLM judging remains in the requested design."
+}

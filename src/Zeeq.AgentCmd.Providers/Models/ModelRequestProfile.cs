@@ -229,8 +229,7 @@ public sealed class ModelRequestCatalog
     public ModelTargetBinding Bind(string providerKey, ApiKind api, string target, string modelId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
-        var profile =
-            Find(providerKey, api, modelId)
+        var profile = Find(providerKey, api, modelId)
             ?? throw new ArgumentException(
                 "No reviewed model request profile matches the binding.",
                 nameof(modelId)

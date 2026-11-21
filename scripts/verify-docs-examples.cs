@@ -427,8 +427,8 @@ static async Task<string> Run(string workingDirectory, params string[] arguments
         start.ArgumentList.Add(argument);
     }
 
-    using var process =
-        Process.Start(start) ?? throw new InvalidOperationException("Could not start dotnet.");
+    using var process = Process.Start(start)
+        ?? throw new InvalidOperationException("Could not start dotnet.");
     var stdout = process.StandardOutput.ReadToEndAsync();
     var stderr = process.StandardError.ReadToEndAsync();
     await process.WaitForExitAsync();

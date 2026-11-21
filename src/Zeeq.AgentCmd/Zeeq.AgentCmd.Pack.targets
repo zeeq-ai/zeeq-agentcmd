@@ -7,6 +7,19 @@
         PackagePath="analyzers/dotnet/cs/"
         Visible="false"
       />
+      <!-- Explicit import only: ordinary consumers never invoke Python or export prompts. -->
+      <None
+        Include="$(MSBuildThisFileDirectory)../../scripts/AgentCmd.Manifest.targets"
+        Pack="true"
+        PackagePath="tools/"
+        Visible="false"
+      />
+      <None
+        Include="$(MSBuildThisFileDirectory)../../scripts/export-command-manifest.py"
+        Pack="true"
+        PackagePath="tools/"
+        Visible="false"
+      />
     </ItemGroup>
   </Target>
 </Project>

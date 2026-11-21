@@ -31,6 +31,8 @@ internal sealed class CommandModel
         System = "",
         User = "";
     public int Revision;
+    public string DefinitionHash = "",
+        ContractSignature = "";
     public List<PropertyModel> ParametersShape = new List<PropertyModel>();
     public List<ContractTypeModel> Contracts = new List<ContractTypeModel>();
     public string ParameterAlias = "",

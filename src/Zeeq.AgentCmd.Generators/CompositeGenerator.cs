@@ -98,10 +98,9 @@ internal static class CompositeModels
         }
 
         model.Contracts = CommandModels.ContractGraph(type, type, Fail);
-        model.Parts =
-            model
-                .Contracts.FirstOrDefault(c => SymbolEqualityComparer.Default.Equals(c.Type, type))
-                ?.Properties
+        model.Parts = model
+            .Contracts.FirstOrDefault(c => SymbolEqualityComparer.Default.Equals(c.Type, type))
+            ?.Properties
             ?? new List<PropertyModel>();
         if (model.Parts.Count == 0)
         {

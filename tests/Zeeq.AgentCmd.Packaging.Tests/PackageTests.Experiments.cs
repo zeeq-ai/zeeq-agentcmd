@@ -97,8 +97,7 @@ public partial class PackageTests
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
-            using var process =
-                Process.Start(start)
+            using var process = Process.Start(start)
                 ?? throw new InvalidOperationException(
                     "Unable to start native experiment consumer."
                 );

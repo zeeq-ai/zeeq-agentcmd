@@ -77,44 +77,41 @@ public sealed class NamedClientSdkTests
         var services = new ServiceCollection();
         services.AddKeyedChatClient("azure.luna", _ => Azure("gpt-6-luna", "azure.luna"));
         services.AddKeyedChatClient("azure.astra", _ => Azure("gpt-6-astra", "azure.astra"));
-        services.AddKeyedChatClient(
-            "claude",
-            _ =>
-            {
-                var identity = new ProviderIdentity("anthropic", "claude", ApiKind.Messages);
-                var captured = new ProviderExtractionChatClient(
-                    new AnthropicClient
-                    {
-                        ApiKey = "synthetic-not-a-credential",
-                        HttpClient = claudeHttp,
-                        BaseUrl = "https://synthetic.example",
-                        MaxRetries = 0,
-                    }.AsIChatClient(defaultModelId: null, defaultMaxOutputTokens: 64),
-                    extractor,
-                    identity,
-                    snapshots
-                );
-                return new ModelPolicyChatClient(
-                    captured,
-                    identity,
-                    modelBindings:
-                    [
-                        ModelRequestCatalog.Default.Bind(
-                            "anthropic",
-                            ApiKind.Messages,
-                            "claude-haiku-5-5",
-                            "claude-haiku-5-5"
-                        ),
-                        ModelRequestCatalog.Default.Bind(
-                            "anthropic",
-                            ApiKind.Messages,
-                            "claude-sonnet-5-5",
-                            "claude-sonnet-5-5"
-                        ),
-                    ]
-                );
-            }
-        );
+        services.AddKeyedChatClient("claude", _ =>
+        {
+            var identity = new ProviderIdentity("anthropic", "claude", ApiKind.Messages);
+            var captured = new ProviderExtractionChatClient(
+                new AnthropicClient
+                {
+                    ApiKey = "synthetic-not-a-credential",
+                    HttpClient = claudeHttp,
+                    BaseUrl = "https://synthetic.example",
+                    MaxRetries = 0,
+                }.AsIChatClient(defaultModelId: null, defaultMaxOutputTokens: 64),
+                extractor,
+                identity,
+                snapshots
+            );
+            return new ModelPolicyChatClient(
+                captured,
+                identity,
+                modelBindings:
+                [
+                    ModelRequestCatalog.Default.Bind(
+                        "anthropic",
+                        ApiKind.Messages,
+                        "claude-haiku-5-5",
+                        "claude-haiku-5-5"
+                    ),
+                    ModelRequestCatalog.Default.Bind(
+                        "anthropic",
+                        ApiKind.Messages,
+                        "claude-sonnet-5-5",
+                        "claude-sonnet-5-5"
+                    ),
+                ]
+            );
+        });
         services
             .AddAgentCmd(builder =>
                 builder

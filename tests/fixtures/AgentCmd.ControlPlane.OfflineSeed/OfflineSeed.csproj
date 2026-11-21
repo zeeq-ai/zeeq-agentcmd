@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AgentCmdGenerateCommands>true</AgentCmdGenerateCommands>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Zeeq.AgentCmd.ControlPlane/Zeeq.AgentCmd.ControlPlane.csproj" />
+  </ItemGroup>
+</Project>

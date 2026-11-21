@@ -19,7 +19,9 @@ public sealed partial class Invocation<TP, TR>
         OperationContext? Context = null,
         bool Suppressed = false,
         string? Error = null,
-        bool ProfileExplicit = false
+        bool ProfileExplicit = false,
+        IExecutionJournal? Journal = null,
+        ExpectedExperimentCandidate? Candidate = null
     );
 
     readonly CommandRuntime runtime;
@@ -117,6 +119,46 @@ public sealed partial class Invocation<TP, TR>
         return InContext(OperationContext.ForRun(runId));
     }
 
+    /// <summary>Returns an invocation whose provider attempts are recorded in the supplied journal.</summary>
+    /// <param name="journal">
+    /// Job-bound journal, usually tied to one worker claim. A failed start append blocks the provider send;
+    /// a failed finish append is not fenced and leaves the attempt for the host to reconcile.
+    /// </param>
+    /// <returns>A new invocation; the original is unchanged.</returns>
+    /// <remarks>
+    /// The journal travels with this immutable invocation, not with the runtime, so concurrent jobs cannot
+    /// replace each other's journal. Journal events carry the execution context, so an explicit
+    /// <see cref="InContext"/> or <see cref="InRun"/> is required; ambient context is rejected at execution.
+    /// Composition steps keep their own slot journal and report a bound journal as a configuration error.
+    /// </remarks>
+    public Invocation<TP, TR> WithJournal(IExecutionJournal journal) =>
+        journal is null ? Error("journal_null") : Copy(state with { Journal = journal });
+
+    /// <summary>Returns an invocation that must prepare exactly the expected candidate before any send.</summary>
+    /// <param name="candidate">Planned treatment or configured default.</param>
+    /// <returns>A new invocation; the original is unchanged.</returns>
+    /// <remarks>
+    /// A mismatch or failed preparation returns a configuration failure with a reason from
+    /// <see cref="ExperimentCandidateFailureReasons"/> and sends nothing. It never falls back to the
+    /// configured default. Invocations without a candidate keep the ordinary production fallback.
+    /// </remarks>
+    public Invocation<TP, TR> RequireExperimentCandidate(ExpectedExperimentCandidate candidate) =>
+        candidate switch
+        {
+            null => Error(ExperimentCandidateFailureReasons.Null),
+            ExpectedExperimentCandidate.Treatment treatment
+                when treatment.Revision is null
+                    || string.IsNullOrWhiteSpace(treatment.ExperimentId)
+                    || string.IsNullOrWhiteSpace(treatment.VariantId) => Error(
+                ExperimentCandidateFailureReasons.Invalid
+            ),
+            ExpectedExperimentCandidate.ConfiguredDefault configured
+                when string.IsNullOrWhiteSpace(configured.ExpectedFingerprint) => Error(
+                ExperimentCandidateFailureReasons.Invalid
+            ),
+            _ => Copy(state with { Candidate = candidate }),
+        };
+
     /// <summary>Captures context and call site, then executes the command and returns its typed outcome.</summary>
     public Task<Outcome<TR>> ExecuteAsync(
         CancellationToken ct = default,
@@ -136,6 +178,14 @@ public sealed partial class Invocation<TP, TR>
         );
         FrozenExperimentInput<TP>? frozen = null;
         var error = state.Error;
+
+        // A journal entry is evidence for one worker claim. Ambient context could belong to an
+        // unrelated request, so journaled work must name its run explicitly.
+        if (state.Journal is not null && state.Context is null)
+        {
+            error ??= "journal_requires_explicit_context";
+        }
+
         string? hookPhase = null;
         if (runtime.Experiments is not null)
         {
@@ -161,9 +211,11 @@ public sealed partial class Invocation<TP, TR>
             error,
             new(member, file, line),
             ct,
+            journal: state.Journal,
             frozenExperiment: frozen,
             explicitProfile: state.ProfileExplicit,
-            pendingHookPhase: hookPhase
+            pendingHookPhase: hookPhase,
+            expectedCandidate: state.Candidate
         );
     }
 }

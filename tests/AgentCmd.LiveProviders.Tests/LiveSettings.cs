@@ -68,8 +68,9 @@ internal sealed class LiveSettings(
             );
         }
 
-        var model =
-            configuration[$"{environment}_MODEL"] ?? configuration[$"{section}:Model"] ?? fallback;
+        var model = configuration[$"{environment}_MODEL"]
+            ?? configuration[$"{section}:Model"]
+            ?? fallback;
         if (string.IsNullOrWhiteSpace(model))
         {
             throw new InvalidOperationException($"Missing {section}:Model");
@@ -78,8 +79,8 @@ internal sealed class LiveSettings(
         Uri? endpoint = null;
         if (provider == "azureopenai")
         {
-            var value =
-                configuration["AZURE_OPENAI_ENDPOINT"] ?? configuration["AzureOpenAI:Endpoint"];
+            var value = configuration["AZURE_OPENAI_ENDPOINT"]
+                ?? configuration["AzureOpenAI:Endpoint"];
             if (
                 !Uri.TryCreate(value, UriKind.Absolute, out var resource)
                 || resource.Scheme != Uri.UriSchemeHttps

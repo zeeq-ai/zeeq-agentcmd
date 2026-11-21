@@ -191,14 +191,11 @@ public class CompositionSettingsTests
         );
         var temperature = .2f;
         var callbacks = 0;
-        var call = new SettingsCommand(
-            runtime,
-            p =>
-            {
-                callbacks++;
-                p.Temperature = temperature;
-            }
-        ).WithParameters(new("document"));
+        var call = new SettingsCommand(runtime, p =>
+        {
+            callbacks++;
+            p.Temperature = temperature;
+        }).WithParameters(new("document"));
         var root = await roots.BeginAsync<SettingsWhole>(new(run, "input-v1", "freeze"));
         root.WithPartFrom(Header, call);
         temperature = .9f;

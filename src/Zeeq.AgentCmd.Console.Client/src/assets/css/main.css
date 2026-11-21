@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* Compact operator density: 13px body text, tight rows. Identity and error text stays readable. */
+@theme static {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Nuxt UI sizes text in rem; a 15px root makes its text-sm 13px and tightens spacing in proportion. */
+html {
+  font-size: 15px;
+}
+
+body {
+  font-size: 0.875rem;
+}
+
+:root {
+  --ui-radius: 0.25rem;
+  --ui-header-height: 2.75rem;
+}
+
+.dark {
+  --ui-primary: var(--ui-color-primary-500);
+}
+
+/* Unknown values use a distinct treatment so they never read as zero. */
+.value-unknown {
+  font-style: italic;
+  color: var(--ui-text-muted);
+}

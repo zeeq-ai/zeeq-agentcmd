@@ -320,3 +320,40 @@ public closed record ExperimentResolution
     /// <param name="Reason">Sanitized reason recorded with the result.</param>
     public sealed record ConfiguredDefault(ConfiguredDefaultView View, ExperimentFallbackReason Reason) : ExperimentResolution;
 }
+
+/// <summary>
+/// Configuration that a strict invocation must actually prepare before any provider send. Evaluation and
+/// backtest workers use it so a paid call can never silently run a different configuration than the one
+/// that the job planned and will attribute the result to.
+/// </summary>
+/// <remarks>
+/// <para>
+/// A candidate is an assertion, not a selector. The host still chooses the arm with its own
+/// <see cref="IExperimentSelector"/>. The runtime only verifies the choice and the complete preparation.
+/// Production calls without a candidate keep the ordinary configured-default fallback.
+/// </para>
+/// <para>
+/// A mismatch returns <see cref="ExecutionFailure.ConfigurationFailure"/> with a reason from
+/// <see cref="ExperimentCandidateFailureReasons"/>. Strict preparation never retries with the configured
+/// default, because that output would then be attributed to a candidate that did not run.
+/// </para>
+/// </remarks>
+public closed record ExpectedExperimentCandidate
+{
+    /// <summary>A treatment variant of one immutable publication revision.</summary>
+    /// <param name="Revision">
+    /// Publication revision to read. The source lookup requests this exact revision, so a newer publication
+    /// cannot replace it.
+    /// </param>
+    /// <param name="ExperimentId">Experiment that must own the selected variant.</param>
+    /// <param name="VariantId">Variant that must be selected in the primary role.</param>
+    public sealed record Treatment(ExperimentRevision Revision, string ExperimentId, string VariantId)
+        : ExpectedExperimentCandidate;
+
+    /// <summary>The host-configured default, identified by its stable host fingerprint.</summary>
+    /// <param name="ExpectedFingerprint">
+    /// Value that must equal <see cref="ExperimentRuntimeOptions.DefaultConfigurationFingerprint"/>. The
+    /// default has no publication revision, so the fingerprint is its only stable identity.
+    /// </param>
+    public sealed record ConfiguredDefault(string ExpectedFingerprint) : ExpectedExperimentCandidate;
+}

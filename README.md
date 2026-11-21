@@ -1,6 +1,6 @@
 # Zeeq.AgentCmd
 
-Typed prompt commands and aggregate composition over `Microsoft.Extensions.AI`. This is the first source library, version `0.1.0-alpha.1`, extracted from the tested designs in this repository. It targets .NET 11 and C# 15.
+Typed prompt commands and aggregate composition over `Microsoft.Extensions.AI`. This is the first source library, version `0.1.0-alpha.1`, extracted from the tested designs in this repository. It targets .NET 11 and C# 15. `global.json` pins the SDK used by mise and CI.
 
 [Documentation](https://zeeq-ai.github.io/zeeq-agentcmd/) · [Offline quick start](docs/content/1.getting-started/3.quick-start.md) · [Build the documentation site](docs/README.md)
 
@@ -134,6 +134,73 @@ An experiment source can supply a new prompt, opted-in parameter values, and an 
 
 The host owns authorization, client pipelines, assignment and the side-effect policy for shadows. The default cache, scheduler and ledger are process-local. Composition shadows are offered explicitly after the primary is pinned. See the [runtime experiments guide](docs/content/2.guides/7.runtime-experiments.md) and run the [offline example](examples/Zeeq.AgentCmd.ExperimentsExample/README.md) with `mise run demo:experiments`.
 
+## Management console
+
+The repository now includes a .NET management API and a compact Vue/Vite console. The API uses discovered `IEndpoint` modules, transient `IEndpointHandler` classes, named operations, handler activities, and an OpenAPI snapshot consumed by Kubb. The console retains the five work areas: Commands, Experiments, Traces, Datasets, and Review. Settings reports actual storage and registered capabilities.
+
+Start the local operator API and client in separate terminals:
+
+```sh
+mise run console:install
+mise run console:api:local
+# In another terminal:
+mise run console:dev
+```
+
+The API listens on `http://127.0.0.1:5180`; the client proxies `/api/v1` there. Local mode is explicit and accepts loopback connections, Host authorities, and browser origins only. It grants `local-operator` the `local/dev/default` scope. There is no seeded product data, worker, provider client, or publication target on startup. The [offline workflow fixture](tests/fixtures/AgentCmd.ControlPlane.OfflineSeed/README.md) uses generated commands and fake chat clients when retained development evidence is wanted.
+
+Remote hosts must install authenticated-principal middleware through `ControlPlaneApplication.Build(args, configure)`. The API requires a subject, action permissions in `agentcmd.permission`, and allowed application/environment/partition claims. Scope headers select an authorized namespace; they never establish identity. Default external mode denies unauthenticated reads and writes. Resource edits and transitions require the returned ETag in `If-Match`. A conflict preserves the earlier version; frozen resources are immutable.
+
+Storage is a host-wide bootstrap choice. `ControlPlane:Provider=Sqlite` uses persistent local disk and one host process. Its sidecar lease also excludes offline maintenance. Never use a network file share or a database-file alias. PostgreSQL uses `ControlPlane:Provider=Postgres` plus `ControlPlane:ConnectionStringReference`, which names a server environment variable rather than containing credentials. Database selection is independent of the runtime publication source. The SQLite and PostgreSQL stores share revisions, transactional audit/outbox, claim fencing and late-receipt semantics. Explicit qualification passed against PostgreSQL 17.6 with durable settings; this does not test connectivity or permissions for another deployment.
+
+The first schema initializes additively and refuses unsupported schema versions. Retention is `RetainAll`: no automatic garbage collection or deletion API removes pinned evidence. Assets have an independent scoped content-addressed filesystem store. Future schema/provider changes require an offline migration and restart; no live store swap is offered.
+
+### Register structure, then define judgment
+
+Generated catalogs expose `ExportManifest()` with input/output schemas, structural signatures, placeholders and runtime override metadata. Unsupported/custom serializer shapes remain opaque and require typed preflight. Templates and profiles are withheld unless `includeBaselineTemplates: true` is requested. A digest checks integrity; authenticated namespace authority still controls registration.
+
+The core package supplies an optional exporter under `tools/`. Add `GeneratePathProperty="true"` to its `PackageReference`, explicitly import `$(PkgZeeq_AgentCmd)/tools/AgentCmd.Manifest.targets`, then run:
+
+```sh
+dotnet msbuild MyApp.csproj -restore -t:AgentCmdExportManifest
+```
+
+The target needs Python 3. It rebuilds and extracts generated data without loading or starting the application. Ordinary compilation does not import this target or run Python. In a source checkout, import `scripts/AgentCmd.Manifest.targets`. Register the exported JSON through `POST /api/v1/builds`; a wrapper can retain `manifestJson`, `manifestDigest`, source revision and CI identity without changing the catalog bytes.
+
+A manifest defines structure. A frozen benchmark explicitly selects business criteria and one primary criterion; other fields remain unscored. Criteria name independent output, reference and source bindings. `outputBindings` maps declared output signatures to reviewed pointers for cross-contract comparisons; a missing mapping is unmapped. Scorers are selected explicitly. Human, exact, numeric and scoped LLM assessments retain their exact original output references, evaluator/protocol versions and non-score states. Human corrections do not improve model scores.
+
+LLM judging can target a field, subtree, collection or whole output. Collection order, duplicates and matching unit are explicit. Source-grounded additions and known-reference agreement stay distinct. A supported addition against an exhaustive reference creates an unresolved completeness dispute. Citations prove retained text exists, not that it entails a claim. Judge configuration and calibration thresholds freeze before preview. Primary judge admission requires matching human calibration on independent source families; a judge is not ground truth. Candidate and evaluator calls require explicit launch approval and host-owned pipelines. Unknown usage, pricing, timing and guardrails remain unknown.
+
+### Run, compare and curate
+
+Backtests pin frozen inputs, build, publication/variant and benchmark. Reassessment uses original outputs and makes no new candidate calls; judge calls can still incur cost. Claims and a claim-bound journal gate provider starts. Late finishes remain recordable. An indeterminate send is held and never retried automatically. Strict `RequireExperimentCandidate(...)` plus `PreflightAsync()` prevents paid fallback to a different configuration; production fallback behavior remains unchanged.
+
+Applications explicitly register `TypedWorkerAdapter<TInput,TOutput>` or `JudgeWorkerAdapter` for their own compiled commands and provider-neutral `IChatClient` pipelines. `InProcessEvaluationWorker.ForCommand/ForJudge` dispatches one compatible item per `DispatchOnceAsync` call; the application owns scheduling, shutdown and side-effect policy. The console never loads assemblies supplied by a browser. With no registered capability, work stays queued. The default ledger is still in memory; durable applications must provide their own ledger/composition store.
+
+Evaluation pipelines must be tool-free or explicitly approved as side-effect-free. Put physical-attempt capture/journaling next to the provider inside any host retry/tool loops, or disable those loops for evaluation. One admitted `IChatClient` invocation does not prove one physical HTTP request, and no exactly-once billing or exact spend ceiling is promised.
+
+Comparisons retain exact assessment IDs and baseline pins. Reports reduce repeats within a case, give cases equal weight, and expose common scored cases, coverage, non-scores and unresolved guardrails. They do not infer causal lift or a statistical winner. Purpose is separate from Primary/Shadow role; missing origin is Unknown. Trusted application services can report production/shadow outcomes and captured attempt/trace evidence through `/executions/observe`; best-effort observations never substitute for a send journal. Captured invocation elapsed is distinct from attempt timing and from a benchmark's case-latency rule.
+
+Acceptance cases are withheld in browser dataset, job, execution and assessment responses until an explicit audited reveal. Exposure follows the source family across versions. Drafts are protected too. Related sources cannot silently cross regression, calibration and acceptance splits. Hosts must record equivalent reveals or prompt-example use outside this console. A trace-linked incident needs retained authorized input/assets before capture. Capture creates a regression draft case and an owned review; the case cannot freeze before acceptance, and no reference answer is invented.
+
+### Publish and operate
+
+Applications configure `PublicationTargetRegistry` explicitly. `PublicationPostgresTarget` supplies immutable history and ABA-safe pointer CAS independently of the management database; `PublicationSnapshotSource` reads it through `IExperimentSnapshotSource`. Initialization is explicit and constructors resolve no credentials. File remains a development reader with no CAS/history writer. S3, Redis and Floci integration remain future adapter work; Floci is only needed when an S3 adapter is tested.
+
+Publication review records the target's actual pointer and exact immutable decision/content. Delivery uses that precondition once. Lost acknowledgements reconcile by reading; they never trigger a blind overwrite or resend. Manual decisions say `automatedAcceptance=NotAsserted`. Host reports show only reporting hosts and expire to Unknown; they do not prove fleet-wide adoption. Stopping restores an explicitly reviewed empty complete snapshot, not all-zero weights. Host defaults and compiled command changes remain deployment actions.
+
+SQLite backup/restore is an offline host-wide command. Stop the host and use explicit absolute source paths. A backup verifies database and asset checksums. Restore verifies staged bytes and requires fresh destination paths; it never overwrites the original:
+
+```sh
+mise exec -- dotnet run --project src/Zeeq.AgentCmd.ControlPlane.Host -- \
+  --maintenance=backup --archive=/absolute/backups/run-001 \
+  --ControlPlane:DatabasePath=/absolute/data/management.db \
+  --ControlPlane:AssetPath=/absolute/data/assets
+# Use --maintenance=verify to check an archive, or --maintenance=restore with new destination paths.
+```
+
+PostgreSQL backups use the deployment's database backup tooling plus the retained asset store; the console does not expose host-wide database export over scoped HTTP. Full telemetry/span queries, automatic cost pricing, schedules, CI gates, alerts and automatic promotion remain extension work. The console shows their absence explicitly.
+
 ## Compose an aggregate
 
 ```csharp
@@ -182,9 +249,9 @@ mise run demo:experiments
 mise run pack
 ```
 
-`build` compiles `Zeeq.AgentCmd.slnx`. `test` runs the maintained TUnit suites directly with dotnet. `test:package` packs the core and builds/runs an isolated consumer outside the checkout using only its NuGet package, with reflection disabled; it also checks wrong-slot compilation. `pack` writes three local alpha packages to `artifacts/packages`. No package is published. `mise run verify` runs the library checks and examples in order. These tasks do not need Python or Aspire.
+`build` compiles `Zeeq.AgentCmd.slnx`. `test` runs the maintained TUnit suites directly with dotnet, including offline control-plane checks. `test:package` packs the core and builds/runs an isolated consumer outside the checkout using only its NuGet package, with reflection disabled; it also checks wrong-slot compilation and optional manifest export (Python 3). `pack` writes three local alpha packages to `artifacts/packages`. No package is published. `mise run verify` also checks the installed console client. Run `console:install` first. No ordinary verification task starts a container or makes paid model calls.
 
-Formatting uses the same CSharpier pin as `zeeq-tmpl`. Its parser predates C# 15 `closed`/`union`, so an exact file list is formatted and checked by the pinned SDK instead. Production public XML documentation and a small SDK analyzer [quality floor](docs/architecture/quality-floor.md) fail builds on violations; no third-party analyzer bundle is added.
+Formatting uses a pinned CSharpier. Its parser predates C# 15 `closed`/`union`, so an exact file list is formatted and checked by the pinned SDK instead. Production public XML documentation and a small SDK analyzer [quality floor](docs/architecture/quality-floor.md) fail builds on violations; no third-party analyzer bundle is added.
 
 Paid API tests remain separate:
 
@@ -226,4 +293,4 @@ This is an alpha foundation. The default feedback ledger and composition store a
 
 A dynamic `Then` invocation's contract can be checked only after its prerequisite is stored and before that dependent call spends. Optional slots may be absent but cannot attach a null part. Native streaming accounting, OpenAI Responses API extraction, invoice reconciliation and hosted collector read-back remain separate work. Azure GPT-6 Luna and Claude Haiku 5.5 have passed explicit API and generated-runtime tests; local self-hosted Langfuse has accepted and returned their generation records.
 
-The C# 15/.NET 11 toolchain remains pinned to the verified release candidate. Serialization metadata is emitted during ordinary compiler generation; no precompiler executable, serializer MSBuild target or packaged Roslyn runtime is required. Unsupported contracts receive a build diagnostic and can use an explicit STJ context. See [serialization and NativeAOT](docs/architecture/serialization-and-aot.md) for the supported boundary and package-only proof.
+The C# 15/.NET 11 toolchain is pinned to the .NET 11 GA SDK. Serialization metadata is emitted during ordinary compiler generation; no precompiler executable, serializer MSBuild target or packaged Roslyn runtime is required. Unsupported contracts receive a build diagnostic and can use an explicit STJ context. See [serialization and NativeAOT](docs/architecture/serialization-and-aot.md) for the supported boundary and package-only proof.

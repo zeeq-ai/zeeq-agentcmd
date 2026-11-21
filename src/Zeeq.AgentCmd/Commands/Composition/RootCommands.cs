@@ -179,8 +179,8 @@ public sealed class RootCommands : IRootCommands
     )
     {
         this.ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
-        this.actorProvider =
-            actorProvider ?? throw new ArgumentNullException(nameof(actorProvider));
+        this.actorProvider = actorProvider
+            ?? throw new ArgumentNullException(nameof(actorProvider));
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
         engine = new(ledger, actorProvider, store, clock ?? TimeProvider.System, events, runtime);

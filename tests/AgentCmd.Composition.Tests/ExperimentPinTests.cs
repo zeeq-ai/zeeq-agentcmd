@@ -119,10 +119,8 @@ public sealed class ExperimentPinTests
             )
             .ToArray();
         var results = new System.Collections.Concurrent.ConcurrentBag<ExperimentPinResult>();
-        await Parallel.ForEachAsync(
-            candidates,
-            async (candidate, ct) =>
-                results.Add(await store.PinExperimentAsync(draft.DraftId, candidate, ct))
+        await Parallel.ForEachAsync(candidates, async (candidate, ct) =>
+            results.Add(await store.PinExperimentAsync(draft.DraftId, candidate, ct))
         );
         await Assert.That(results.OfType<ExperimentPinResult.Applied>().Count()).IsEqualTo(1);
         var winner = results.OfType<ExperimentPinResult.Applied>().Single().Pin;

@@ -61,8 +61,8 @@ public class LangfuseLocalIntegrationTests
             process.ArgumentList.Add(arg);
         }
 
-        using var child =
-            Process.Start(process) ?? throw new InvalidOperationException("Unable to start proof.");
+        using var child = Process.Start(process)
+            ?? throw new InvalidOperationException("Unable to start proof.");
         var stdout = child.StandardOutput.ReadToEndAsync();
         var stderr = child.StandardError.ReadToEndAsync();
         using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));

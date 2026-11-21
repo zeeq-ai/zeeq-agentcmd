@@ -442,20 +442,14 @@ public class PropagationTests
         ));
         var outer = Context();
         using var parent = AgentCmdContext.BeginScope(outer);
-        var ok = await PropagationIngress.HandleAsync(
-            incoming,
-            resolver,
-            async (ctx, work, ct) =>
-            {
-                await Task.Yield();
-                return AgentCmdContext.Current == ctx && ctx.WorkId == work!.WorkId;
-            }
-        );
+        var ok = await PropagationIngress.HandleAsync(incoming, resolver, async (ctx, work, ct) =>
+        {
+            await Task.Yield();
+            return AgentCmdContext.Current == ctx && ctx.WorkId == work!.WorkId;
+        });
         await Assert.That(ok is IngressResult<bool>.Handled { Value: true }).IsTrue();
-        var fail = await PropagationIngress.HandleAsync<int>(
-            incoming,
-            resolver,
-            (ctx, work, ct) => throw new InvalidOperationException()
+        var fail = await PropagationIngress.HandleAsync<int>(incoming, resolver, (ctx, work, ct) =>
+            throw new InvalidOperationException()
         );
         await Assert.That(fail is IngressResult<int>.Failed).IsTrue();
         using var cancelled = new CancellationTokenSource();

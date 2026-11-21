@@ -68,11 +68,8 @@ public partial class PackageTests
                     )
                 )
                 .IsFalse();
-            await Assert
-                .That(
-                    paths.Any(path => path.StartsWith("tools/", StringComparison.OrdinalIgnoreCase))
-                )
-                .IsFalse();
+            await Assert.That(paths.Contains("tools/AgentCmd.Manifest.targets")).IsTrue();
+            await Assert.That(paths.Contains("tools/export-command-manifest.py")).IsTrue();
             await Assert
                 .That(
                     paths.Any(path =>
@@ -151,7 +148,7 @@ public partial class PackageTests
                     <RestorePackagesPath>packages</RestorePackagesPath>
                   </PropertyGroup>
                   <ItemGroup>
-                    <PackageReference Include="Zeeq.AgentCmd" Version="{{version}}" />
+                    <PackageReference Include="Zeeq.AgentCmd" Version="{{version}}" GeneratePathProperty="true" />
                     <PackageReference Include="Zeeq.AgentCmd.Providers" Version="{{version}}" />
                     <PackageReference Include="Zeeq.AgentCmd.OpenTelemetry" Version="{{version}}" />
                   </ItemGroup>
@@ -212,6 +209,8 @@ public partial class PackageTests
                 "--",
                 "--quick"
             );
+
+            await VerifyPackagedManifestExport(consumer, reports);
 
             await VerifyClientRegistrationAnalyzer(consumer, reports);
             await VerifyTemplateDeclarations(consumer, reports);
@@ -418,8 +417,8 @@ public partial class PackageTests
         }
 
         start.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
-        using var process =
-            Process.Start(start) ?? throw new InvalidOperationException("Unable to start dotnet");
+        using var process = Process.Start(start)
+            ?? throw new InvalidOperationException("Unable to start dotnet");
         var output = process.StandardOutput.ReadToEndAsync();
         var error = process.StandardError.ReadToEndAsync();
         using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));

@@ -69,9 +69,8 @@ public class SdkBoundaryTests
         var handler = new ScriptedResponse(provider, omitCache: true);
         var run = await ProviderCapture.RunAsync(OfflineSettings(provider), handler);
         await Assert.That(run.ObserverFailures.Count).IsEqualTo(0);
-        var nativeCache =
-            run.Snapshot.Usage.Find(Dim.Cached)
-                ?.Observations.Any(observation => observation.Origin == Origin.Native)
+        var nativeCache = run.Snapshot.Usage.Find(Dim.Cached)
+            ?.Observations.Any(observation => observation.Origin == Origin.Native)
             ?? false;
         await Assert.That(nativeCache).IsFalse();
     }

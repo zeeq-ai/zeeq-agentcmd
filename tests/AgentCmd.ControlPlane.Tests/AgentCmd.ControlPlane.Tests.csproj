@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <ProjectReference Include="../../src/Zeeq.AgentCmd.ControlPlane/Zeeq.AgentCmd.ControlPlane.csproj" />
+    <ProjectReference Include="../../src/Zeeq.AgentCmd.ControlPlane.Host/Zeeq.AgentCmd.ControlPlane.Host.csproj" />
+  </ItemGroup>
+</Project>

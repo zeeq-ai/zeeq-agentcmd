@@ -49,7 +49,7 @@ provide('navigation', navigation)
     <NuxtLoadingIndicator />
 
     <UBanner
-      title="0.1.0-alpha.1 · .NET 11 / C# 15 RC · In-memory storage defaults"
+      title="0.1.0-alpha.1 · .NET 11 / C# 15 · In-memory storage defaults"
       icon="i-lucide-flask-conical"
       color="neutral"
       :ui="{

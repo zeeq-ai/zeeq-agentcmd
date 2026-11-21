@@ -43,8 +43,8 @@ if (OperatingSystem.IsWindows())
 }
 
 // Only this dedicated test instance's private generated state is read.
-var state =
-    Environment.GetEnvironmentVariable("AGENTCMD_LANGFUSE_STATE") ?? "/tmp/zeeq-llmcmd-langfuse";
+var state = Environment.GetEnvironmentVariable("AGENTCMD_LANGFUSE_STATE")
+    ?? "/tmp/zeeq-llmcmd-langfuse";
 var stateFile = Path.Combine(state, ".env");
 if (
     !File.Exists(stateFile)
@@ -81,8 +81,8 @@ if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(secret))
     return 1;
 }
 var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(key + ":" + secret));
-var baseUrl =
-    Environment.GetEnvironmentVariable("AGENTCMD_LANGFUSE_BASE_URL") ?? "http://127.0.0.1:38941";
+var baseUrl = Environment.GetEnvironmentVariable("AGENTCMD_LANGFUSE_BASE_URL")
+    ?? "http://127.0.0.1:38941";
 if (
     !Uri.TryCreate(baseUrl, UriKind.Absolute, out var endpoint)
     || endpoint.Scheme != Uri.UriSchemeHttp
@@ -161,8 +161,7 @@ if (args.Length == 1)
         s.TryGetProperty(name, out var x) && x.ValueKind == JsonValueKind.String
             ? x.GetString()
             : null;
-    usage =
-        s.GetProperty("Usage").Deserialize<UsageSnapshot>()
+    usage = s.GetProperty("Usage").Deserialize<UsageSnapshot>()
         ?? throw new InvalidDataException("Missing usage.");
     var diagnostics = s.GetProperty("Diagnostics").Deserialize<List<Diagnostic>>() ?? [];
     snapshot = new(

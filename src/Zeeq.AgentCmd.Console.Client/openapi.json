@@ -1,0 +1,5898 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Zeeq.AgentCmd.ControlPlane.Host | v1",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5180"
+    }
+  ],
+  "paths": {
+    "/api/v1/comparisons/{id}/summary": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetComparisonSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments/llm": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateJudgeEvaluation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JudgeEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/calibrations": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CalibrateJudge",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalibrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListCalibrations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments/deterministic": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "AssessDeterministic",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeterministicAssessmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assessments/human": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "AssessHuman",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HumanAssessmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reviews": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateReview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListReviews",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews/{id}/claim": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ClaimReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reviews/{id}/decide": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "DecideReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/comparisons": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "SaveComparison",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveComparisonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListComparisons",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{id}/exposure": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetDatasetExposure",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetExposure"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{id}/cases/{caseId}/reveal": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "RevealDatasetCase",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevealCaseDefinition"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonElement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListJobs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CancelJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/resume": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ResumeJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workers/claim": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ClaimWorker",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkerClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workers/attempt-start": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "StartWorkerAttempt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkerAttemptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workers/attempt-finish": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "FinishWorkerAttempt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkerAttemptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workers/complete-work": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CompleteWorkerWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkerCompletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/executions/observe": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "RecordExecutionObservation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutionObservation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{id}/capture-incident": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CaptureExecutionIncident",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentCapture"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews/{id}/accept-incident": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "AcceptIncidentReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews/{id}/release": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ReleaseReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-targets": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListPublicationTargets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationTargetsView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/decisions/publication": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "SavePublicationDecision",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-targets/{id}/review": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ReviewPublication",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-operations": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListPublicationOperations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-operations/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetPublicationOperation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-operations/{id}/deliver": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "DeliverPublication",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-operations/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ReconcilePublication",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publication-operations/{id}/adoption": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetPublicationAdoption",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationAdoption"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosts/report": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ReportHostAdoption",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationHostReport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/builds": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListBuilds",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "RegisterBuild",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/builds/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetBuilds",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publications": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListPublications",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreatePublications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "body"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "required": [
+                      "buildId",
+                      "commands"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "buildId": {
+                        "type": "string"
+                      },
+                      "commands": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "commandId",
+                            "commandRevision",
+                            "contractSignature",
+                            "experimentId",
+                            "controlVariantId",
+                            "variants"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "commandId": {
+                              "type": "string"
+                            },
+                            "commandRevision": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                              "type": [
+                                "integer",
+                                "string"
+                              ],
+                              "format": "int32"
+                            },
+                            "contractSignature": {
+                              "type": "string"
+                            },
+                            "experimentId": {
+                              "type": "string"
+                            },
+                            "controlVariantId": {
+                              "type": "string"
+                            },
+                            "variants": {
+                              "type": "array",
+                              "items": {
+                                "required": [
+                                  "id",
+                                  "weight",
+                                  "userTemplate",
+                                  "parameters"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "weight": {
+                                    "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                    "type": [
+                                      "integer",
+                                      "string"
+                                    ],
+                                    "format": "int32"
+                                  },
+                                  "userTemplate": {
+                                    "type": "string"
+                                  },
+                                  "parameters": {
+                                    "type": "object"
+                                  },
+                                  "systemTemplate": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  },
+                                  "route": {
+                                    "required": [
+                                      "key",
+                                      "provider",
+                                      "model"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "required": [
+                                          "id"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      "provider": {
+                                        "type": "string"
+                                      },
+                                      "model": {
+                                        "type": "string"
+                                      },
+                                      "temperature": {
+                                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                        "type": [
+                                          "null",
+                                          "number",
+                                          "string"
+                                        ],
+                                        "format": "float"
+                                      },
+                                      "defaults": {
+                                        "type": "object",
+                                        "properties": {
+                                          "temperature": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                            "type": [
+                                              "null",
+                                              "number",
+                                              "string"
+                                            ],
+                                            "format": "float"
+                                          },
+                                          "maxOutputTokens": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                            "type": [
+                                              "null",
+                                              "integer",
+                                              "string"
+                                            ],
+                                            "format": "int32"
+                                          },
+                                          "topP": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                            "type": [
+                                              "null",
+                                              "number",
+                                              "string"
+                                            ],
+                                            "format": "float"
+                                          },
+                                          "topK": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                            "type": [
+                                              "null",
+                                              "integer",
+                                              "string"
+                                            ],
+                                            "format": "int32"
+                                          },
+                                          "reasoningEffort": {
+                                            "type": [
+                                              "null",
+                                              "string"
+                                            ]
+                                          },
+                                          "reasoningOutput": {
+                                            "type": [
+                                              "null",
+                                              "string"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "systemMode": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "restoreConfiguredDefaults": {
+                        "type": "boolean",
+                        "default": false
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "id",
+                    "kind",
+                    "revision",
+                    "name",
+                    "state",
+                    "createdAt",
+                    "updatedAt",
+                    "contentHash",
+                    "body"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                      "type": [
+                        "integer",
+                        "string"
+                      ],
+                      "format": "int64"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "contentHash": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "required": [
+                        "buildId",
+                        "commands"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "buildId": {
+                          "type": "string"
+                        },
+                        "commands": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "commandId",
+                              "commandRevision",
+                              "contractSignature",
+                              "experimentId",
+                              "controlVariantId",
+                              "variants"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "commandId": {
+                                "type": "string"
+                              },
+                              "commandRevision": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                "type": [
+                                  "integer",
+                                  "string"
+                                ],
+                                "format": "int32"
+                              },
+                              "contractSignature": {
+                                "type": "string"
+                              },
+                              "experimentId": {
+                                "type": "string"
+                              },
+                              "controlVariantId": {
+                                "type": "string"
+                              },
+                              "variants": {
+                                "type": "array",
+                                "items": {
+                                  "required": [
+                                    "id",
+                                    "weight",
+                                    "userTemplate",
+                                    "parameters"
+                                  ],
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "weight": {
+                                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                      "type": [
+                                        "integer",
+                                        "string"
+                                      ],
+                                      "format": "int32"
+                                    },
+                                    "userTemplate": {
+                                      "type": "string"
+                                    },
+                                    "parameters": {
+                                      "type": "object"
+                                    },
+                                    "systemTemplate": {
+                                      "type": [
+                                        "null",
+                                        "string"
+                                      ]
+                                    },
+                                    "route": {
+                                      "required": [
+                                        "key",
+                                        "provider",
+                                        "model"
+                                      ],
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "required": [
+                                            "id"
+                                          ],
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "provider": {
+                                          "type": "string"
+                                        },
+                                        "model": {
+                                          "type": "string"
+                                        },
+                                        "temperature": {
+                                          "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                          "type": [
+                                            "null",
+                                            "number",
+                                            "string"
+                                          ],
+                                          "format": "float"
+                                        },
+                                        "defaults": {
+                                          "type": "object",
+                                          "properties": {
+                                            "temperature": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                              "type": [
+                                                "null",
+                                                "number",
+                                                "string"
+                                              ],
+                                              "format": "float"
+                                            },
+                                            "maxOutputTokens": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                              "type": [
+                                                "null",
+                                                "integer",
+                                                "string"
+                                              ],
+                                              "format": "int32"
+                                            },
+                                            "topP": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                              "type": [
+                                                "null",
+                                                "number",
+                                                "string"
+                                              ],
+                                              "format": "float"
+                                            },
+                                            "topK": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                              "type": [
+                                                "null",
+                                                "integer",
+                                                "string"
+                                              ],
+                                              "format": "int32"
+                                            },
+                                            "reasoningEffort": {
+                                              "type": [
+                                                "null",
+                                                "string"
+                                              ]
+                                            },
+                                            "reasoningOutput": {
+                                              "type": [
+                                                "null",
+                                                "string"
+                                              ]
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "systemMode": {
+                                      "type": [
+                                        "null",
+                                        "string"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "restoreConfiguredDefaults": {
+                          "type": "boolean",
+                          "default": false
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publications/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetPublications",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "UpdatePublications",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "body"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "required": [
+                      "buildId",
+                      "commands"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "buildId": {
+                        "type": "string"
+                      },
+                      "commands": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "commandId",
+                            "commandRevision",
+                            "contractSignature",
+                            "experimentId",
+                            "controlVariantId",
+                            "variants"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "commandId": {
+                              "type": "string"
+                            },
+                            "commandRevision": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                              "type": [
+                                "integer",
+                                "string"
+                              ],
+                              "format": "int32"
+                            },
+                            "contractSignature": {
+                              "type": "string"
+                            },
+                            "experimentId": {
+                              "type": "string"
+                            },
+                            "controlVariantId": {
+                              "type": "string"
+                            },
+                            "variants": {
+                              "type": "array",
+                              "items": {
+                                "required": [
+                                  "id",
+                                  "weight",
+                                  "userTemplate",
+                                  "parameters"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "weight": {
+                                    "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                    "type": [
+                                      "integer",
+                                      "string"
+                                    ],
+                                    "format": "int32"
+                                  },
+                                  "userTemplate": {
+                                    "type": "string"
+                                  },
+                                  "parameters": {
+                                    "type": "object"
+                                  },
+                                  "systemTemplate": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  },
+                                  "route": {
+                                    "required": [
+                                      "key",
+                                      "provider",
+                                      "model"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "required": [
+                                          "id"
+                                        ],
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      "provider": {
+                                        "type": "string"
+                                      },
+                                      "model": {
+                                        "type": "string"
+                                      },
+                                      "temperature": {
+                                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                        "type": [
+                                          "null",
+                                          "number",
+                                          "string"
+                                        ],
+                                        "format": "float"
+                                      },
+                                      "defaults": {
+                                        "type": "object",
+                                        "properties": {
+                                          "temperature": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                            "type": [
+                                              "null",
+                                              "number",
+                                              "string"
+                                            ],
+                                            "format": "float"
+                                          },
+                                          "maxOutputTokens": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                            "type": [
+                                              "null",
+                                              "integer",
+                                              "string"
+                                            ],
+                                            "format": "int32"
+                                          },
+                                          "topP": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                            "type": [
+                                              "null",
+                                              "number",
+                                              "string"
+                                            ],
+                                            "format": "float"
+                                          },
+                                          "topK": {
+                                            "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                            "type": [
+                                              "null",
+                                              "integer",
+                                              "string"
+                                            ],
+                                            "format": "int32"
+                                          },
+                                          "reasoningEffort": {
+                                            "type": [
+                                              "null",
+                                              "string"
+                                            ]
+                                          },
+                                          "reasoningOutput": {
+                                            "type": [
+                                              "null",
+                                              "string"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "systemMode": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "restoreConfiguredDefaults": {
+                        "type": "boolean",
+                        "default": false
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "id",
+                    "kind",
+                    "revision",
+                    "name",
+                    "state",
+                    "createdAt",
+                    "updatedAt",
+                    "contentHash",
+                    "body"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                      "type": [
+                        "integer",
+                        "string"
+                      ],
+                      "format": "int64"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "contentHash": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "required": [
+                        "buildId",
+                        "commands"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "buildId": {
+                          "type": "string"
+                        },
+                        "commands": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "commandId",
+                              "commandRevision",
+                              "contractSignature",
+                              "experimentId",
+                              "controlVariantId",
+                              "variants"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "commandId": {
+                                "type": "string"
+                              },
+                              "commandRevision": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                "type": [
+                                  "integer",
+                                  "string"
+                                ],
+                                "format": "int32"
+                              },
+                              "contractSignature": {
+                                "type": "string"
+                              },
+                              "experimentId": {
+                                "type": "string"
+                              },
+                              "controlVariantId": {
+                                "type": "string"
+                              },
+                              "variants": {
+                                "type": "array",
+                                "items": {
+                                  "required": [
+                                    "id",
+                                    "weight",
+                                    "userTemplate",
+                                    "parameters"
+                                  ],
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "weight": {
+                                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                      "type": [
+                                        "integer",
+                                        "string"
+                                      ],
+                                      "format": "int32"
+                                    },
+                                    "userTemplate": {
+                                      "type": "string"
+                                    },
+                                    "parameters": {
+                                      "type": "object"
+                                    },
+                                    "systemTemplate": {
+                                      "type": [
+                                        "null",
+                                        "string"
+                                      ]
+                                    },
+                                    "route": {
+                                      "required": [
+                                        "key",
+                                        "provider",
+                                        "model"
+                                      ],
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "required": [
+                                            "id"
+                                          ],
+                                          "type": "object",
+                                          "properties": {
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "provider": {
+                                          "type": "string"
+                                        },
+                                        "model": {
+                                          "type": "string"
+                                        },
+                                        "temperature": {
+                                          "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                          "type": [
+                                            "null",
+                                            "number",
+                                            "string"
+                                          ],
+                                          "format": "float"
+                                        },
+                                        "defaults": {
+                                          "type": "object",
+                                          "properties": {
+                                            "temperature": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                              "type": [
+                                                "null",
+                                                "number",
+                                                "string"
+                                              ],
+                                              "format": "float"
+                                            },
+                                            "maxOutputTokens": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                              "type": [
+                                                "null",
+                                                "integer",
+                                                "string"
+                                              ],
+                                              "format": "int32"
+                                            },
+                                            "topP": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                              "type": [
+                                                "null",
+                                                "number",
+                                                "string"
+                                              ],
+                                              "format": "float"
+                                            },
+                                            "topK": {
+                                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                              "type": [
+                                                "null",
+                                                "integer",
+                                                "string"
+                                              ],
+                                              "format": "int32"
+                                            },
+                                            "reasoningEffort": {
+                                              "type": [
+                                                "null",
+                                                "string"
+                                              ]
+                                            },
+                                            "reasoningOutput": {
+                                              "type": [
+                                                "null",
+                                                "string"
+                                              ]
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "systemMode": {
+                                      "type": [
+                                        "null",
+                                        "string"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "restoreConfiguredDefaults": {
+                          "type": "boolean",
+                          "default": false
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListDatasets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateDatasets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "body"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "required": [
+                      "purpose",
+                      "cases"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "purpose": {
+                        "type": "string"
+                      },
+                      "cases": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "id",
+                            "sourceFamilyId",
+                            "input",
+                            "assets",
+                            "tags"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "sourceFamilyId": {
+                              "type": "string"
+                            },
+                            "input": {},
+                            "assets": {
+                              "type": "array"
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "reference": {
+                              "required": [
+                                "value",
+                                "completeness"
+                              ],
+                              "type": "object",
+                              "properties": {
+                                "value": {},
+                                "completeness": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "exposed": {
+                              "type": "boolean",
+                              "default": false
+                            }
+                          }
+                        }
+                      },
+                      "exposureApproved": {
+                        "type": [
+                          "null",
+                          "boolean"
+                        ]
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "id",
+                    "kind",
+                    "revision",
+                    "name",
+                    "state",
+                    "createdAt",
+                    "updatedAt",
+                    "contentHash",
+                    "body"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                      "type": [
+                        "integer",
+                        "string"
+                      ],
+                      "format": "int64"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "contentHash": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "required": [
+                        "purpose",
+                        "cases"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "purpose": {
+                          "type": "string"
+                        },
+                        "cases": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "id",
+                              "sourceFamilyId",
+                              "input",
+                              "assets",
+                              "tags"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "sourceFamilyId": {
+                                "type": "string"
+                              },
+                              "input": {},
+                              "assets": {
+                                "type": "array"
+                              },
+                              "tags": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "reference": {
+                                "required": [
+                                  "value",
+                                  "completeness"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "value": {},
+                                  "completeness": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "exposed": {
+                                "type": "boolean",
+                                "default": false
+                              }
+                            }
+                          }
+                        },
+                        "exposureApproved": {
+                          "type": [
+                            "null",
+                            "boolean"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetDatasets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "UpdateDatasets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "body"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "required": [
+                      "purpose",
+                      "cases"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "purpose": {
+                        "type": "string"
+                      },
+                      "cases": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "id",
+                            "sourceFamilyId",
+                            "input",
+                            "assets",
+                            "tags"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "sourceFamilyId": {
+                              "type": "string"
+                            },
+                            "input": {},
+                            "assets": {
+                              "type": "array"
+                            },
+                            "tags": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "reference": {
+                              "required": [
+                                "value",
+                                "completeness"
+                              ],
+                              "type": "object",
+                              "properties": {
+                                "value": {},
+                                "completeness": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "exposed": {
+                              "type": "boolean",
+                              "default": false
+                            }
+                          }
+                        }
+                      },
+                      "exposureApproved": {
+                        "type": [
+                          "null",
+                          "boolean"
+                        ]
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "id",
+                    "kind",
+                    "revision",
+                    "name",
+                    "state",
+                    "createdAt",
+                    "updatedAt",
+                    "contentHash",
+                    "body"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                      "type": [
+                        "integer",
+                        "string"
+                      ],
+                      "format": "int64"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "contentHash": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "required": [
+                        "purpose",
+                        "cases"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "purpose": {
+                          "type": "string"
+                        },
+                        "cases": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "id",
+                              "sourceFamilyId",
+                              "input",
+                              "assets",
+                              "tags"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "sourceFamilyId": {
+                                "type": "string"
+                              },
+                              "input": {},
+                              "assets": {
+                                "type": "array"
+                              },
+                              "tags": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "reference": {
+                                "required": [
+                                  "value",
+                                  "completeness"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "value": {},
+                                  "completeness": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "exposed": {
+                                "type": "boolean",
+                                "default": false
+                              }
+                            }
+                          }
+                        },
+                        "exposureApproved": {
+                          "type": [
+                            "null",
+                            "boolean"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/benchmarks": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListBenchmarks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateBenchmarks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "body"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "required": [
+                      "datasetId",
+                      "criteria",
+                      "primaryCriterionId",
+                      "repeats",
+                      "guardrails"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "datasetId": {
+                        "type": "string"
+                      },
+                      "criteria": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "id",
+                            "version",
+                            "name",
+                            "scope",
+                            "scorer"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                              "type": [
+                                "integer",
+                                "string"
+                              ],
+                              "format": "int32"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "scope": {
+                              "type": "string"
+                            },
+                            "scorer": {
+                              "required": [
+                                "kind",
+                                "version"
+                              ],
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "type": "string"
+                                },
+                                "tolerance": {
+                                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                                  "type": [
+                                    "null",
+                                    "number",
+                                    "string"
+                                  ],
+                                  "format": "double"
+                                },
+                                "judgeConfigId": {
+                                  "type": [
+                                    "null",
+                                    "string"
+                                  ]
+                                }
+                              }
+                            },
+                            "outputBinding": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "referenceBinding": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "sourceBinding": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "matching": {
+                              "required": [
+                                "order",
+                                "duplicates",
+                                "unit",
+                                "paraphrases"
+                              ],
+                              "type": "object",
+                              "properties": {
+                                "order": {
+                                  "type": "string"
+                                },
+                                "duplicates": {
+                                  "type": "string"
+                                },
+                                "unit": {
+                                  "type": "string"
+                                },
+                                "paraphrases": {
+                                  "type": "boolean"
+                                },
+                                "decompositionConfigId": {
+                                  "type": [
+                                    "null",
+                                    "string"
+                                  ]
+                                }
+                              }
+                            },
+                            "outputBindings": {
+                              "type": [
+                                "null",
+                                "object"
+                              ],
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "primaryCriterionId": {
+                        "type": "string"
+                      },
+                      "repeats": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                          "integer",
+                          "string"
+                        ],
+                        "format": "int32"
+                      },
+                      "guardrails": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "id",
+                            "metric",
+                            "operator",
+                            "threshold",
+                            "minimumCoverage",
+                            "required"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "metric": {
+                              "type": "string"
+                            },
+                            "operator": {
+                              "type": "string"
+                            },
+                            "threshold": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                              "type": [
+                                "number",
+                                "string"
+                              ],
+                              "format": "double"
+                            },
+                            "minimumCoverage": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                              "type": [
+                                "number",
+                                "string"
+                              ],
+                              "format": "double"
+                            },
+                            "required": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "id",
+                    "kind",
+                    "revision",
+                    "name",
+                    "state",
+                    "createdAt",
+                    "updatedAt",
+                    "contentHash",
+                    "body"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                      "type": [
+                        "integer",
+                        "string"
+                      ],
+                      "format": "int64"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "contentHash": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "required": [
+                        "datasetId",
+                        "criteria",
+                        "primaryCriterionId",
+                        "repeats",
+                        "guardrails"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "datasetId": {
+                          "type": "string"
+                        },
+                        "criteria": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "id",
+                              "version",
+                              "name",
+                              "scope",
+                              "scorer"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                "type": [
+                                  "integer",
+                                  "string"
+                                ],
+                                "format": "int32"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "scope": {
+                                "type": "string"
+                              },
+                              "scorer": {
+                                "required": [
+                                  "kind",
+                                  "version"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string"
+                                  },
+                                  "version": {
+                                    "type": "string"
+                                  },
+                                  "tolerance": {
+                                    "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                                    "type": [
+                                      "null",
+                                      "number",
+                                      "string"
+                                    ],
+                                    "format": "double"
+                                  },
+                                  "judgeConfigId": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  }
+                                }
+                              },
+                              "outputBinding": {
+                                "type": [
+                                  "null",
+                                  "string"
+                                ]
+                              },
+                              "referenceBinding": {
+                                "type": [
+                                  "null",
+                                  "string"
+                                ]
+                              },
+                              "sourceBinding": {
+                                "type": [
+                                  "null",
+                                  "string"
+                                ]
+                              },
+                              "matching": {
+                                "required": [
+                                  "order",
+                                  "duplicates",
+                                  "unit",
+                                  "paraphrases"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "order": {
+                                    "type": "string"
+                                  },
+                                  "duplicates": {
+                                    "type": "string"
+                                  },
+                                  "unit": {
+                                    "type": "string"
+                                  },
+                                  "paraphrases": {
+                                    "type": "boolean"
+                                  },
+                                  "decompositionConfigId": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  }
+                                }
+                              },
+                              "outputBindings": {
+                                "type": [
+                                  "null",
+                                  "object"
+                                ],
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "primaryCriterionId": {
+                          "type": "string"
+                        },
+                        "repeats": {
+                          "pattern": "^-?(?:0|[1-9]\\d*)$",
+                          "type": [
+                            "integer",
+                            "string"
+                          ],
+                          "format": "int32"
+                        },
+                        "guardrails": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "id",
+                              "metric",
+                              "operator",
+                              "threshold",
+                              "minimumCoverage",
+                              "required"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "metric": {
+                                "type": "string"
+                              },
+                              "operator": {
+                                "type": "string"
+                              },
+                              "threshold": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                "type": [
+                                  "number",
+                                  "string"
+                                ],
+                                "format": "double"
+                              },
+                              "minimumCoverage": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                "type": [
+                                  "number",
+                                  "string"
+                                ],
+                                "format": "double"
+                              },
+                              "required": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/benchmarks/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetBenchmarks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "UpdateBenchmarks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "body"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "required": [
+                      "datasetId",
+                      "criteria",
+                      "primaryCriterionId",
+                      "repeats",
+                      "guardrails"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "datasetId": {
+                        "type": "string"
+                      },
+                      "criteria": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "id",
+                            "version",
+                            "name",
+                            "scope",
+                            "scorer"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)$",
+                              "type": [
+                                "integer",
+                                "string"
+                              ],
+                              "format": "int32"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "scope": {
+                              "type": "string"
+                            },
+                            "scorer": {
+                              "required": [
+                                "kind",
+                                "version"
+                              ],
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "type": "string"
+                                },
+                                "tolerance": {
+                                  "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                                  "type": [
+                                    "null",
+                                    "number",
+                                    "string"
+                                  ],
+                                  "format": "double"
+                                },
+                                "judgeConfigId": {
+                                  "type": [
+                                    "null",
+                                    "string"
+                                  ]
+                                }
+                              }
+                            },
+                            "outputBinding": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "referenceBinding": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "sourceBinding": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "matching": {
+                              "required": [
+                                "order",
+                                "duplicates",
+                                "unit",
+                                "paraphrases"
+                              ],
+                              "type": "object",
+                              "properties": {
+                                "order": {
+                                  "type": "string"
+                                },
+                                "duplicates": {
+                                  "type": "string"
+                                },
+                                "unit": {
+                                  "type": "string"
+                                },
+                                "paraphrases": {
+                                  "type": "boolean"
+                                },
+                                "decompositionConfigId": {
+                                  "type": [
+                                    "null",
+                                    "string"
+                                  ]
+                                }
+                              }
+                            },
+                            "outputBindings": {
+                              "type": [
+                                "null",
+                                "object"
+                              ],
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "primaryCriterionId": {
+                        "type": "string"
+                      },
+                      "repeats": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                          "integer",
+                          "string"
+                        ],
+                        "format": "int32"
+                      },
+                      "guardrails": {
+                        "type": "array",
+                        "items": {
+                          "required": [
+                            "id",
+                            "metric",
+                            "operator",
+                            "threshold",
+                            "minimumCoverage",
+                            "required"
+                          ],
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "metric": {
+                              "type": "string"
+                            },
+                            "operator": {
+                              "type": "string"
+                            },
+                            "threshold": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                              "type": [
+                                "number",
+                                "string"
+                              ],
+                              "format": "double"
+                            },
+                            "minimumCoverage": {
+                              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                              "type": [
+                                "number",
+                                "string"
+                              ],
+                              "format": "double"
+                            },
+                            "required": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": [
+                      "null",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "id",
+                    "kind",
+                    "revision",
+                    "name",
+                    "state",
+                    "createdAt",
+                    "updatedAt",
+                    "contentHash",
+                    "body"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "pattern": "^-?(?:0|[1-9]\\d*)$",
+                      "type": [
+                        "integer",
+                        "string"
+                      ],
+                      "format": "int64"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "contentHash": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "required": [
+                        "datasetId",
+                        "criteria",
+                        "primaryCriterionId",
+                        "repeats",
+                        "guardrails"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "datasetId": {
+                          "type": "string"
+                        },
+                        "criteria": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "id",
+                              "version",
+                              "name",
+                              "scope",
+                              "scorer"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                                "type": [
+                                  "integer",
+                                  "string"
+                                ],
+                                "format": "int32"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "scope": {
+                                "type": "string"
+                              },
+                              "scorer": {
+                                "required": [
+                                  "kind",
+                                  "version"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string"
+                                  },
+                                  "version": {
+                                    "type": "string"
+                                  },
+                                  "tolerance": {
+                                    "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                                    "type": [
+                                      "null",
+                                      "number",
+                                      "string"
+                                    ],
+                                    "format": "double"
+                                  },
+                                  "judgeConfigId": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  }
+                                }
+                              },
+                              "outputBinding": {
+                                "type": [
+                                  "null",
+                                  "string"
+                                ]
+                              },
+                              "referenceBinding": {
+                                "type": [
+                                  "null",
+                                  "string"
+                                ]
+                              },
+                              "sourceBinding": {
+                                "type": [
+                                  "null",
+                                  "string"
+                                ]
+                              },
+                              "matching": {
+                                "required": [
+                                  "order",
+                                  "duplicates",
+                                  "unit",
+                                  "paraphrases"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                  "order": {
+                                    "type": "string"
+                                  },
+                                  "duplicates": {
+                                    "type": "string"
+                                  },
+                                  "unit": {
+                                    "type": "string"
+                                  },
+                                  "paraphrases": {
+                                    "type": "boolean"
+                                  },
+                                  "decompositionConfigId": {
+                                    "type": [
+                                      "null",
+                                      "string"
+                                    ]
+                                  }
+                                }
+                              },
+                              "outputBindings": {
+                                "type": [
+                                  "null",
+                                  "object"
+                                ],
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "primaryCriterionId": {
+                          "type": "string"
+                        },
+                        "repeats": {
+                          "pattern": "^-?(?:0|[1-9]\\d*)$",
+                          "type": [
+                            "integer",
+                            "string"
+                          ],
+                          "format": "int32"
+                        },
+                        "guardrails": {
+                          "type": "array",
+                          "items": {
+                            "required": [
+                              "id",
+                              "metric",
+                              "operator",
+                              "threshold",
+                              "minimumCoverage",
+                              "required"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "metric": {
+                                "type": "string"
+                              },
+                              "operator": {
+                                "type": "string"
+                              },
+                              "threshold": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                "type": [
+                                  "number",
+                                  "string"
+                                ],
+                                "format": "double"
+                              },
+                              "minimumCoverage": {
+                                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                "type": [
+                                  "number",
+                                  "string"
+                                ],
+                                "format": "double"
+                              },
+                              "required": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListExecutions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/executions/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetExecutions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reviews/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetReviews",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListAssessments",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetAssessments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/comparisons/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetComparisons",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/judge-configurations": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListJudgeConfigurations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateJudgeConfigurations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/judge-configurations/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetJudgeConfigurations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "UpdateJudgeConfigurations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calibrations/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetCalibrations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/source-profiles": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListSourceProfiles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateSourceProfiles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/source-profiles/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetSourceProfiles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "UpdateSourceProfiles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bindings": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListBindings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "CreateBindings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bindings/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetBindings",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "UpdateBindings",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workers": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListWorkers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workers/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetWorkers",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/decisions": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ListDecisions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagementResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/decisions/{id}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetDecisions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/publications/{id}/freeze": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "FreezePublications",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{id}/freeze": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "FreezeDatasets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/benchmarks/{id}/freeze": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "FreezeBenchmarks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/judge-configurations/{id}/freeze": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "FreezeJudgeConfigurations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assets": {
+      "post": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "StoreAsset",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredAsset"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{hash}": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "ReadAsset",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetWorkspace",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDefinition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Zeeq.AgentCmd.ControlPlane.Host"
+        ],
+        "operationId": "GetReadiness",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDefinition"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthenticationDefinition": {
+        "required": [
+          "mode"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string"
+          }
+        }
+      },
+      "CalibrationPair": {
+        "required": [
+          "humanAssessmentId",
+          "judgeAssessmentId"
+        ],
+        "type": "object",
+        "properties": {
+          "humanAssessmentId": {
+            "type": "string",
+            "description": "Human-labelled reference assessment."
+          },
+          "judgeAssessmentId": {
+            "type": "string",
+            "description": "Judge assessment to measure."
+          }
+        },
+        "description": "One blinded calibration pair against the same retained execution and criterion."
+      },
+      "CalibrationRequest": {
+        "required": [
+          "judgeConfigurationId",
+          "criterionId",
+          "pairs",
+          "maximumScoreDifference",
+          "minimumAgreement"
+        ],
+        "type": "object",
+        "properties": {
+          "judgeConfigurationId": {
+            "type": "string",
+            "description": "Frozen judge configuration."
+          },
+          "criterionId": {
+            "type": "string",
+            "description": "Single criterion under calibration."
+          },
+          "pairs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CalibrationPair"
+            },
+            "description": "Distinct retained calibration cases."
+          },
+          "maximumScoreDifference": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Maximum absolute normalized score disagreement for a pair.",
+            "format": "double"
+          },
+          "minimumAgreement": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Minimum required fraction of agreeing pairs.",
+            "format": "double"
+          }
+        },
+        "description": "Predeclared calibration rule and exact sample identities."
+      },
+      "CapabilityDefinition": {
+        "required": [
+          "manifestRegistration",
+          "typedWorker",
+          "publicationTargets",
+          "traceQuery"
+        ],
+        "type": "object",
+        "properties": {
+          "manifestRegistration": {
+            "type": "boolean"
+          },
+          "typedWorker": {
+            "type": "boolean"
+          },
+          "publicationTargets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "traceQuery": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CaptureIncidentRequest": {
+        "required": [
+          "datasetDraftId",
+          "datasetRevision",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "datasetDraftId": {
+            "type": "string",
+            "description": "Scoped regression draft."
+          },
+          "datasetRevision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Observed draft revision.",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Human explanation retained with the review task."
+          }
+        },
+        "description": "Incident capture names a draft and its observed revision; it cannot replace frozen cases or create a reference answer."
+      },
+      "ComparisonCandidate": {
+        "required": [
+          "key",
+          "candidateId",
+          "buildId",
+          "buildHash",
+          "publicationId",
+          "publicationHash",
+          "commandId",
+          "variantId"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Content-derived candidate identity."
+          },
+          "candidateId": {
+            "type": "string",
+            "description": "Run-local candidate identity."
+          },
+          "buildId": {
+            "type": "string",
+            "description": "Registered application build."
+          },
+          "buildHash": {
+            "type": "string",
+            "description": "Exact build content digest."
+          },
+          "publicationId": {
+            "type": "string",
+            "description": "Frozen snapshot identity."
+          },
+          "publicationHash": {
+            "type": "string",
+            "description": "Exact snapshot content digest."
+          },
+          "commandId": {
+            "type": "string",
+            "description": "Compiled command identity."
+          },
+          "variantId": {
+            "type": "string",
+            "description": "Selected variant."
+          }
+        },
+        "description": "Exact candidate configuration represented in a saved comparison."
+      },
+      "ComparisonCandidateMetric": {
+        "required": [
+          "candidateKey",
+          "expectedCases",
+          "eligibleCases",
+          "scoredCases",
+          "missingCases",
+          "unreconciledCases",
+          "mean",
+          "matchedMean",
+          "cases"
+        ],
+        "type": "object",
+        "properties": {
+          "candidateKey": {
+            "type": "string",
+            "description": "Exact candidate identity."
+          },
+          "expectedCases": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Frozen protocol case count.",
+            "format": "int32"
+          },
+          "eligibleCases": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Cases with complete repeat evidence and verified candidate provenance.",
+            "format": "int32"
+          },
+          "scoredCases": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Cases with a score for each repeat.",
+            "format": "int32"
+          },
+          "missingCases": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Cases lacking a complete score.",
+            "format": "int32"
+          },
+          "unreconciledCases": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Cases with duplicate, conflicting or unverified evidence.",
+            "format": "int32"
+          },
+          "mean": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Mean of scored case means, or null when none are scored.",
+            "format": "double"
+          },
+          "matchedMean": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Mean over the shared scored cases, or null when no cases match.",
+            "format": "double"
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComparisonCase"
+            },
+            "description": "Frozen cases and their status."
+          }
+        },
+        "description": "Equal-case weighted candidate results and visible coverage."
+      },
+      "ComparisonCase": {
+        "required": [
+          "caseId",
+          "status",
+          "score",
+          "assessmentIds",
+          "outcomes"
+        ],
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "description": "Frozen case identity."
+          },
+          "status": {
+            "type": "string",
+            "description": "Scored, Pending, NonScore, Unreconciled or browser-projected Withheld."
+          },
+          "score": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Within-case mean, only when every expected repeat is scored.",
+            "format": "double"
+          },
+          "assessmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact contributing or incomplete assessments."
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Distinct observed assessment outcomes, including failures and non-scores."
+          }
+        },
+        "description": "One frozen case outcome under a candidate and criterion."
+      },
+      "ComparisonCriterion": {
+        "required": [
+          "criterionId",
+          "criterionVersion",
+          "commonCaseIds",
+          "candidates"
+        ],
+        "type": "object",
+        "properties": {
+          "criterionId": {
+            "type": "string",
+            "description": "Frozen criterion identity."
+          },
+          "criterionVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Frozen criterion version.",
+            "format": "int32"
+          },
+          "commonCaseIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Cases scored for every represented candidate."
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComparisonCandidateMetric"
+            },
+            "description": "Per-candidate coverage and scores."
+          }
+        },
+        "description": "Criterion results under one frozen benchmark and dataset."
+      },
+      "ComparisonGuardrail": {
+        "required": [
+          "id",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Frozen rule identity."
+          },
+          "status": {
+            "type": "string",
+            "description": "Unknown until the rule is evaluated."
+          }
+        },
+        "description": "A guardrail whose evaluation is not yet supported."
+      },
+      "ComparisonReport": {
+        "required": [
+          "comparisonId",
+          "datasetHash",
+          "benchmarkHash",
+          "baselineCandidateId",
+          "baselineAmbiguous",
+          "candidates",
+          "criteria",
+          "guardrails",
+          "independentAcceptanceEligible"
+        ],
+        "type": "object",
+        "properties": {
+          "comparisonId": {
+            "type": "string",
+            "description": "Saved comparison identity."
+          },
+          "datasetHash": {
+            "type": "string",
+            "description": "Frozen dataset content identity."
+          },
+          "benchmarkHash": {
+            "type": "string",
+            "description": "Frozen benchmark content identity."
+          },
+          "baselineCandidateId": {
+            "type": "string",
+            "description": "Requested baseline ID."
+          },
+          "baselineAmbiguous": {
+            "type": "boolean",
+            "description": "Whether that ID names more than one exact candidate configuration."
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComparisonCandidate"
+            },
+            "description": "Configurations represented by selected assessment IDs."
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComparisonCriterion"
+            },
+            "description": "Case-weighted criterion summaries."
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComparisonGuardrail"
+            },
+            "description": "Frozen rules with unknown evaluation status."
+          },
+          "independentAcceptanceEligible": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Current exposure status for an acceptance dataset; null for other purposes."
+          },
+          "holdoutWithheld": {
+            "type": "boolean",
+            "description": "Whether per-case evidence was withheld by the browser projection.",
+            "default": false
+          },
+          "primaryCriterionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Headline metric pinned by the frozen benchmark; never inferred from the first available score."
+          }
+        },
+        "description": "Read-only exact-protocol comparison; it makes no causal or winner claim."
+      },
+      "DatasetExposure": {
+        "required": [
+          "exposedCaseIds",
+          "independentAcceptanceEligible"
+        ],
+        "type": "object",
+        "properties": {
+          "exposedCaseIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Cases whose source families have been revealed or used for tuning."
+          },
+          "independentAcceptanceEligible": {
+            "type": "boolean",
+            "description": "Whether this acceptance set has no recorded source-family exposure."
+          }
+        },
+        "description": "Exposure is separate from frozen dataset content so later human reveals cannot rewrite an earlier protocol."
+      },
+      "DeterministicAssessmentRequest": {
+        "required": [
+          "executionId",
+          "criterionId"
+        ],
+        "type": "object",
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "description": "Exact retained execution."
+          },
+          "criterionId": {
+            "type": "string",
+            "description": "Criterion in the pinned benchmark."
+          },
+          "assessmentJobId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional reassessment run that explicitly retained this execution."
+          }
+        },
+        "description": "Identifies the stored execution and frozen criterion to assess."
+      },
+      "ExecutionObservation": {
+        "required": [
+          "executionId",
+          "purpose",
+          "buildId",
+          "commandId",
+          "outcome",
+          "storageStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "description": "Original execution identity.",
+            "format": "uuid"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "Production, Shadow, or Unknown; role and experiment identifiers cannot establish origin."
+          },
+          "buildId": {
+            "type": "string",
+            "description": "Registered build reported by the authenticated host."
+          },
+          "commandId": {
+            "type": "string",
+            "description": "Original command identifier."
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Success, Failed, or Cancelled."
+          },
+          "storageStatus": {
+            "type": "string",
+            "description": "Stored or Unavailable."
+          },
+          "outputRef": {
+            "description": "Exact original command or sealed aggregate reference, when stored."
+          },
+          "value": {
+            "description": "Exact retained output, when stored."
+          },
+          "input": {
+            "description": "Authorized frozen typed input, or absent when not retained."
+          },
+          "sourceFamilyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Stable document/source lineage, required for curation."
+          },
+          "assetHashes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Authorized retained immutable source assets."
+          },
+          "trace": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Captured trace anchor, independent of span availability.",
+                "$ref": "#/components/schemas/TraceAnchor"
+              }
+            ]
+          },
+          "caseElapsedSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Actual host-captured case elapsed, never a sum of attempts.",
+            "format": "double"
+          },
+          "experimentEvidence": {
+            "description": "Original assignment/fallback evidence, or unknown."
+          },
+          "attempts": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ObservedAttempt"
+            },
+            "description": "Normalized observations, not a durable send journal."
+          }
+        },
+        "description": "Trusted application report of an original execution; retained input is explicit and must follow the host capture policy."
+      },
+      "HealthDefinition": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "HumanAssessmentRequest": {
+        "required": [
+          "executionId",
+          "criterionId",
+          "score",
+          "rationale"
+        ],
+        "type": "object",
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "description": "Stored execution identity."
+          },
+          "criterionId": {
+            "type": "string",
+            "description": "Frozen human criterion."
+          },
+          "score": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Reviewer-assigned normalized score.",
+            "format": "double"
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Reviewer explanation."
+          },
+          "assessmentJobId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional reassessment run retaining this execution."
+          }
+        },
+        "description": "Human rubric assessment of a retained exact execution."
+      },
+      "IdentityDefinition": {
+        "required": [
+          "subject",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "IncidentCapture": {
+        "required": [
+          "dataset",
+          "review",
+          "caseId",
+          "alreadyPresent"
+        ],
+        "type": "object",
+        "properties": {
+          "dataset": {
+            "description": "Updated draft.",
+            "$ref": "#/components/schemas/ManagementResource"
+          },
+          "review": {
+            "description": "Owned review task.",
+            "$ref": "#/components/schemas/ManagementResource"
+          },
+          "caseId": {
+            "type": "string",
+            "description": "Captured or duplicate case."
+          },
+          "alreadyPresent": {
+            "type": "boolean",
+            "description": "Whether matching evidence already existed."
+          }
+        },
+        "description": "Draft evidence and owned task produced by capture; acceptance remains a separate review."
+      },
+      "JsonElement": {},
+      "JudgeEvaluationRequest": {
+        "required": [
+          "executionId",
+          "criterionId",
+          "executionApproved"
+        ],
+        "type": "object",
+        "properties": {
+          "executionId": {
+            "type": "string",
+            "description": "Exact output execution."
+          },
+          "criterionId": {
+            "type": "string",
+            "description": "Pinned LLM criterion."
+          },
+          "executionApproved": {
+            "type": "boolean",
+            "description": "Explicit approval for evaluator calls."
+          },
+          "assessmentJobId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional reassessment that retains this output."
+          },
+          "calibrationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Admitted matching calibration for non-calibration datasets."
+          }
+        },
+        "description": "Explicitly approved judge work for a retained output under a frozen protocol."
+      },
+      "ManagementResource": {
+        "required": [
+          "id",
+          "kind",
+          "revision",
+          "name",
+          "state",
+          "createdAt",
+          "updatedAt",
+          "contentHash",
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable artifact identity."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Owning feature module."
+          },
+          "revision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Optimistic concurrency token.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Operator-facing label."
+          },
+          "state": {
+            "type": "string",
+            "description": "Lifecycle state, separate from execution or telemetry status."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation time.",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last committed transition time.",
+            "format": "date-time"
+          },
+          "contentHash": {
+            "type": "string",
+            "description": "Digest of the exact normalized stored body."
+          },
+          "body": {
+            "description": "Detached immutable content for this revision.",
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        },
+        "description": "Persisted management artifact. Its JSON body is governed by a module's validation and freeze rules."
+      },
+      "ObservedAttempt": {
+        "required": [
+          "attemptId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "description": "Original provider-attempt identity, used once for accounting.",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string",
+            "description": "Reported outcome category."
+          },
+          "provider": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Provider registration when known."
+          },
+          "requestedModel": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Requested route model when known."
+          },
+          "reportedModel": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Provider-reported model when known."
+          },
+          "inputTokens": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "Reported usage, or unknown.",
+            "format": "int64"
+          },
+          "outputTokens": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "Reported usage, or unknown.",
+            "format": "int64"
+          },
+          "durationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Captured attempt timing, separate from case elapsed.",
+            "format": "double"
+          }
+        },
+        "description": "Normalized host observation; its presence is evidence, while its absence never proves that no provider send occurred."
+      },
+      "PublicationAdoption": {
+        "required": [
+          "state",
+          "hosts"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "description": "Unknown without fresh matching reports; otherwise ReportingHostsOnly."
+          },
+          "hosts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationHostStatus"
+            },
+            "description": "Known reports, including stale and mismatched hosts."
+          }
+        },
+        "description": "Bounded reporting-host view; it never claims fleet-wide adoption without an inventory."
+      },
+      "PublicationDecisionRequest": {
+        "required": [
+          "targetId",
+          "publicationId",
+          "publicationRevision",
+          "publicationHash",
+          "buildId",
+          "action",
+          "verdict",
+          "comparisonId",
+          "candidateId",
+          "rationale"
+        ],
+        "type": "object",
+        "properties": {
+          "targetId": {
+            "type": "string",
+            "description": "Server target whose manual-decision policy applies."
+          },
+          "publicationId": {
+            "type": "string",
+            "description": "Frozen complete publication."
+          },
+          "publicationRevision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Exact management revision.",
+            "format": "int64"
+          },
+          "publicationHash": {
+            "type": "string",
+            "description": "Exact publication content hash."
+          },
+          "buildId": {
+            "type": "string",
+            "description": "Registered target build."
+          },
+          "action": {
+            "type": "string",
+            "description": "Activate, ChangeAllocation, ChangeControl, Rollback, or RestoreConfiguredDefaults."
+          },
+          "verdict": {
+            "type": "string",
+            "description": "Manual Pass, Fail, or Inconclusive; never an automated test claim."
+          },
+          "comparisonId": {
+            "type": "string",
+            "description": "Immutable comparison with pinned benchmark and candidate evidence."
+          },
+          "candidateId": {
+            "type": "string",
+            "description": "Candidate within the named comparison."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Required human explanation."
+          },
+          "evidencePublicationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "For restore-defaults only, the old publication investigated by the report."
+          }
+        },
+        "description": "Manual decision input. The server supplies the author and validates linked evidence."
+      },
+      "PublicationHostReport": {
+        "required": [
+          "targetId",
+          "buildId",
+          "bindingId",
+          "bindingRevision",
+          "publicationRevision",
+          "publicationHash",
+          "sequence"
+        ],
+        "type": "object",
+        "properties": {
+          "targetId": {
+            "type": "string",
+            "description": "Server target identity."
+          },
+          "buildId": {
+            "type": "string",
+            "description": "Exact registered build running on the reporting host."
+          },
+          "bindingId": {
+            "type": "string",
+            "description": "Exact runtime source binding."
+          },
+          "bindingRevision": {
+            "type": "string",
+            "description": "Exact binding revision."
+          },
+          "publicationRevision": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Observed publication revision, or null when unknown."
+          },
+          "publicationHash": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Observed content hash, or null with unknown revision."
+          },
+          "sequence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Monotonic per authenticated host and target; persist across restarts.",
+            "format": "int64"
+          }
+        },
+        "description": "Host-reported adoption. Authenticated subject supplies host identity; these reports are not deployment proof."
+      },
+      "PublicationHostStatus": {
+        "required": [
+          "hostId",
+          "state",
+          "receivedAt",
+          "report"
+        ],
+        "type": "object",
+        "properties": {
+          "hostId": {
+            "type": "string",
+            "description": "Authenticated subject."
+          },
+          "state": {
+            "type": "string",
+            "description": "Reported, OtherPublication, or Unknown."
+          },
+          "receivedAt": {
+            "type": "string",
+            "description": "Server receipt time.",
+            "format": "date-time"
+          },
+          "report": {
+            "description": "Exact last accepted report.",
+            "$ref": "#/components/schemas/PublicationHostReport"
+          }
+        },
+        "description": "Per-host freshness and exact adoption evidence."
+      },
+      "PublicationReviewRequest": {
+        "required": [
+          "decisionId",
+          "decisionHash",
+          "wholePartitionReplacementReviewed"
+        ],
+        "type": "object",
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "description": "Immutable manually reviewed decision."
+          },
+          "decisionHash": {
+            "type": "string",
+            "description": "Exact decision content identity."
+          },
+          "wholePartitionReplacementReviewed": {
+            "type": "boolean",
+            "description": "Acknowledges that omitted commands use configured defaults."
+          }
+        },
+        "description": "Explicit review confirmation; reads the actual target before saving a delivery intent."
+      },
+      "PublicationTargetCapabilities": {
+        "required": [
+          "provider",
+          "immutableHistory",
+          "compareExchange",
+          "qualified"
+        ],
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Adapter name."
+          },
+          "immutableHistory": {
+            "type": "boolean",
+            "description": "Supports exact historical revision reads."
+          },
+          "compareExchange": {
+            "type": "boolean",
+            "description": "Implements pointer CAS."
+          },
+          "qualified": {
+            "type": "boolean",
+            "description": "Passed an explicit real-provider contract suite."
+          }
+        },
+        "description": "Truthful adapter capability, independent of the management database provider."
+      },
+      "PublicationTargetProfile": {
+        "required": [
+          "id",
+          "scope",
+          "bindingId",
+          "bindingRevision",
+          "buildId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Target identity in one workspace."
+          },
+          "scope": {
+            "description": "Authorized workspace.",
+            "$ref": "#/components/schemas/WorkspaceScope"
+          },
+          "bindingId": {
+            "type": "string",
+            "description": "Host runtime binding identity."
+          },
+          "bindingRevision": {
+            "type": "string",
+            "description": "Exact deployed binding configuration revision."
+          },
+          "buildId": {
+            "type": "string",
+            "description": "Build accepted by this binding."
+          },
+          "allowManualDecisions": {
+            "type": "boolean",
+            "description": "Explicit policy permitting an authored decision over pinned evidence.",
+            "default": false
+          }
+        },
+        "description": "Server-owned binding metadata. No connection string or credential reference is exposed."
+      },
+      "PublicationTargetsView": {
+        "required": [
+          "state",
+          "targets",
+          "fileDevelopment"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "description": "Configured or Unconfigured."
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationTargetView"
+            },
+            "description": "Configured targets in the authorized scope."
+          },
+          "fileDevelopment": {
+            "description": "File source has no supported CAS writer.",
+            "$ref": "#/components/schemas/PublicationTargetCapabilities"
+          }
+        },
+        "description": "Explicitly configured targets; absence means publishing is unconfigured."
+      },
+      "PublicationTargetView": {
+        "required": [
+          "profile",
+          "capabilities"
+        ],
+        "type": "object",
+        "properties": {
+          "profile": {
+            "description": "Authorized binding metadata.",
+            "$ref": "#/components/schemas/PublicationTargetProfile"
+          },
+          "capabilities": {
+            "description": "Implemented and qualified capabilities.",
+            "$ref": "#/components/schemas/PublicationTargetCapabilities"
+          }
+        },
+        "description": "Typed target capability data; credential references stay in server configuration."
+      },
+      "RevealCaseDefinition": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ReviewDecision": {
+        "required": [
+          "decision",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "description": "Reject or NeedsEvidence; accepted draft edits need adjudication support."
+          },
+          "note": {
+            "type": "string",
+            "description": "Reviewer rationale."
+          },
+          "datasetDraftId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Explicit destination for a future accepted reference."
+          }
+        },
+        "description": "A reviewer decision with an explanation and optional draft destination."
+      },
+      "SaveComparisonRequest": {
+        "required": [
+          "assessmentIds",
+          "baselineCandidateId"
+        ],
+        "type": "object",
+        "properties": {
+          "assessmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact saved assessments, including non-scores."
+          },
+          "baselineCandidateId": {
+            "type": "string",
+            "description": "Explicit baseline among the assessments."
+          }
+        },
+        "description": "Immutable references used to inspect a comparison under one frozen protocol."
+      },
+      "SaveResource": {
+        "required": [
+          "name",
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Operator label."
+          },
+          "body": {
+            "description": "Module-specific content.",
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional immutable build identity during registration."
+          }
+        },
+        "description": "Input to an explicit draft transition; it is never an implicit publish or model launch."
+      },
+      "ScopeDefinition": {
+        "required": [
+          "application",
+          "environment",
+          "partition"
+        ],
+        "type": "object",
+        "properties": {
+          "application": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "partition": {
+            "type": "string"
+          }
+        }
+      },
+      "StorageDefinition": {
+        "required": [
+          "provider",
+          "topology"
+        ],
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "topology": {
+            "type": "string"
+          },
+          "retention": {
+            "type": "string",
+            "default": "RetainAll"
+          },
+          "schemaVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 1
+          }
+        }
+      },
+      "StoredAsset": {
+        "required": [
+          "hash",
+          "length"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "description": "SHA-256 content identity."
+          },
+          "length": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Exact byte length.",
+            "format": "int64"
+          }
+        },
+        "description": "Scoped immutable asset identity, independent of expiring trace storage."
+      },
+      "TraceAnchor": {
+        "required": [
+          "traceId",
+          "spanId",
+          "recorded",
+          "traceState"
+        ],
+        "type": "object",
+        "properties": {
+          "traceId": {
+            "type": "string",
+            "description": "W3C trace identifier."
+          },
+          "spanId": {
+            "type": "string",
+            "description": "W3C span identifier."
+          },
+          "recorded": {
+            "type": "boolean",
+            "description": "Whether the trace was sampled."
+          },
+          "traceState": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional W3C trace state."
+          }
+        },
+        "description": "Portable trace identifiers used as a link, not an authorization source."
+      },
+      "WorkerAttemptRequest": {
+        "required": [
+          "workId",
+          "epoch",
+          "attemptId",
+          "receipt"
+        ],
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string"
+          },
+          "epoch": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "attemptId": {
+            "type": "string"
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        }
+      },
+      "WorkerClaimRequest": {
+        "required": [
+          "buildId",
+          "leaseSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "buildId": {
+            "type": "string"
+          },
+          "leaseSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "WorkerCompletionRequest": {
+        "required": [
+          "workId",
+          "epoch",
+          "receipt"
+        ],
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string"
+          },
+          "epoch": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        }
+      },
+      "WorkspaceDefinition": {
+        "required": [
+          "scope",
+          "identity",
+          "authentication",
+          "storage",
+          "capabilities",
+          "activeWorkers"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/ScopeDefinition"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/IdentityDefinition"
+          },
+          "authentication": {
+            "$ref": "#/components/schemas/AuthenticationDefinition"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StorageDefinition"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/CapabilityDefinition"
+          },
+          "activeWorkers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagementResource"
+            }
+          }
+        }
+      },
+      "WorkspaceScope": {
+        "required": [
+          "application",
+          "environment",
+          "partition"
+        ],
+        "type": "object",
+        "properties": {
+          "application": {
+            "type": "string",
+            "description": "Application namespace authorized by the host."
+          },
+          "environment": {
+            "type": "string",
+            "description": "Deployment environment."
+          },
+          "partition": {
+            "type": "string",
+            "description": "Authorized data partition."
+          },
+          "key": {
+            "type": "string",
+            "description": "Unambiguous storage key; separators inside names cannot merge scopes."
+          }
+        },
+        "description": "Explicit application, deployment and data boundary; identifiers do not grant access."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Zeeq.AgentCmd.ControlPlane.Host"
+    }
+  ]
+}

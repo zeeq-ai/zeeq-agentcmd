@@ -1,0 +1,52 @@
+{
+  "status": "design reviewed",
+  "reviewers": [
+    "DMTS",
+    "Customer advocate",
+    "Visual product designer"
+  ],
+  "decisions": [
+    "Explicit criteria, not automatic all-field grading",
+    "One confirmed primary metric per frozen benchmark version",
+    "Guardrails reference metrics separately from field selection",
+    "Versioned dataset, evaluator, bindings and missing-data policy",
+    "Independent assessment identity with optional grade-event link",
+    "No new C# attributes in v1"
+  ],
+  "checks": {
+    "localLinks": "passed",
+    "productionCodeChanges": false,
+    "imagesChanged": false,
+    "runtimeTests": "not run - design only"
+  },
+  "followUp": {
+    "topic": "Variant and version comparison surfaces",
+    "status": "lead clarification of existing pinned-candidate model",
+    "requirements": [
+      "Benchmark evidence on exact variant configuration and history",
+      "Shared Compare variants / Compare versions workflow",
+      "No automatic score carry-forward after configuration changes",
+      "Same-protocol scores and matched coverage by default",
+      "Existing images need benchmark-specific follow-up panels"
+    ]
+  },
+  "semanticJudging": {
+    "status": "design reviewed with team; not implemented",
+    "reviewers": [
+      "DMTS",
+      "Customer advocate",
+      "Visual product designer"
+    ],
+    "spec": "semantic-judging.md",
+    "decisions": [
+      "Explicit field/subtree/collection/whole-output judge scopes",
+      "Order, duplicates, normalization and atomic-fact matching are declared",
+      "Reference agreement and source grounding are separate",
+      "Reference completeness and review provenance are frozen",
+      "Supported extractions absent from partial references are not automatically errors",
+      "Uncertain source coverage does not establish unsupported content or completeness",
+      "Adjudication creates new reference and benchmark versions; compare candidates fairly",
+      "Judge model/configuration, evidence, calibration, calls and costs are tracked"
+    ]
+  }
+}

@@ -212,9 +212,8 @@ public class CompositionTests
         root.WithPartFrom(DocSlots.Lines, rig.Lines.WithParameters(new("l")));
         root.WithPartFrom(
             DocSlots.Totals,
-            parties.Then(
-                lines,
-                (p, l) => rig.Totals.WithParameters(new(p.Value.Buyer + "/" + l.Value.Items.Count))
+            parties.Then(lines, (p, l) =>
+                rig.Totals.WithParameters(new(p.Value.Buyer + "/" + l.Value.Items.Count))
             )
         );
         Check.Published(await root.ExecuteAsync());

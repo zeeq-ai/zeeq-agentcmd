@@ -106,10 +106,8 @@ public sealed class PromptGenerator : IIncrementalGenerator
                 continue;
             }
 
-            var composite = CompositeModels.Build(
-                type,
-                attribute,
-                (syntax, message) => Error(output, syntax, message)
+            var composite = CompositeModels.Build(type, attribute, (syntax, message) =>
+                Error(output, syntax, message)
             );
             if (composite is null)
             {
@@ -256,12 +254,11 @@ public sealed class PromptGenerator : IIncrementalGenerator
         }
 
         model.Contracts = CommandModels.ContractGraph(model.Parameters, model.Result, Fail);
-        model.ParametersShape =
-            model
-                .Contracts.FirstOrDefault(c =>
-                    SymbolEqualityComparer.Default.Equals(c.Type, model.Parameters)
-                )
-                ?.Properties
+        model.ParametersShape = model
+            .Contracts.FirstOrDefault(c =>
+                SymbolEqualityComparer.Default.Equals(c.Type, model.Parameters)
+            )
+            ?.Properties
             ?? new List<PropertyModel>();
         if (model.ParametersShape.Count == 0)
         {
@@ -717,6 +714,9 @@ public sealed class PromptGenerator : IIncrementalGenerator
                         )
                 )
         );
+        // Export exactly the identities used by execution, never a second approximation.
+        model.DefinitionHash = hash;
+        model.ContractSignature = bindingSignature;
         b.Append("private sealed class __RuntimeBinding : global::Zeeq.AgentCmd.IRuntimeBinding<")
             .Append(tp)
             .Append("> { public string ContractSignature => ")
@@ -1120,6 +1120,10 @@ public sealed class PromptGenerator : IIncrementalGenerator
         }
 
         b.Append("});\n");
+        CommandManifestEmitter.Emit(output, assembly, models, composites);
+        b.Append(
+            "public static global::Zeeq.AgentCmd.CommandManifest ExportManifest(bool includeBaselineTemplates=false)=>global::Zeeq.AgentCmd.CommandManifest.Parse(includeBaselineTemplates ? global::Zeeq.AgentCmd.Generated.AgentCmdManifestData.WithBaselineTemplates : global::Zeeq.AgentCmd.Generated.AgentCmdManifestData.Structural);\n"
+        );
         if (composites.Count > 0)
         {
             b.Append(

@@ -126,11 +126,9 @@ if (ledger.ReadOutput(outputRef, actor) is not LedgerResult<OutputArtifact>.Acce
     throw new InvalidOperationException("The aggregate could not be read.");
 }
 
-var descriptor =
-    provider.GetRequiredService<CompositionRegistry>().Find<DocumentExtraction>()
+var descriptor = provider.GetRequiredService<CompositionRegistry>().Find<DocumentExtraction>()
     ?? throw new InvalidOperationException("The aggregate contract is not registered.");
-var whole =
-    stored.Value.Value.Deserialize(descriptor.Whole)
+var whole = stored.Value.Value.Deserialize(descriptor.Whole)
     ?? throw new InvalidOperationException("The stored aggregate could not be decoded.");
 if (
     whole.Header.Number != "INV-1"

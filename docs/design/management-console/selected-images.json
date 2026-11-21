@@ -1,0 +1,83 @@
+[
+  {
+    "screen": 1,
+    "title": "01-command-workspace",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-237d35e7-d0c4-4243-9ab6-7eedec82d74a.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/01-command-workspace-v2.png",
+    "prompt": "Use case: ui-mockup edit. Edit the supplied screenshot, preserving the same light zinc/green Nuxt UI look, main information hierarchy, crisp text, correct badges and interactions. USER WANTS HIGHER DENSITY: narrow sidebar occupying 9\u201310% of width (~190px on a 2048px canvas); compact 13px body text and 11\u201312px metadata, 28\u201332px table rows, 12px card padding/gutters, 24px secondary icon controls. Render high-resolution landscape desktop. Keep all five nav entries and synthetic banner. Keep primary actions labeled; repeated secondary actions icon-only with tooltip/popover. Make only the required content corrections below, plus density adjustments. Do not invent new features, records, or claims.\nReplace the entire bottom Configured default card (including No configured default and Add configured default) with a compact info row: invoice.classify \u00b7 Uses configured default \u00b7 No experiment override, and a ghost open icon with tooltip View configured default. There IS a compiled configured default. The whole-partition contains3commands line stays. Keep publication Superseded badge next to itsID, historical75/25allocation, current50/50, View publication icons, keyed-unit tooltip, draftscope0othercommandschanged, locked contract rail. Do not change any other domain copy.",
+    "revision": 2,
+    "selected": true
+  },
+  {
+    "screen": 2,
+    "title": "02-draft-publication",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-d6a3ebae-4165-43af-8e01-8fa6eb554bcb.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/02-draft-publication-v3.png",
+    "prompt": "Use case: ui-mockup edit. Edit ONLY this screenshot's rendered User preview. Remove the last line Locale override:de-DE from the User rendered text. The User template only interpolates Document, so the user message contains the invoice text only, ending Total due:1.284,50 EUR. Locale override stays in Parameter overrides field and the System message Answer in de-DE. Preserve all other pixels/layout/density/buttons/text including single-brace templates, single resolved preview, no-model-calls validation, sidebar and banner. Do NOT add any content or change style.",
+    "revision": 3,
+    "selected": true
+  },
+  {
+    "screen": 3,
+    "title": "03-production-monitor",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-6bdc9303-9e30-407a-bee9-400bd452caf0.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/03-production-monitor-v3.png",
+    "prompt": "Use case:ui-mockup text edit. Change ONLY the secondary bar-chart title from Observed executions per day to Arm executions per day. Its bars674,680,670sum2024 forcontrol+short only, while40defaultcallsareseparate. Preserve EVERY other screenshot layout,text,numbers,popovers,tables,colors,density,sidebarbanner. Do not change any plot data or label other than this chart title.",
+    "revision": 3,
+    "selected": true
+  },
+  {
+    "screen": 4,
+    "title": "04-matched-evaluation",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-b2644502-0145-47eb-8ff1-dcf984c65765.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/04-matched-evaluation-v3.png",
+    "prompt": "Use case:ui-mockup text edit. In the Paired cases table only, replace the separate right-side Outputs and Traces headers with ONE spanning header Outputs & traces centered above BOTH per-variant output+trace pairs. Firstpair remains controloutputlink+controltraceicon;secondpairremainsshort-2outputlink+short-2traceicon. c0190short-2stillNo storedoutput/Notcaptured. Preserveall15rows,coveragecounts,draftpinhash,badges,otherheaders,buttons,layout,densityandstyle. Do NOT change body data,layout or introduceextra columns.",
+    "revision": 3,
+    "selected": true
+  },
+  {
+    "screen": 5,
+    "title": "05-output-review",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-88dd1779-ca82-4fa8-bc5b-c62b2e2f38d9.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/05-output-review-v4.png",
+    "prompt": "Use case:ui-mockup precise edit. In this Output&grade screenshot ONLY replace all Value-column inputboxes with READ-ONLY plain text (no borders,noeditablefields): vendor Kessler GmbH, total1284.50,currencyEUR. Change vendorstringinObservedJSON to Kessler GmbH withspace. Readonlylabel Observed values ifneeded. Rationale controls and scorecontrols remain editable; Savingcorrectionasnewversion remainsseparateaction. Preserveexactviewedv2\u00b75d2e,HumanCorrection,sourceoriginalreturnedlabel,collapsedVersions4,metadataTabs,alllayout/buttons/queue/unknowns/colors. Do not expand metadata or add outputeditingcontrol.",
+    "revision": 4,
+    "selected": true
+  },
+  {
+    "screen": 6,
+    "title": "06-dataset-explorer",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-6bcd9e2b-2eca-4c7b-ad58-78e43b3cb36c.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/06-dataset-explorer-v4.png",
+    "prompt": "Use case: ui-mockup edit. Make ONLY TWO specific corrections to supplied screenshot, preserve all other layout, tabs, popover, dense15row table,120cases,pagination,referenceeditUnsavedchanges/Inspectbranch/Savereference,sidebar/banner unchanged. 1 Header must say Dataset invoices-regression, NOT Dataset invoices-regression-v4-frozen; keep separate Version4frozen selector. 2 Remove entire Tags:valid\u00d7mixed\u00d7 controls. There must be NO active tag filter at all. Keep Cohort:All cases. Mixed slice tags in the table remain unchanged; these are data values,not filters. Do not introduce replacement tags/chips or change selected case scope. Use the freed toolbar space for blank spacing, not any new feature. Correct typography crisply.",
+    "revision": 4,
+    "selected": true
+  },
+  {
+    "screen": 7,
+    "title": "07-traces",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-9c28ecb8-40d6-4198-80ff-b56f028d7b3c.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/07-traces-v3.png",
+    "prompt": "Use case: ui-mockup edit. Supplied screenshot is edit target. Keep light zinc/green Nuxt UI, synthetic banner, five nav items Commands/Experiments/Traces/Datasets/Review, compact 13px body,11px metadata,28px rows,24px iconcontrols,12px gutters, sidebar9\u201310%width. Latest user wants less clutter: primary content visible; secondary metadata in tabs, accordions, popovers. Preserve essential identities and failures; do not hide unsavedchanges or partialcost. Repeated secondary actions icons with tooltips, mainactions labeled. Re-render crisp desktop landscape.\nEdit traceinvestigation. Trace list12compactrows usesemptyverticalspace. Eachrowexecutionoutcome separatefromtraceavailability. Firstrow Succeeded / Available,34.8s,3attempts,usage1of3,estimate $0.0024 known +2unknown \u00b7Partial,NOTapparentlycompletetotal. Unknowncostsnot0. Failed13:51rowONLY Traceavailabilityunknown,notNotcapturedtoo. OtherrowsAvailable,Notfound,Notcaptured asdistinctstateswithoutcontradiction. Noexpiredunlessconfirmed.\nRightprimarywaterfall rootelapsed34.8s. Source/selector/route timingsillustrative/proposedinstrumentationnoteremains. Attempt1azureprimary429 0.03\u20130.4s,attempt2Retrytimeout1.4\u201331.4s,attempt3Fallbackanthropic31.5\u201334.7s,store34.7\u201334.8s. Retainedbackendoptionalnote.\nUnderwaterfall tabs Attempt details(selected) | Related outputs(1) | Raw attributes. Selectedattempt3FallbackSucceeded essentials compact: requestedprofileazureprimary,servedanthropicfallback,requestmodelclaude-haiku-5-5,reportedmodel same,duration3.2s,tokens1840in/212out,cost$0.0024estpriced2026-11-01. SettingsandidentifiermapunderCOLLAPSED More settings and identifiers. RoottraceIDvisibleheader.\nOverallaccountingbannerstaysvisible priced1of3attempts \u00b7$0.0024knownestimate+2unknown\u00b7Partial. Compactattempttable3rowsknowncostonly3rd,1/2unknown, eachAttemptIdcountedonce. Rawattributesnotpermanentfullpanel.\nRelatedshadows(1)collapseddisclosurewithcomparison groupcg77f2,notlargecard,notchild/rootassumption. Shadowstatusschedulerrecordsacceptedstoredifexpanded. Noabsenceimpliesno-send.\nPrimaryViewoutputs(1)labeled,Openexternaltelemetrysecondary,CopytraceidONEheadericonwithtooltip(removefooterduplicate). No grade/datasetcontrols onspans. Retainbacklinkrollout/cohortcontext. Decluttermetadata,keeptiming/outcomeandpartialcostvisible.",
+    "revision": 3,
+    "selected": true
+  },
+  {
+    "screen": 8,
+    "title": "08-cross-contract-study",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-2281a5f0-82e9-4621-863e-f154bf2b6800.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/08-cross-contract-study-v3.png",
+    "prompt": "Use case: ui-mockup edit. Change ONLY the BOTTOM case-results table of supplied screenshot. Remove duplicate A score/B score columns entirely. The final table has EXACTLY six columns: Case | A outcome | B outcome | Criterion A | Criterion B | Pair. EXACT rows: c0142 | Stored | Stored | 1.0 | 1.0 | Matched; c0177 | Stored | Stored | 0.8 | Pending | Incomplete; c0190 | Stored | Failed(timeout) | 1.0 | \u2014 | Incomplete. No grade on failed Boutput. All other screenshot layout,manualinputreview,armrunANDvariantidentities,flat/nestedJSON,120cases84pairs36incomplete,menu,density,sidebarbanner preserved. Also correct stray word left in left outputlink: it should simply read 7e2\u2026/a17 \u00b7 v1, not left7e2. No other edits.",
+    "revision": 3,
+    "selected": true
+  },
+  {
+    "screen": 9,
+    "title": "09-system-settings",
+    "source": "/Users/cchen/.codex/generated_images/01a197ef-936a-7af0-a5c4-4c848c292c3b/exec-9e0351f1-4a1b-47f7-a604-9a93fec33e65.png",
+    "path": "/Users/cchen/code/zeeq/zeeq-llmcmd/docs/design/management-console/mockups/09-system-settings-v2.png",
+    "prompt": "Use case:ui-mockup precise edit. In this Systemsettings screenshot change ONLY two items. 1 Remove the Control-plane DB column and itsSQLitecell from the BOTTOM Partition bindings table. It is host-wide bootstrap configuration, not a per-partition choice. Remainingcolumns Environment | Partition | Runtime source | Cache | Deadline | Change | Adoption. Reflow remainingcellsnaturally. Keep topControl-planepersistenceSQLite/Pgcardunchanged. 2 In Storagebackends popover replace No claim adapters implemented with Adapters not implemented yet. Preserveeveryothertext,value,status,disabledplannedadapterclaim,FileexistingreaderNoCAS/history,Flociondemandnotstarted,unknownadoption,tabs,collapse,density,buttonsandlayout. No newfeaturesoractualconnectionclaims.",
+    "revision": 2,
+    "selected": true
+  }
+]

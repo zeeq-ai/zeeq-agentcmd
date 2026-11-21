@@ -33,6 +33,14 @@ public interface IGeneratedCommandCatalog
     /// <summary>Command metadata used for runtime profile validation.</summary>
     static abstract IReadOnlyList<CommandRegistration> Commands { get; }
 
+    /// <summary>
+    /// Exports structural metadata without resolving services or invoking command code.
+    /// Older or authored catalogs can return null rather than inventing an incomplete manifest.
+    /// </summary>
+    /// <param name="includeBaselineTemplates">Explicit disclosure of authored templates and the default profile; false withholds them.</param>
+    /// <returns>Generated catalog data, or null when this catalog has no portable export.</returns>
+    static virtual CommandManifest? ExportManifest(bool includeBaselineTemplates = false) => null;
+
     /// <summary>Validates generated serializer contracts before commands run.</summary>
     static abstract IReadOnlyList<CommandContractError> ValidateContracts();
 }

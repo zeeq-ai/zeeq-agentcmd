@@ -1024,8 +1024,7 @@ public class ExperimentSourceTests
         string sourceId = "test-source"
     )
     {
-        var store =
-            cache
+        var store = cache
             ?? new ExperimentSnapshotCache(
                 new ExperimentCacheOptions
                 {

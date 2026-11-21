@@ -43,8 +43,7 @@ public sealed partial class CommandRuntime
         TP input
     )
     {
-        var binding =
-            descriptor.RuntimeBinding
+        var binding = descriptor.RuntimeBinding
             ?? throw new InvalidOperationException("Runtime binding unavailable");
         var safe = binding.TrySnapshot(input, out var frozen);
         var current = safe ? frozen : input;
@@ -71,8 +70,7 @@ public sealed partial class CommandRuntime
         PromptDescriptor<TP, TR> descriptor
     )
     {
-        var binding =
-            descriptor.RuntimeBinding
+        var binding = descriptor.RuntimeBinding
             ?? throw new InvalidOperationException("Runtime binding unavailable");
         var initial = new ConfiguredDefaultView(
             descriptor.Id,
@@ -116,24 +114,47 @@ public sealed partial class CommandRuntime
         ExperimentResolution? pinned,
         CancellationToken ct,
         PreparedCommandSettings? frozenSettings = null,
-        string? shadowGroup = null
+        string? shadowGroup = null,
+        ExpectedExperimentCandidate? expected = null
     )
     {
-        var options =
-            Experiments ?? throw new InvalidOperationException("Experiments are not configured");
-        var binding =
-            descriptor.RuntimeBinding
+        var options = Experiments
+            ?? throw new InvalidOperationException("Experiments are not configured");
+        var binding = descriptor.RuntimeBinding
             ?? throw new InvalidOperationException("Runtime binding unavailable");
+
+        // Strict candidates exist only for fresh standalone calls. Pins and shadows already
+        // carry frozen authority, and composition rejects a candidate before reaching here.
+        if (expected is not null && pinned is not null)
+        {
+            throw new InvalidOperationException("Strict candidate cannot be pinned");
+        }
+
+        // The default has no publication revision. Check its host identity before any
+        // source read, so a mismatched worker build fails without touching the source.
+        if (
+            expected is ExpectedExperimentCandidate.ConfiguredDefault expectedDefault
+            && options.DefaultConfigurationFingerprint != expectedDefault.ExpectedFingerprint
+        )
+        {
+            throw new ExperimentCandidateRejectedException(
+                ExperimentCandidateFailureReasons.DefaultFingerprintMismatch
+            );
+        }
+
         var configured =
             pinned is ExperimentResolution.ConfiguredDefault pinnedDefault ? pinnedDefault.View
             : pinned is null ? GetConfiguredExperimentDefault(descriptor)
             : null;
-        if (!ExperimentLookup.TryCreate(actor.Tenant, null, out var lookup))
+
+        // A treatment candidate reads its exact immutable revision, so a newer publication
+        // cannot replace the planned configuration between queueing and execution.
+        var requestedRevision = (expected as ExpectedExperimentCandidate.Treatment)?.Revision;
+        if (!ExperimentLookup.TryCreate(actor.Tenant, requestedRevision, out var lookup))
         {
             throw new InvalidOperationException("Invalid authorized partition");
         }
-        var resolution =
-            pinned
+        var resolution = pinned
             ?? await options
                 .Resolver.ResolveAsync(
                     lookup!,
@@ -144,6 +165,14 @@ public sealed partial class CommandRuntime
                     ct
                 )
                 .ConfigureAwait(false);
+
+        // Strict preparation never falls back. A default output would be attributed to a
+        // candidate that did not run, and its spend could not be compared.
+        if (expected is not null)
+        {
+            return PrepareCandidate(expected, resolution);
+        }
+
         var prepared = TryPrepare(resolution);
         if (prepared is not null)
         {
@@ -161,6 +190,90 @@ public sealed partial class CommandRuntime
         );
         return TryPrepare(resolution)
             ?? throw new InvalidOperationException("Configured default invalid");
+
+        PreparedExperiment<TP> PrepareCandidate(
+            ExpectedExperimentCandidate candidate,
+            ExperimentResolution selected
+        )
+        {
+            var assignment = (selected as ExperimentResolution.Treatment)?.Assignment;
+            if (candidate is ExpectedExperimentCandidate.Treatment treatment)
+            {
+                if (selected is ExperimentResolution.ConfiguredDefault fallback)
+                {
+                    throw new ExperimentCandidateRejectedException(
+                        fallback.Reason switch
+                        {
+                            ExperimentFallbackReason.StaleCommandRevision =>
+                                ExperimentCandidateFailureReasons.StaleCommandRevision,
+                            ExperimentFallbackReason.InvalidRelease =>
+                                ExperimentCandidateFailureReasons.InvalidRelease,
+                            _ => ExperimentCandidateFailureReasons.ResolvedDefault,
+                        }
+                    );
+                }
+
+                var rejection =
+                    assignment!.View.Revision != treatment.Revision
+                        ? ExperimentCandidateFailureReasons.RevisionMismatch
+                    : assignment.ExperimentId != treatment.ExperimentId
+                        ? ExperimentCandidateFailureReasons.ExperimentMismatch
+                    : assignment.VariantId != treatment.VariantId
+                        ? ExperimentCandidateFailureReasons.VariantMismatch
+                    : assignment.Role != ExperimentRole.Primary
+                        ? ExperimentCandidateFailureReasons.RoleMismatch
+                    : null;
+                if (rejection is not null)
+                {
+                    throw new ExperimentCandidateRejectedException(rejection);
+                }
+            }
+            else if (assignment is not null)
+            {
+                throw new ExperimentCandidateRejectedException(
+                    ExperimentCandidateFailureReasons.ResolvedTreatment
+                );
+            }
+
+            // An explicit call-site profile wins over a dynamic route during preparation.
+            // The evidence would still name the candidate, so strict mode refuses the mix.
+            var candidateRoute = assignment?.Variant.Route
+                ?? (selected as ExperimentResolution.ConfiguredDefault)?.View.Route;
+            if (explicitProfile && candidateRoute is not null)
+            {
+                throw new ExperimentCandidateRejectedException(
+                    ExperimentCandidateFailureReasons.RouteOverridden
+                );
+            }
+
+            var result = TryPrepare(selected)
+                ?? throw new ExperimentCandidateRejectedException(
+                    ExperimentCandidateFailureReasons.PreparationFailed
+                );
+
+            // Evidence is what graders and accounting read later. Re-check it against the
+            // plan so a future preparation change cannot record a different identity.
+            var evidence = result.Evidence;
+            var consistent = candidate switch
+            {
+                ExpectedExperimentCandidate.Treatment expectedTreatment => evidence.Source
+                    == "experiment"
+                    && evidence.Revision == expectedTreatment.Revision.Value
+                    && evidence.ExperimentId == expectedTreatment.ExperimentId
+                    && evidence.VariantId == expectedTreatment.VariantId
+                    && evidence.Role == ExperimentRole.Primary,
+                ExpectedExperimentCandidate.ConfiguredDefault => evidence.Source == "default"
+                    && evidence.VariantId is null,
+            };
+            if (!consistent)
+            {
+                throw new ExperimentCandidateRejectedException(
+                    ExperimentCandidateFailureReasons.PreparationFailed
+                );
+            }
+
+            return result;
+        }
 
         PreparedExperiment<TP>? TryPrepare(ExperimentResolution selected)
         {
@@ -277,9 +390,8 @@ public sealed partial class CommandRuntime
                     if (
                         router is null
                         || options.RoutePolicy is null
-                        || router.TryResolveRoute(
-                            routeDefinition,
-                            candidate => options.RoutePolicy(actor, EffectivePolicyRoute(candidate))
+                        || router.TryResolveRoute(routeDefinition, candidate =>
+                            options.RoutePolicy(actor, EffectivePolicyRoute(candidate))
                         )
                             is not DynamicRouteResult.Ready ready
                     )
@@ -291,8 +403,7 @@ public sealed partial class CommandRuntime
                     {
                         Profile = route.Profile.Key.Id,
                         Model = route.Profile.Model,
-                        Temperature =
-                            temperature
+                        Temperature = temperature
                             ?? route.Profile.Temperature
                             ?? route.Profile.Defaults?.Temperature
                             ?? settings.DefaultTemperature,
@@ -334,8 +445,7 @@ public sealed partial class CommandRuntime
                 }
                 ExecutionProfile EffectivePolicyRoute(ExecutionProfile candidate)
                 {
-                    var effectiveTemperature =
-                        temperature
+                    var effectiveTemperature = temperature
                         ?? candidate.Temperature
                         ?? candidate.Defaults?.Temperature
                         ?? settings.DefaultTemperature;
@@ -348,8 +458,7 @@ public sealed partial class CommandRuntime
                         },
                     };
                 }
-                var configuredRoute =
-                    route?.Profile
+                var configuredRoute = route?.Profile
                     ?? router?.Profiles.FirstOrDefault(p => p.Key.Id == settings.Profile);
                 var effectiveDefaults = configuredRoute?.Defaults ?? new ProfileDefaults();
                 effectiveDefaults = effectiveDefaults with { Temperature = settings.Temperature };

@@ -65,7 +65,7 @@ export default defineNuxtConfig({
     description: 'Typed prompt commands over Microsoft.Extensions.AI. Stable identity, captured parameters, closed outcomes, and evaluation of the exact stored whole.',
     full: {
       title: 'Zeeq AgentCmd — Full documentation',
-      description: 'The local alpha documentation for AgentCmd on .NET 11 / C# 15 RC.'
+      description: 'The local alpha documentation for AgentCmd on .NET 11 / C# 15.'
     },
     sections: ([
       ['Getting started', '/getting-started%'],

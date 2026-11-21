@@ -164,7 +164,8 @@ public sealed partial class CommandRuntime : IDisposable
         PreparedExperiment<TP>? experimentPrepared = null,
         Actor? capturedActor = null,
         bool suppressShadows = false,
-        string? pendingHookPhase = null
+        string? pendingHookPhase = null,
+        ExpectedExperimentCandidate? expectedCandidate = null
     )
     {
         var id = context.ExecutionId;
@@ -287,6 +288,18 @@ public sealed partial class CommandRuntime : IDisposable
                 );
             }
 
+            // A strict caller asked for verified identity. Without experiment options the
+            // runtime cannot verify anything, so it must not run the unverified default.
+            if (expectedCandidate is not null && (Experiments is null || prepared is not null))
+            {
+                return new Outcome<TR>.Failed(
+                    new ExecutionFailure.ConfigurationFailure(
+                        context,
+                        ExperimentCandidateFailureReasons.ExperimentsDisabled
+                    )
+                );
+            }
+
             Guid? experimentRun = null;
             if (Experiments is not null && (prepared is null || experimentPrepared is not null))
             {
@@ -315,13 +328,20 @@ public sealed partial class CommandRuntime : IDisposable
                             context,
                             actor,
                             null,
-                            ct
+                            ct,
+                            expected: expectedCandidate
                         );
                     }
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
                     return new Outcome<TR>.Failed(new ExecutionFailure.Cancelled(context));
+                }
+                catch (ExperimentCandidateRejectedException rejected)
+                {
+                    return new Outcome<TR>.Failed(
+                        new ExecutionFailure.ConfigurationFailure(context, rejected.Reason)
+                    );
                 }
                 catch (ValidationHookException)
                 {
@@ -362,8 +382,7 @@ public sealed partial class CommandRuntime : IDisposable
                 return new Outcome<TR>.Failed(new ExecutionFailure.InvalidInput(context, invalid));
             }
 
-            var settings =
-                experimentPrepared?.Settings
+            var settings = experimentPrepared?.Settings
                 ?? prepared?.Settings
                 ?? FreezeSettings(descriptor, profile, temperature);
             profile = settings.Profile;
@@ -489,10 +508,10 @@ public sealed partial class CommandRuntime : IDisposable
                     throw new InvalidOperationException();
                 }
 
-                prompt =
-                    experimentPrepared?.Prompt ?? prepared?.Prompt ?? descriptor.Render(parameters);
-                system =
-                    experimentPrepared?.System
+                prompt = experimentPrepared?.Prompt
+                    ?? prepared?.Prompt
+                    ?? descriptor.Render(parameters);
+                system = experimentPrepared?.System
                     ?? prepared?.System
                     ?? descriptor.RenderSystem(parameters);
                 snapshot = snapshot with { FormattedPrompt = prompt };
@@ -517,8 +536,7 @@ public sealed partial class CommandRuntime : IDisposable
                     throw new InvalidOperationException();
                 }
 
-                projected =
-                    experimentPrepared?.Parameters
+                projected = experimentPrepared?.Parameters
                     ?? prepared?.Parameters
                     ?? descriptor.Project(parameters);
                 snapshot = snapshot with { Parameters = projected };
@@ -563,8 +581,8 @@ public sealed partial class CommandRuntime : IDisposable
             {
                 try
                 {
-                    var group =
-                        treatment.Assignment.ComparisonGroupId ?? Guid.NewGuid().ToString("N");
+                    var group = treatment.Assignment.ComparisonGroupId
+                        ?? Guid.NewGuid().ToString("N");
                     var names = shadowOptions.SelectShadows(actor, treatment.Assignment.View);
                     if (ct.IsCancellationRequested)
                     {
@@ -715,13 +733,12 @@ public sealed partial class CommandRuntime : IDisposable
                         new ChatMessage(ChatRole.System, system),
                         new ChatMessage(ChatRole.User, prompt),
                     };
-            RoutedProfileClient? routed =
-                experimentPrepared?.Route?.For(
-                    context,
-                    events,
-                    settings.DefaultTemperature,
-                    journal
-                )
+            RoutedProfileClient? routed = experimentPrepared?.Route?.For(
+                context,
+                events,
+                settings.DefaultTemperature,
+                journal
+            )
                 ?? router?.For(
                     ProfileKey.Declare(profile),
                     context,

@@ -243,7 +243,7 @@ public sealed class MetadataGenerator : IIncrementalGenerator
         );
     }
 
-    private static bool IsSupported(ITypeSymbol type, out string? reason)
+    internal static bool IsSupported(ITypeSymbol type, out string? reason)
     {
         reason = null;
         if (type is IArrayTypeSymbol array)

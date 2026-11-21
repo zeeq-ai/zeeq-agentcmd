@@ -33,10 +33,9 @@ public sealed class ProviderExtractor(
     ProviderExtractionOptions? options = null
 )
 {
-    static readonly string MeaiVersion =
-        typeof(ChatResponse)
-            .Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion
+    static readonly string MeaiVersion = typeof(ChatResponse)
+        .Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+        ?.InformationalVersion
         ?? typeof(ChatResponse).Assembly.GetName().Version?.ToString()
         ?? "unknown";
     readonly ProviderExtractionOptions options = options ?? new();
@@ -512,8 +511,7 @@ public sealed class ExtractionAttempt
         foreach (var (key, value) in u.AdditionalCounts)
         {
             var path = $"meai:Usage.AdditionalCounts[{key}]";
-            var rule =
-                adapter?.AdditionalCounts.GetValueOrDefault(key)
+            var rule = adapter?.AdditionalCounts.GetValueOrDefault(key)
                 ?? new AdditionalCountRule(
                     Dim.AdditionalPrefix + key,
                     Unit.Unknown,

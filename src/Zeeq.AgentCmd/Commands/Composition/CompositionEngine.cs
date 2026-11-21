@@ -841,8 +841,9 @@ sealed class CompositionEngine(
         DraftRecord latest;
         try
         {
-            latest =
-                await store.GetDraftAsync(draftId, CancellationToken.None).ConfigureAwait(false)
+            latest = await store
+                .GetDraftAsync(draftId, CancellationToken.None)
+                .ConfigureAwait(false)
                 ?? fresh;
         }
         catch (Exception)

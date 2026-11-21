@@ -1043,11 +1043,8 @@ public class RuntimeExperimentTests
         var source = new Source { Snapshot = Release("v1", "fr") };
         var baseline = new Client();
         var treatment = new Client();
-        using var provider = Build(
-            source,
-            baseline,
-            treatment,
-            (_, route) => route.Temperature is null or 1f
+        using var provider = Build(source, baseline, treatment, (_, route) =>
+            route.Temperature is null or 1f
         );
         var command = new Command(provider.GetRequiredService<CommandRuntime>());
         var result = await command

@@ -1,0 +1,32 @@
+<Project>
+  <!-- Import explicitly, then run -t:AgentCmdExportManifest. Rebuild prevents
+       stale generated catalog data from surviving removal of all commands.
+       This builds code but never starts or loads the consuming application. -->
+  <PropertyGroup>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)agentcmd-manifest/$(Configuration)/$(TargetFramework)</CompilerGeneratedFilesOutputPath>
+    <AgentCmdManifestPython Condition="'$(AgentCmdManifestPython)' == ''"
+      >python3</AgentCmdManifestPython>
+    <AgentCmdManifestOutput Condition="'$(AgentCmdManifestOutput)' == ''"
+      >$(OutputPath)$(AssemblyName).agentcmd.manifest.json</AgentCmdManifestOutput>
+    <_AgentCmdManifestExporter>$(MSBuildThisFileDirectory)export-command-manifest.py</_AgentCmdManifestExporter>
+    <_AgentCmdManifestDisclosure Condition="'$(AgentCmdManifestIncludeBaselineTemplates)' == 'true'"
+      >--include-baseline-templates</_AgentCmdManifestDisclosure>
+  </PropertyGroup>
+  <Target Name="_AgentCmdClearManifestData" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_AgentCmdOldManifest Include="$(CompilerGeneratedFilesOutputPath)/**/AgentCmd.Manifest.g.cs" />
+    </ItemGroup>
+    <Delete Files="@(_AgentCmdOldManifest)" />
+  </Target>
+  <Target Name="AgentCmdExportManifest" DependsOnTargets="Rebuild">
+    <ItemGroup>
+      <_AgentCmdGeneratedManifest Include="$(CompilerGeneratedFilesOutputPath)/**/AgentCmd.Manifest.g.cs" />
+    </ItemGroup>
+    <Error
+      Condition="'@(_AgentCmdGeneratedManifest->Count())' != '1'"
+      Text="Expected exactly one current generated AgentCmd manifest. Check command generation and compilation diagnostics."
+    />
+    <Exec Command="&quot;$(AgentCmdManifestPython)&quot; &quot;$(_AgentCmdManifestExporter)&quot; --generated-file &quot;@(_AgentCmdGeneratedManifest)&quot; --output &quot;$(AgentCmdManifestOutput)&quot; $(_AgentCmdManifestDisclosure)" />
+  </Target>
+</Project>

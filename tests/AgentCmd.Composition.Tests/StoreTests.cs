@@ -61,9 +61,8 @@ public class StoreTests
     {
         var (store, draft) = await Open();
         var results = new System.Collections.Concurrent.ConcurrentBag<ClaimResult>();
-        await Parallel.ForEachAsync(
-            Enumerable.Range(0, 64),
-            async (_, ct) => results.Add(await store.ClaimSlotAsync(Claim(draft, "a"), ct))
+        await Parallel.ForEachAsync(Enumerable.Range(0, 64), async (_, ct) =>
+            results.Add(await store.ClaimSlotAsync(Claim(draft, "a"), ct))
         );
         await Assert.That(results.Count(r => r is ClaimResult.Claimed)).IsEqualTo(1);
         await Assert.That(results.Count(r => r is ClaimResult.InFlight)).IsEqualTo(63);

@@ -212,8 +212,8 @@ internal static class ExperimentFileMapper
         }
 
         // A missing weight is -1, so validation rejects it. It is never treated as zero, which would shift traffic silently.
-        var parameters =
-            variant.Parameters ?? new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+        var parameters = variant.Parameters
+            ?? new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         mapped = new ExperimentVariant(
             variantId,
             variant.Weight ?? -1,

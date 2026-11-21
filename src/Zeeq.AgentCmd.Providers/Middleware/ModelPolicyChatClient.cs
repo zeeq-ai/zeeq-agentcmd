@@ -93,8 +93,8 @@ public sealed class ModelPolicyChatClient : DelegatingChatClient
 
     void Validate(ChatOptions? options)
     {
-        var target =
-            options?.ModelId ?? InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
+        var target = options?.ModelId
+            ?? InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
         string? model = target;
         if (bindings is not null)
         {

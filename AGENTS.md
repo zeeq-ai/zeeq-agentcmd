@@ -6,7 +6,7 @@
 
 - Keep call sites terse and fluent: `WithParameters(...).ExecuteAsync()`.
 - Generate boilerplate. Use `WithHeaderFrom(...)` and typed dependencies to compose a whole.
-- Use modern C# 15 / .NET 11 RC; `global.json` pins the SDK.
+- Use modern C# 15 / .NET 11 GA; `global.json` pins the SDK.
 - Explain **why** in adjacent C# or XML comments: authority, replay, serialization, accounting, and scope lifetime.
 - Document every public production API with XML comments. `CS1591` and malformed parameter docs fail the build; generated-file exemptions must not hide authored API gaps. See [quality floor](docs/architecture/quality-floor.md).
 - Use CSharpier through mise. Re-read after formatting; code and line numbers move. The exact C# 15 exceptions use the SDK formatter via `scripts/format.sh`.

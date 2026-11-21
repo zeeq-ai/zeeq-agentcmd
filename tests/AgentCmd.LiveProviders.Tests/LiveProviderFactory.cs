@@ -68,12 +68,11 @@ internal static class LiveProviderFactory
 
     internal static ReasoningEffort MinimumEffort(LiveSettings settings)
     {
-        var profile =
-            ModelRequestCatalog.Default.Find(
-                settings.Provider,
-                settings.Provider == "anthropic" ? ApiKind.Messages : ApiKind.ChatCompletions,
-                settings.UnderlyingModel
-            ) ?? throw new InvalidOperationException("No reviewed model request profile exists.");
+        var profile = ModelRequestCatalog.Default.Find(
+            settings.Provider,
+            settings.Provider == "anthropic" ? ApiKind.Messages : ApiKind.ChatCompletions,
+            settings.UnderlyingModel
+        ) ?? throw new InvalidOperationException("No reviewed model request profile exists.");
         return profile.ReasoningEfforts.Contains("none", StringComparer.Ordinal)
             ? ReasoningEffort.None
             : ReasoningEffort.Low;

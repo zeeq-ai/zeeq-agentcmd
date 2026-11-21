@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scrutor" />
+    <ProjectReference Include="../Zeeq.AgentCmd.ControlPlane/Zeeq.AgentCmd.ControlPlane.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="AgentCmd.ControlPlane.Tests" />
+  </ItemGroup>
+</Project>

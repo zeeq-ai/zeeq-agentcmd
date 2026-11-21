@@ -1,0 +1,58 @@
+{
+  "status": "Proposed; implementation and acceptance checks not started",
+  "approach": "Six working increments over one modular control plane and an isolated application-owned evaluation worker.",
+  "phases": [
+    {
+      "title": "1. Foundation and durable storage",
+      "detail": "Management API, SQLite/PostgreSQL storage contracts, scoped access, audit, assets and outbox. Gate: restart preserves state; stale edits and unauthorized access are rejected.",
+      "risk": "Store transaction and authorization boundaries"
+    },
+    {
+      "title": "2. Manifests, variant drafts and build-pinned workers",
+      "detail": "Build export/registration, contract diffs, typed no-call preflight, standalone journal binding and strict candidate mode. Gate: wrong build or fallback cannot cause a paid call.",
+      "risk": "Runtime API, serializer authority and production isolation"
+    },
+    {
+      "title": "3. Replay-ready datasets and frozen benchmarks",
+      "detail": "Typed inputs/assets, references, splits/exposure, criterion bindings and primary/guardrail policies. Gate: frozen data is immutable and missing evidence is explicit.",
+      "risk": "Input authority, reference policy and acceptance leakage"
+    },
+    {
+      "title": "4. Durable backtest and reassessment jobs",
+      "detail": "Claim-bound journals, progress, cancel/resume, late-receipt reconciliation, workload origin and spend coverage. Gate: uncertain sends are held; offline work never enters production metrics.",
+      "risk": "Paid dispatch, crash recovery and duplicate accounting"
+    },
+    {
+      "title": "5. Scoped judges, review and exact comparisons",
+      "detail": "Human/deterministic/LLM assessments, calibration, source evidence, owned review and variant/version matrices. Gate: discoveries require adjudication; revised references reassess all compared outputs fairly.",
+      "risk": "Judge evidence, calibration and historical result integrity"
+    },
+    {
+      "title": "6. Publish, observe and capture regressions",
+      "detail": "Qualified publication CAS/history, explicit promotion, host adoption, execution/assignment/timing evidence and trace-to-case workflow. Gate: conflicts/restarts reconcile without overwrites or invented adoption.",
+      "risk": "Target activation, runtime evidence and fleet state"
+    }
+  ],
+  "architecture": [
+    ["Control plane", "One modular .NET API with in-process job/outbox service initially; compact Vue/Nuxt UI."],
+    ["Management storage", "SQLite for one local instance; PostgreSQL for qualified shared deployment. Selected at bootstrap."],
+    ["Evaluation", "Separate app-owned worker/runtime pinned to a build; host-approved clients, policies and typed dispatch."],
+    ["Runtime publications", "Independent read/publish ports; PostgreSQL first for qualified CAS/history. File remains development/current-only."],
+    ["Assets and traces", "Separate asset port, persistent filesystem first; optional retained-trace adapter/deep links."]
+  ],
+  "runtimeAdditions": [
+    "Optional standalone invocation/worker journal binding; the current journal parameter is internal.",
+    "Strict candidate preparation for evaluation: fail before send when the requested configuration cannot run.",
+    "Authoritative workload origin plus intended-assignment, elapsed and execution/attempt correlation evidence."
+  ],
+  "acceptance": [
+    "A stale worker cannot start a call; a valid late completion is retained.",
+    "Start without reliable completion is held, never automatically resent.",
+    "Wrong build, signature, override or render fails before provider dispatch in strict mode.",
+    "Backtest and evaluator traffic cannot enter production metrics.",
+    "Exact original outputs and frozen reports survive reference, rubric and configuration changes.",
+    "Publication conflicts and lost acknowledgements reconcile without blind overwrite."
+  ],
+  "later": "CI gates, scheduling, alerts, automatic promotion, additional runtime/asset adapters and statistical winner claims follow the same immutable protocol.",
+  "scope": "Includes scoped LLM judging. No application implementation, provider calls, containers, secrets or migrations are performed by this proposal."
+}

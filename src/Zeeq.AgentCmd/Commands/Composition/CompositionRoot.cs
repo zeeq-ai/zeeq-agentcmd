@@ -89,11 +89,10 @@ public sealed class StepRef<TPart>
         // WHY deserialize here from the re-read ledger JSON and not hand back the earlier typed value: the stored version is
         // the fact. A callback sees exactly what a later reader of the ledger would see.
         var input = inputs[slotId];
-        var value =
-            JsonSerializer.Deserialize(
-                input.Value,
-                info ?? throw new InvalidOperationException("No JSON type info")
-            ) ?? throw new InvalidOperationException("Stored dependency is null");
+        var value = JsonSerializer.Deserialize(
+            input.Value,
+            info ?? throw new InvalidOperationException("No JSON type info")
+        ) ?? throw new InvalidOperationException("Stored dependency is null");
         return new(value, input.Ref);
     }
 }

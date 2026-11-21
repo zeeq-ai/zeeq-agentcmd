@@ -156,14 +156,11 @@ public sealed class NamedClientRegistrationTests
         var factories = 0;
         var services = new ServiceCollection().AddAgentCmd(builder =>
             builder
-                .AddChatClient(
-                    "provider",
-                    _ =>
-                    {
-                        factories++;
-                        return new RecordingClient();
-                    }
-                )
+                .AddChatClient("provider", _ =>
+                {
+                    factories++;
+                    return new RecordingClient();
+                })
                 .AddProfile("other", "provider", "model")
                 .UseActor(_ => new("tenant", "actor"))
         );

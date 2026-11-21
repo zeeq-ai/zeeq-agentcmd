@@ -47,6 +47,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
+        with:
+          # CI must install the same GA SDK selected by local dotnet and mise.
+          global-json-file: global.json
       # Validate the copied Markdown against the packages a reader will use.
       - run: dotnet pack src/Zeeq.AgentCmd/Zeeq.AgentCmd.csproj -c Release -o artifacts/packages --nologo
       - run: dotnet pack src/Zeeq.AgentCmd.Providers/Zeeq.AgentCmd.Providers.csproj -c Release -o artifacts/packages --nologo

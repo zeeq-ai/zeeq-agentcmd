@@ -3,7 +3,7 @@ title: Zeeq AgentCmd
 description: Typed prompt commands over Microsoft.Extensions.AI. Keep intent, telemetry, execution, and stored-output evaluation together.
 seo:
   title: Zeeq AgentCmd — Prompts as typed commands
-  description: A SqlCommand-inspired command layer over Microsoft.Extensions.AI. Stable prompt identity, captured parameters, closed outcomes, and evaluation of the exact stored whole.
+  description: A SqlCommand-inspired command layer over Microsoft.Extensions.AI. Stable prompt identity, captured parameters, typed success/failure results, and grading of the output your app stored.
 ---
 
 ::u-page-hero{class="dark:bg-gradient-to-b from-neutral-900 to-neutral-950"}
@@ -17,7 +17,7 @@ orientation: horizontal
 Prompts as [typed commands]{.brand-gradient-text}.
 
 #description
-Give a prompt a name, typed inputs, and a result you can inspect. AgentCmd brings those pieces together over Microsoft.Extensions.AI, from one model call to a whole you can evaluate.
+Give a prompt a name, typed inputs, and a result you can inspect. AgentCmd brings those pieces together over Microsoft.Extensions.AI, from one model call to a finished document you can grade.
 
 #links
   :::u-button
@@ -73,7 +73,7 @@ The prompt is one part of the operation.
 #description
 Your application asks a model to extract an invoice. Later, the total looks wrong. Which prompt and inputs produced it? Which model ran? Can you evaluate the exact invoice that was stored?
 
-MEAI already provides typed responses, schema helpers, and middleware. AgentCmd brings the rest of that operation together: a stable prompt identity, captured inputs, execution telemetry, a delivery receipt, and a result you can read back and evaluate.
+MEAI already provides typed responses, schema helpers, and middleware. AgentCmd brings the rest of that operation together: a name for the prompt, the inputs it saw, and the saved result you can grade.
 
 #default
   :::u-page-grid{class="lg:grid-cols-2"}
@@ -90,7 +90,7 @@ MEAI already provides typed responses, schema helpers, and middleware. AgentCmd 
     title: Add a command when identity matters
     icon: i-lucide-fingerprint
     ---
-    Give a repeated operation an ID and a typed parameter contract. Inspect the raw template and captured inputs. Handle a closed outcome and check whether the output was stored.
+    Give a repeated operation an ID and a typed parameter contract. Inspect the raw template and captured inputs. Handle Success or Failed, then check whether the output was stored.
     ::::
   :::
 ::
@@ -126,9 +126,9 @@ Keep the important choices visible.
 
   :::u-page-feature
   ---
-  title: Closed outcomes
+  title: Typed outcomes
   icon: i-lucide-circle-check
-  description: Handle Success or Failed directly, then inspect the delivery receipt. A successful value does not by itself promise persistence.
+  description: Switch on Success or Failed. A failed parse or provider error never looks like an invoice. Then check the storage receipt to see whether the output was saved.
   ---
   :::
 
@@ -142,9 +142,9 @@ Keep the important choices visible.
 
   :::u-page-feature
   ---
-  title: Evaluate the whole
+  title: Grade the finished invoice
   icon: i-lucide-clipboard-check
-  description: Compose typed steps, keep their lineage, and read back the exact stored aggregate. Grade the final invoice without grading each extraction separately.
+  description: Compose typed steps, keep the record of which step produced what, and read back the invoice your app saved. Grade it once, not once per extraction.
   ---
   :::
 ::
@@ -177,8 +177,8 @@ Start with a use case.
 
     ::::u-page-card
     ---
-    title: Assemble and grade a whole
-    description: Use several extraction steps and evaluate the stored aggregate.
+    title: Assemble and grade an invoice
+    description: Use several extraction steps, then grade the saved result.
     icon: i-lucide-layers
     to: /examples/composition
     ---
@@ -208,7 +208,7 @@ Start with a use case.
   :::u-page-c-t-a
   ---
   title: Write one command.
-  description: Run the quick start with a fake client. No API key, paid call, or container is needed. This is a local alpha on .NET 11 / C# 15 RC; packages are built from source.
+  description: Run the quick start with a fake client. No API key, paid call, or container is needed.
   links:
     - label: Run the quick start
       to: /getting-started/quick-start

@@ -186,8 +186,7 @@ public sealed partial class Invocation<TP, TR>
 
     internal InvocationIdentity GetCompositionIdentity()
     {
-        var frozen =
-            prepared
+        var frozen = prepared
             ?? throw new InvalidOperationException(
                 "Freeze the invocation before capturing its identity"
             );
@@ -354,7 +353,15 @@ public sealed partial class Invocation<TP, TR>
             state.Profile,
             state.Temperature,
             context,
-            state.Error ?? (conflict ? "composition_context_conflict" : null),
+            // The slot journal and the composition pin are the authority for a step.
+            // A standalone binding would bypass one of them, so it is refused, never ignored.
+            state.Error
+                ?? (
+                    conflict ? "composition_context_conflict"
+                    : state.Journal is not null || state.Candidate is not null
+                        ? "composition_binding_conflict"
+                    : null
+                ),
             caller,
             ct,
             journal,
