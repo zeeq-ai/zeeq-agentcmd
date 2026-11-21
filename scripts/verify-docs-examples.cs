@@ -336,6 +336,10 @@ try
         Fence(telemetryExample, "csharp", "TelemetryFakes.cs")
     );
     File.WriteAllText(
+        Path.Combine(telemetryApp, "InvoiceDatasetGrader.cs"),
+        Fence(telemetryExample, "csharp", "InvoiceDatasetGrader.cs")
+    );
+    File.WriteAllText(
         Path.Combine(telemetryApp, "TelemetryExport.cs"),
         Fence(telemetryGuide, "csharp", "TelemetryExport.cs")
     );
@@ -358,6 +362,8 @@ try
         "--project",
         "telemetry-app.csproj"
     );
+    const string retainedEvidence =
+        "Invoice execution finished. Evidence retained for later selection.";
     if (
         !telemetryOutput.Contains(
             "Prompt: invoice.extract; input tokens: 7",
@@ -368,7 +374,9 @@ try
             StringComparison.Ordinal
         )
         || !telemetryOutput.Contains("Document: Invoice for USD 12.50", StringComparison.Ordinal)
-        || !telemetryOutput.Contains("Stored output:", StringComparison.Ordinal)
+        || !telemetryOutput.Contains(retainedEvidence, StringComparison.Ordinal)
+        || telemetryOutput.IndexOf("Stored output:", StringComparison.Ordinal)
+            <= telemetryOutput.IndexOf(retainedEvidence, StringComparison.Ordinal)
         || !telemetryOutput.Contains(
             "The exact stored total was read and graded.",
             StringComparison.Ordinal

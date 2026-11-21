@@ -52,12 +52,13 @@ internal static class Fixture
         );
         Directory.CreateDirectory(root);
         var path = Path.Combine(root, "management.db");
+        var assets = new FileAssetStore(Path.Combine(root, "assets"));
         var store = new RelationalControlPlaneStore(
             new ManagementDatabase("Sqlite", () =>
                 new SqliteConnection($"Data Source={path};Default Timeout=10")
-            )
+            ),
+            assets: assets
         );
-        var assets = new FileAssetStore(Path.Combine(root, "assets"));
         var scope = new WorkspaceScope("local", "dev", "default");
         var operatorActor = new ManagementActor("offline-fixture-operator");
         var workerActor = new ManagementActor("offline-fixture-worker");
@@ -689,6 +690,50 @@ internal static class Fixture
                 "Reassessment regenerated a candidate or missed an original output."
             );
         }
+
+        // The incident walkthrough needs a source family outside the calibration split.
+        var incidentInput = new OfflineFixture.Input("The supported value is A.");
+        await using var incidentSource = new MemoryStream(
+            Encoding.UTF8.GetBytes(incidentInput.Document)
+        );
+        var incidentAsset = await assets.PutAsync(scope, incidentSource);
+        using var incidentRuntime = CommandRuntime.Create(
+            () => new FakeClient("C"),
+            new Dictionary<string, Profile> { ["fixture"] = new("fake-model", 0) },
+            ledger,
+            () => runtimeActor
+        );
+        var incidentOutcome = await new OfflineFixture.Extract(incidentRuntime)
+            .WithParameters(incidentInput)
+            .InRun(runId)
+            .ExecuteAsync();
+        if (
+            incidentOutcome
+            is not Outcome<OfflineFixture.Output>.Success
+            {
+                Delivery: OutputDelivery.Stored storedIncident
+            } incidentSuccess
+        )
+        {
+            throw new InvalidOperationException("The synthetic incident output was not stored.");
+        }
+        var incident = await store.RecordObservationAsync(
+            scope,
+            operatorActor,
+            new ExecutionObservation(
+                incidentSuccess.ExecutionId,
+                "Production",
+                buildId,
+                OfflineFixture.Extract.Id,
+                "Success",
+                "Stored",
+                Element(storedIncident.Output.Reference),
+                storedIncident.Output.Value,
+                Element(incidentInput),
+                prefix + "-incident-source",
+                [incidentAsset.Hash]
+            )
+        );
         var ids = new
         {
             prefix,
@@ -698,6 +743,7 @@ internal static class Fixture
             datasetId = dataset.Id,
             benchmarkId = benchmark.Id,
             jobId = job.Id,
+            incidentExecutionId = incident.Id,
             executionIds = executions
                 .Select(item => item.GetProperty("executionId").GetString())
                 .ToArray(),
@@ -715,13 +761,12 @@ internal static class Fixture
             reassessmentIds = reassessments,
             assetHash = asset.Hash,
         };
+        var idsPath = Path.Combine(root, "fixture-ids.json");
         await File.WriteAllTextAsync(
-            Path.Combine(root, "fixture-ids.json"),
+            idsPath,
             JsonSerializer.Serialize(ids, new JsonSerializerOptions(Json) { WriteIndented = true })
         );
-        Console.WriteLine(
-            "Offline fixture created. IDs: artifacts/control-plane/integration/fixture-ids.json"
-        );
+        Console.WriteLine($"Offline fixture created. IDs: {idsPath}");
     }
 
     private sealed class SnapshotSource(ExperimentSnapshot snapshot) : IExperimentSnapshotSource

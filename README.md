@@ -136,6 +136,8 @@ The host owns authorization, client pipelines, assignment and the side-effect po
 
 ## Management console
 
+Follow the [console walkthrough](docs/content/2.guides/9.management-console.md) or use the [management API reference](docs/content/4.reference/3.management-api.md).
+
 The repository now includes a .NET management API and a compact Vue/Vite console. The API uses discovered `IEndpoint` modules, transient `IEndpointHandler` classes, named operations, handler activities, and an OpenAPI snapshot consumed by Kubb. The console retains the five work areas: Commands, Experiments, Traces, Datasets, and Review. Settings reports actual storage and registered capabilities.
 
 Start the local operator API and client in separate terminals:
