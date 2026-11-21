@@ -241,6 +241,13 @@ public sealed class ModelRequestCatalog
     {
         foreach (var model in KnownProviderModels.All)
         {
+            // Fable is priced but its request constraints (sampling, effort levels,
+            // output limit) have not been reviewed, so it gets no request profile.
+            if (model.ModelId.StartsWith("claude-fable-", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             if (model.ProviderKey == "anthropic")
             {
                 // Sonnet 5.5 rejects thinking:disabled; the pinned SDK's None

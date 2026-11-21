@@ -71,4 +71,20 @@ public static class PricingEstimator
         ArgumentNullException.ThrowIfNull(scope);
         return TokenPricingCatalog.Default.Estimate(snapshot, scope);
     }
+
+    /// <summary>Prices observed usage with a host-built catalog, such as one from <see cref="TokenPricingCatalog.Create"/>.</summary>
+    /// <param name="snapshot">Captured response usage.</param>
+    /// <param name="scope">Caller-asserted billing scope.</param>
+    /// <param name="catalog">Catalog that selects the rate card.</param>
+    public static PricingEstimate Estimate(
+        ResponseSnapshot snapshot,
+        PricingScope scope,
+        TokenPricingCatalog catalog
+    )
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(scope);
+        ArgumentNullException.ThrowIfNull(catalog);
+        return catalog.Estimate(snapshot, scope);
+    }
 }

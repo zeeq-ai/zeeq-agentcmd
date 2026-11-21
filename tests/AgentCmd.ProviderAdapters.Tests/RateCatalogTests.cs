@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using TUnit.Assertions;
 using TUnit.Assertions.Extensions;
 using TUnit.Core;
@@ -12,7 +13,7 @@ public class RateCatalogTests
     public async Task Cards_can_succeed_each_other_by_date_and_cover_disjoint_context_bands()
     {
         var original = TokenPricingCatalog.Default.Cards.Single(c =>
-            c.Model.ModelId == "gpt-5.6-sol"
+            c.Model.ModelId == "gpt-5.6-sol" && c.ValidFrom is not null
         );
         var after = original with
         {
@@ -134,7 +135,12 @@ public class RateCatalogTests
     {
         foreach (var card in TokenPricingCatalog.Default.Cards)
         {
-            var scope = card.Scope with { ContextBand = "short", AsOf = new DateOnly(2026, 11, 2) };
+            // A time-limited card needs a date inside its own window.
+            var scope = card.Scope with
+            {
+                ContextBand = "short",
+                AsOf = card.ValidThrough ?? card.ValidFrom ?? new DateOnly(2026, 11, 2),
+            };
             var expected =
                 (
                     70 * card.Rates.Input
@@ -174,9 +180,12 @@ public class RateCatalogTests
     [Test]
     public async Task Promotions_and_unverified_context_bands_do_not_leak_into_other_requests()
     {
-        var card = TokenPricingCatalog.Default.Cards.Single(c => c.Model.ModelId == "gpt-5.6-sol");
+        var card = TokenPricingCatalog.Default.Cards.Single(c =>
+            c.Model.ModelId == "gpt-5.6-sol" && c.ValidFrom is not null
+        );
         var snapshot = Snapshot(card);
-        foreach (var date in new DateOnly?[] { null, new(2026, 8, 31), new(2026, 12, 1) })
+        // 8/31 belongs to the list-price card; the dates around the promotion stay unpriced.
+        foreach (var date in new DateOnly?[] { null, new(2026, 12, 1) })
         {
             await Assert
                 .That(PricingEstimator.Estimate(snapshot, card.Scope with { AsOf = date }).Status)
@@ -281,5 +290,117 @@ public class RateCatalogTests
                     .Status
             )
             .IsEqualTo(PricingStatus.Unpriced);
+    }
+
+    [Test]
+    public async Task The_list_price_applies_before_the_promotion_and_not_after()
+    {
+        var list = TokenPricingCatalog.Default.Cards.Single(c =>
+            c.Model.ModelId == "gpt-5.6-sol" && c.ValidFrom is null
+        );
+        var snapshot = Snapshot(list);
+        var before = PricingEstimator.Estimate(
+            snapshot,
+            list.Scope with
+            {
+                AsOf = new(2026, 8, 31),
+            }
+        );
+        await Assert.That(before.Status).IsEqualTo(PricingStatus.Complete);
+        await Assert.That(list.Rates.Input).IsEqualTo(5m);
+        await Assert.That(list.Rates.Output).IsEqualTo(30m);
+    }
+
+    [Test]
+    public async Task Fable_models_have_standard_single_band_rates_and_no_request_profile()
+    {
+        var fable = TokenPricingCatalog.Default.Cards.Single(c =>
+            c.Model.ModelId == "claude-fable-5-2"
+        );
+        await Assert.That(fable.Rates.Input).IsEqualTo(8m);
+        await Assert.That(fable.Rates.Output).IsEqualTo(40m);
+        await Assert.That(fable.Rates.CachedInput).IsEqualTo(.20m);
+        await Assert.That(fable.LongContextRates).IsNull();
+        await Assert
+            .That(PricingEstimator.Estimate(Snapshot(fable), fable.Scope).Status)
+            .IsEqualTo(PricingStatus.Complete);
+        await Assert
+            .That(TokenPricingCatalog.Default.Cards.Any(c => c.Model.ModelId == "claude-fable-5-1"))
+            .IsTrue();
+    }
+
+    [Test]
+    public async Task A_host_override_replaces_only_the_overlapping_builtin_card()
+    {
+        var builtIn = TokenPricingCatalog.Default.Cards.Single(c =>
+            c.Model.ModelId == "claude-sonnet-5-5"
+        );
+        var negotiated = builtIn with
+        {
+            Rates = builtIn.Rates with { Input = 1m, Output = 5m },
+            Provenance = builtIn.Provenance with { Id = "contract-2026" },
+        };
+        var catalog = TokenPricingCatalog.Create(options => options.Override(negotiated));
+        var snapshot = Snapshot(builtIn);
+
+        var custom = PricingEstimator.Estimate(snapshot, builtIn.Scope, catalog);
+        var standard = PricingEstimator.Estimate(snapshot, builtIn.Scope);
+
+        await Assert.That(custom.Status).IsEqualTo(PricingStatus.Complete);
+        await Assert.That(custom.TotalUsd < standard.TotalUsd).IsTrue();
+        await Assert.That(catalog.Cards.Count).IsEqualTo(TokenPricingCatalog.Default.Cards.Count);
+        await Assert
+            .That(
+                TokenPricingCatalog
+                    .Default.Cards.Single(c => c.Model.ModelId == "claude-sonnet-5-5")
+                    .Rates.Input
+            )
+            .IsEqualTo(2m);
+    }
+
+    [Test]
+    public async Task Add_rejects_an_overlap_while_remove_and_clear_make_usage_unpriced()
+    {
+        var builtIn = TokenPricingCatalog.Default.Cards.Single(c =>
+            c.Model.ModelId == "claude-opus-5-5"
+        );
+        var snapshot = Snapshot(builtIn);
+
+        await Assert
+            .That(() => TokenPricingCatalog.Create(options => options.Add(builtIn)))
+            .Throws<ArgumentException>();
+
+        var removed = TokenPricingCatalog.Create(options =>
+            options.Remove("anthropic", "claude-opus-5-5")
+        );
+        await Assert
+            .That(PricingEstimator.Estimate(snapshot, builtIn.Scope, removed).Status)
+            .IsEqualTo(PricingStatus.Unpriced);
+
+        var cleared = TokenPricingCatalog.Create(options => options.Clear());
+        await Assert.That(cleared.Cards.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task The_di_helper_registers_one_catalog_with_host_overrides()
+    {
+        var builtIn = TokenPricingCatalog.Default.Cards.Single(c =>
+            c.Model.ModelId == "claude-sonnet-5-5"
+        );
+        var negotiated = builtIn with { Rates = builtIn.Rates with { Input = 1m } };
+        var services = new ServiceCollection().AddAgentCmdPricing(options =>
+            options.Override(negotiated)
+        );
+        using var provider = services.BuildServiceProvider();
+
+        var catalog = provider.GetRequiredService<TokenPricingCatalog>();
+
+        await Assert
+            .That(catalog.Cards.Single(c => c.Model.ModelId == "claude-sonnet-5-5").Rates.Input)
+            .IsEqualTo(1m);
+        await Assert.That(() => services.AddAgentCmdPricing()).Throws<InvalidOperationException>();
+        await Assert
+            .That(() => new ServiceCollection().AddAgentCmdPricing(options => options.Add(builtIn)))
+            .Throws<ArgumentException>();
     }
 }

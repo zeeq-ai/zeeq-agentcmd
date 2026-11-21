@@ -4,6 +4,11 @@ namespace Zeeq.AgentCmd.Providers.Pricing;
 // Keep prices as reviewed data, not subclasses that duplicate usage arithmetic.
 internal static class BuiltInRateCards
 {
+    // Every card shares one review date so a refresh is a single, visible edit.
+    // The id suffix and the retrieval date must change together.
+    const string Reviewed = "2026-11-20";
+    static readonly DateOnly ReviewedOn = new(2026, 11, 20);
+
     const string Anthropic = "https://platform.claude.com/docs/en/about-claude/pricing";
     const string AzureSix =
         "https://azure.microsoft.com/en-us/blog/gpt-6-astra-sol-and-luna-for-production-agents-in-microsoft-foundry/";
@@ -22,6 +27,12 @@ internal static class BuiltInRateCards
         // rates across the full 1M context window; only Haiku has a 100k tier.
         yield return Claude("claude-sonnet-5-5", new(2m, 10m, .10m, 2.50m, 4m));
         yield return Claude("claude-opus-5-5", new(4m, 20m, .20m, 5m, 8m));
+        // Fable has a single standard band at every context length. Cache reads
+        // are published as 0.025x base input. Mythos is limited-availability and
+        // its API ID is unconfirmed, so it has no built-in card; add one with
+        // TokenPricingOptions when a verified organization needs it.
+        yield return Claude("claude-fable-5-2", new(8m, 40m, .20m, 10m, 16m));
+        yield return Claude("claude-fable-5-1", new(10m, 50m, .25m, 12.50m, 20m));
         yield return Azure("gpt-6-luna", new(.10m, .50m, .01m, .125m), new(.20m, .75m, .02m, .25m));
         yield return Azure("gpt-6-sol", new(2m, 10m, .20m, 2.50m), new(4m, 15m, .40m, 5m));
         yield return Azure("gpt-6-astra", new(10m, 50m, 1m, 12.50m), new(20m, 75m, 2m, 25m));
@@ -29,6 +40,13 @@ internal static class BuiltInRateCards
         // Microsoft's announcement publishes only short-context 5.6 rates.
         // Do not derive long rates from direct OpenAI or extrapolate a promotion.
         yield return Azure("gpt-5.6-terra", new(2m, 12m, .20m, 2.50m), null, AzureFive);
+        // The list price applied before the promotion. After ValidThrough Microsoft
+        // says only "through at least", so the period is left unpriced rather
+        // than guessed.
+        yield return Azure("gpt-5.6-sol", new(5m, 30m, .50m, 6.25m), null, AzureFive) with
+        {
+            ValidThrough = new DateOnly(2026, 8, 31),
+        };
         yield return Azure("gpt-5.6-sol", new(4m, 20m, .50m, 6.25m), null, AzureFive) with
         {
             ValidFrom = new DateOnly(2026, 9, 1),
@@ -50,11 +68,11 @@ internal static class BuiltInRateCards
             new("anthropic-direct", "standard", "global"),
             rates,
             new(
-                "anthropic-" + model + "-standard-global-2026-11-02",
+                "anthropic-" + model + "-standard-global-" + Reviewed,
                 "USD",
                 "per million tokens",
                 Anthropic,
-                new(2026, 11, 2)
+                ReviewedOn
             ),
             InputTokenAccounting.UncachedWithTtlWrites,
             longRates,
@@ -78,11 +96,11 @@ internal static class BuiltInRateCards
             ),
             rates,
             new(
-                "azure-" + model + "-global-standard-2026-11-02",
+                "azure-" + model + "-global-standard-" + Reviewed,
                 "USD",
                 "per million tokens",
                 source,
-                new(2026, 11, 2)
+                ReviewedOn
             ),
             InputTokenAccounting.InclusiveWithCacheSubsets,
             longRates,

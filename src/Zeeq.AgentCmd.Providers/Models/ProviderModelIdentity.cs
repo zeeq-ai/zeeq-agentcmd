@@ -75,6 +75,8 @@ internal static class KnownProviderModels
                     new ProviderModelIdentity("anthropic", "claude-haiku-5-5"),
                     new ProviderModelIdentity("anthropic", "claude-sonnet-5-5"),
                     new ProviderModelIdentity("anthropic", "claude-opus-5-5"),
+                    new ProviderModelIdentity("anthropic", "claude-fable-5-2"),
+                    new ProviderModelIdentity("anthropic", "claude-fable-5-1"),
                 }
             )
             .ToArray()

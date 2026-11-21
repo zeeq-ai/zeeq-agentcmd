@@ -109,8 +109,24 @@ public sealed partial class TokenPricingCatalog
     /// <summary>Reviewed built-in cards. Hosts can construct a separate catalog with their own cards.</summary>
     public static TokenPricingCatalog Default { get; } = new(BuiltInRateCards.Create());
 
+    /// <summary>
+    /// Creates a catalog from the reviewed built-in cards plus the host's changes. Use it at setup
+    /// to apply negotiated rates, private deployments or a model this release does not know yet.
+    /// </summary>
+    /// <param name="configure">Adds, overrides or removes cards before the catalog is frozen.</param>
+    public static TokenPricingCatalog Create(Action<TokenPricingOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        var options = new TokenPricingOptions(Default.Cards);
+        configure(options);
+        return new(options.Cards);
+    }
+
     /// <summary>Frozen card definitions, including their source revisions.</summary>
     public IReadOnlyList<TokenRateCard> Cards { get; }
+
+    internal static bool CardsOverlap(TokenRateCard left, TokenRateCard right) =>
+        Overlaps(left, right);
 
     static bool Overlaps(TokenRateCard left, TokenRateCard right) =>
         string.Equals(
