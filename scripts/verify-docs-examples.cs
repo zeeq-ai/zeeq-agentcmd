@@ -62,7 +62,7 @@ try
         "docs",
         "content",
         "2.guides",
-        "6.serialization-and-nativeaot.md"
+        "7.serialization-and-nativeaot.md"
     );
     var projectText = Fence(installation, "xml", "my-app/my-app.csproj");
     var project = XDocument.Parse(projectText);
@@ -86,7 +86,7 @@ try
         "docs",
         "content",
         "2.guides",
-        "7.runtime-experiments.md"
+        "8.runtime-experiments.md"
     );
     File.WriteAllText(
         Path.Combine(app, "InvoiceRequest.cs"),
@@ -227,13 +227,13 @@ try
         "docs",
         "content",
         "2.guides",
-        "2.outcomes-and-context.md"
+        "3.outcomes-and-context.md"
     );
     File.WriteAllText(
         Path.Combine(app, "OutcomeInspector.cs"),
         Fence(outcomes, "csharp", "OutcomeInspector.cs")
     );
-    var composition = Path.Combine(repository, "docs", "content", "2.guides", "3.composition.md");
+    var composition = Path.Combine(repository, "docs", "content", "2.guides", "4.composition.md");
     var bootstrap = Fence(composition, "csharp", "CompositionBootstrap.cs");
     var commands = File.ReadAllText(
         Path.Combine(repository, "examples", "Zeeq.AgentCmd.CompositionExample", "Commands.cs")
@@ -321,15 +321,11 @@ try
         "docs",
         "content",
         "2.guides",
-        "5.accounting-and-observability.md"
+        "6.accounting-and-observability.md"
     );
     File.WriteAllText(
         Path.Combine(telemetryApp, "CaptureSetup.cs"),
         Fence(telemetryExample, "csharp", "CaptureSetup.cs")
-    );
-    File.WriteAllText(
-        Path.Combine(telemetryApp, "EvaluationCapture.cs"),
-        Fence(telemetryExample, "csharp", "EvaluationCapture.cs")
     );
     File.WriteAllText(
         Path.Combine(telemetryApp, "Program.cs"),

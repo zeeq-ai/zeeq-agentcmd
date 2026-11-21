@@ -273,4 +273,24 @@ public static class ProviderExtractionBuilderExtensions
             registration,
             sink
         ));
+
+    /// <summary>
+    /// Adds provider extraction from explicit adapters, without building the extractor and registry by hand.
+    /// Adapters stay explicit because the provider identity selects the protocol; it is never inferred from a model name.
+    /// </summary>
+    /// <param name="builder">Client builder; call this last so it sits directly above the provider.</param>
+    /// <param name="registration">Explicit provider and protocol identity.</param>
+    /// <param name="sink">Receives each normalized attempt.</param>
+    /// <param name="adapters">Adapters for the protocols this client may speak.</param>
+    public static ChatClientBuilder UseProviderExtraction(
+        this ChatClientBuilder builder,
+        ProviderIdentity registration,
+        IExtractionSink sink,
+        params IProviderResponseAdapter[] adapters
+    ) =>
+        builder.UseProviderExtraction(
+            new ProviderExtractor(new ProviderAdapterRegistry(adapters)),
+            registration,
+            sink
+        );
 }

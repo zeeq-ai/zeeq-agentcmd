@@ -23,6 +23,32 @@ public class CompositionTests
     }
 
     [Test]
+    public async Task ReadStored_decodes_the_aggregate_the_ledger_holds()
+    {
+        using var rig = new Rig();
+        var pub = Check.Published(await rig.AddAll(await rig.Begin()).ExecuteAsync());
+
+        var read = pub.ReadStored(rig.RealLedger, rig.Registry, rig.Actor);
+
+        var found = (StoredWhole<Doc>.Found)read;
+        await Assert.That(found.Value.Header.Title).IsEqualTo("Invoice 7");
+        await Assert.That(found.Artifact.Reference).IsEqualTo(pub.Aggregate.Output);
+    }
+
+    [Test]
+    public async Task ReadStored_reports_an_unauthorized_actor_and_a_missing_contract()
+    {
+        using var rig = new Rig();
+        var pub = Check.Published(await rig.AddAll(await rig.Begin()).ExecuteAsync());
+
+        var other = pub.ReadStored(rig.RealLedger, rig.Registry, new Actor("tenant-b", "intruder"));
+        var noContract = pub.ReadStored(rig.RealLedger, new CompositionRegistry(), rig.Actor);
+
+        await Assert.That(other).IsTypeOf<StoredWhole<Doc>.Unavailable>();
+        await Assert.That(noContract).IsTypeOf<StoredWhole<Doc>.Undecodable>();
+    }
+
+    [Test]
     public async Task Published_aggregate_names_the_exact_stored_versions()
     {
         using var rig = new Rig();

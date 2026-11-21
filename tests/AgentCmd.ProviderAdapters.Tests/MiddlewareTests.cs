@@ -4,6 +4,7 @@ using TUnit.Assertions;
 using TUnit.Assertions.Extensions;
 using TUnit.Core;
 using Zeeq.AgentCmd.Providers;
+using Zeeq.AgentCmd.Providers.Platforms;
 
 namespace AgentCmd.ProviderAdapters.Tests;
 
@@ -25,6 +26,23 @@ public class MiddlewareTests
             .Build();
 
     static readonly ChatMessage[] Hello = [new(ChatRole.User, "hello")];
+
+    [Test]
+    public async Task Explicit_adapters_overload_builds_the_extractor_without_manual_wiring()
+    {
+        var (response, _, _) = Fx.Load("anthropic-cache-ttl");
+        var inner = new ScriptedClient { Respond = (_, _, _) => Task.FromResult(response) };
+        var sink = new CaptureSink();
+        var client = new ChatClientBuilder(inner)
+            .UseProviderExtraction(Fx.Anthropic, sink, new AnthropicMessagesAdapter())
+            .Build();
+
+        var got = await client.GetResponseAsync(Hello);
+
+        await Assert.That(ReferenceEquals(got, response)).IsTrue();
+        await Assert.That(sink.Results.Count).IsEqualTo(1);
+        await Assert.That(Fx.Status(sink.Results[0])).IsEqualTo("Extracted");
+    }
 
     [Test]
     public async Task Response_is_returned_unchanged_and_the_collector_sees_one_snapshot()
