@@ -230,6 +230,16 @@ public sealed record ResponseSnapshot(
     {
         get; init;
     }
+
+    /// <summary>
+    /// Command and routed attempt this provider call belongs to, read once when the call started.
+    /// <see cref="AttemptId"/> identifies this call; several calls can share one routed attempt when
+    /// inner middleware retries or runs tools. Null when the call ran outside a command.
+    /// </summary>
+    public Zeeq.AgentCmd.AttemptCorrelation? Correlation
+    {
+        get; init;
+    }
 }
 
 /// <summary>Closed extraction result. Every case keeps the valid normalized baseline. Unsupported native/protocol shapes are <see cref="Partial"/>.</summary>

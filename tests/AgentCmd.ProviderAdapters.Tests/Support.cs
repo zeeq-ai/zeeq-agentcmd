@@ -113,37 +113,38 @@ static class Fx
         [.. r.Snapshot.Diagnostics.Select(d => d.Code)];
 }
 
-sealed class CaptureSink : IExtractionSink
+sealed class CaptureSink : IAttemptSink
 {
-    readonly List<ExtractionResult> results = [];
-    public IReadOnlyList<ExtractionResult> Results
+    readonly List<AttemptRecord> records = [];
+
+    public IReadOnlyList<AttemptRecord> Records
     {
         get
         {
-            lock (results)
+            lock (records)
             {
-                return [.. results];
+                return [.. records];
             }
         }
     }
 
-    public ValueTask OnExtractedAsync(ExtractionResult result, CancellationToken cancellationToken)
+    public IReadOnlyList<ExtractionResult> Results => [.. Records.Select(r => r.Result)];
+
+    public ValueTask OnAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
     {
-        lock (results)
+        lock (records)
         {
-            results.Add(result);
+            records.Add(attempt);
         }
 
         return ValueTask.CompletedTask;
     }
 }
 
-sealed class ThrowingSink : IExtractionSink
+sealed class ThrowingSink : IAttemptSink
 {
-    public ValueTask OnExtractedAsync(
-        ExtractionResult result,
-        CancellationToken cancellationToken
-    ) => throw new InvalidOperationException("sink down");
+    public ValueTask OnAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken) =>
+        throw new InvalidOperationException("sink down");
 }
 
 sealed class ScriptedClient : IChatClient

@@ -15,7 +15,7 @@ var binding = capabilities.Bind(
 
 var client = azureClient.AsBuilder()
     .UseModelPolicy(registration, capabilities, [binding])
-    .UseProviderExtraction(extractor, registration, sink)
+    .UseAttemptCapture(extractor, registration, sink)
     .Build();
 
 // The host chooses settings. The policy rejects invalid values before transport.

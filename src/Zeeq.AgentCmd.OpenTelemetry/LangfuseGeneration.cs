@@ -67,6 +67,35 @@ public static class LangfuseGeneration
             activity.SetTag("langfuse.observation.metadata.response_id", snapshot.ResponseId);
         }
 
+        // Name the command and routed attempt, so a generation joins its execution without a trace walk.
+        if (snapshot.Correlation is { } correlation)
+        {
+            activity.SetTag(
+                "langfuse.observation.metadata.command_id",
+                correlation.Command.CommandId
+            );
+            activity.SetTag(
+                "langfuse.observation.metadata.command_revision",
+                correlation.Command.Revision
+            );
+            activity.SetTag(
+                "langfuse.observation.metadata.execution_id",
+                correlation.Command.ExecutionId.ToString()
+            );
+            activity.SetTag(
+                "langfuse.observation.metadata.route_attempt_id",
+                correlation.RouteAttemptId.ToString()
+            );
+            activity.SetTag(
+                "langfuse.observation.metadata.attempt_number",
+                correlation.AttemptNumber
+            );
+            if (correlation.Profile is not null)
+            {
+                activity.SetTag("langfuse.observation.metadata.profile", correlation.Profile);
+            }
+        }
+
         var endCode = snapshot.End switch
         {
             AttemptEnd.Failed => "failed",

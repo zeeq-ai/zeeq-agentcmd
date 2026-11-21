@@ -921,6 +921,10 @@ public sealed partial class CommandRuntime : IDisposable
                 attempt?.SetTag("agentcmd.attempt.id", attemptId.ToString());
                 try
                 {
+                    // Provider capture reads this once at call start, so it can name the command.
+                    using var scope = AttemptScope.Begin(
+                        new(context, attemptId, 1, profile, attempt?.Context ?? default)
+                    );
                     answer = await client!.GetResponseAsync(
                         messages,
                         new ChatOptions

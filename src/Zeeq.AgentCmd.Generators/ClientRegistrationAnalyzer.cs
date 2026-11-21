@@ -243,15 +243,21 @@ public sealed class ClientRegistrationAnalyzer : DiagnosticAnalyzer
         List<Client> duplicates
     )
     {
+        var extension = KnownCaptureExtension(call.TargetMethod, builder);
         if (
-            !SymbolEqualityComparer.Default.Equals(call.TargetMethod.ContainingType, builder)
-            || !KnownBuilderOverload(call.TargetMethod, builder)
+            !extension
+            && (
+                !SymbolEqualityComparer.Default.Equals(call.TargetMethod.ContainingType, builder)
+                || !KnownBuilderOverload(call.TargetMethod, builder)
+            )
         )
         {
             return false;
         }
 
-        if (call.Instance is IInvocationOperation previous)
+        // An extension call carries the chain in its first argument instead of an instance.
+        var instance = extension ? call.Arguments[0].Value : call.Instance;
+        if (instance is IInvocationOperation previous)
         {
             if (
                 !ReadChain(
@@ -270,14 +276,18 @@ public sealed class ClientRegistrationAnalyzer : DiagnosticAnalyzer
             }
         }
         else if (
-            call.Instance is not IParameterReferenceOperation parameter
+            instance is not IParameterReferenceOperation parameter
             || !SymbolEqualityComparer.Default.Equals(parameter.Parameter, receiver)
         )
         {
             return false;
         }
 
-        foreach (var argument in call.Arguments.Where(a => !a.IsImplicit))
+        foreach (
+            var argument in call.Arguments.Where(a =>
+                !a.IsImplicit && !(extension && a.Parameter?.Ordinal == 0)
+            )
+        )
         {
             // Constant expressions, including nameof(builder), cannot leak the builder.
             if (argument.Value.ConstantValue.HasValue)
@@ -382,6 +392,33 @@ public sealed class ClientRegistrationAnalyzer : DiagnosticAnalyzer
         }
 
         return true;
+    }
+
+    // Providers registers a captured client through an extension; it has the same name and model semantics.
+    private static bool KnownCaptureExtension(IMethodSymbol method, INamedTypeSymbol builder)
+    {
+        if (
+            !method.IsExtensionMethod
+            || method.Name != "AddChatClient"
+            || method.IsGenericMethod
+            || !SymbolEqualityComparer.Default.Equals(method.ReturnType, builder)
+            || method.ContainingType.ToDisplayString()
+                != "Zeeq.AgentCmd.Providers.AgentCmdBuilderCaptureExtensions"
+        )
+        {
+            return false;
+        }
+
+        var signature = string.Join(
+            "|",
+            method.Parameters.Select(p => p.Name + ":" + TypeSignature(p.Type))
+        );
+        return signature
+            == "builder:Zeeq.AgentCmd.AgentCmdBuilder|name:System.String"
+                + "|provider:System.Func`2<System.IServiceProvider,Microsoft.Extensions.AI.IChatClient>"
+                + "|protocol:Zeeq.AgentCmd.Providers.ProviderProtocol|fixedModel:System.String"
+                + "|classify:System.Func`2<System.Exception,Zeeq.AgentCmd.FailureKind>"
+                + "|configure:System.Action`1<Microsoft.Extensions.AI.ChatClientBuilder>";
     }
 
     // Pin the supported surface so later overloads cannot silently acquire these semantics.

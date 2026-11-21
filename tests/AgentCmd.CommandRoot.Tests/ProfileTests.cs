@@ -162,6 +162,50 @@ public class ProfileTests
     }
 
     [Test]
+    public async Task Each_routed_attempt_exposes_its_correlation_to_the_provider_call()
+    {
+        var seen = new ConcurrentQueue<AttemptCorrelation?>();
+        using var f = new Fixture(
+            new(
+                (_, _) =>
+                {
+                    seen.Enqueue(AttemptScope.Current);
+                    return Unavailable();
+                }
+            ),
+            new(
+                (_, _) =>
+                {
+                    seen.Enqueue(AttemptScope.Current);
+                    return Task.FromResult(Answer("anthropic-response"));
+                }
+            )
+        );
+
+        var result = (Outcome<Invoice>.Success)
+            await f.Invocation.WithProfile<Profiles>(p => p.OpenAI).ExecuteAsync();
+
+        var attempts = seen.ToArray();
+        var routed = result.Snapshot.Routing!.Attempts;
+        await Assert.That(attempts.Length).IsEqualTo(routed.Count);
+        await Assert.That(attempts.All(a => a!.Command.ExecutionId == result.ExecutionId)).IsTrue();
+        await Assert
+            .That(
+                attempts
+                    .Select(a => a!.RouteAttemptId)
+                    .SequenceEqual(routed.Select(r => r.AttemptId))
+            )
+            .IsTrue();
+        await Assert
+            .That(
+                attempts.Select(a => a!.AttemptNumber).SequenceEqual(routed.Select(r => r.Number))
+            )
+            .IsTrue();
+        await Assert.That(attempts[^1]!.Profile).IsEqualTo(Profiles.Instance.Anthropic.Id);
+        await Assert.That(AttemptScope.Current).IsNull();
+    }
+
+    [Test]
     public async Task Retry_and_fallback_emit_one_transition_and_separate_attempt_spans_and_metrics()
     {
         var spans = new ConcurrentQueue<Activity>();

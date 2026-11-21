@@ -1,6 +1,6 @@
 # Provider accounting
 
-Provider response adapters read MEAI responses and optional native accounting projections into immutable per-attempt snapshots. This assembly has no OpenAI or Anthropic SDK dependency. `ProviderExtractionChatClient` preserves the provider response and isolates observer failures.
+Provider response adapters read MEAI responses and optional native accounting projections into immutable per-attempt snapshots. This assembly has no OpenAI or Anthropic SDK dependency. `AttemptCaptureChatClient` preserves the provider response and isolates failures in each `IAttemptSink`. Use `UseAttemptCapture` to place it at the provider boundary and `AddAttemptSink` to register observers in DI.
 
 Use explicit provider/protocol registration. Cached, reasoning and audio details are subsets, not extra totals. Missing counts remain unknown. Conflicting normalized/native evidence stays visible. Raw content is off by default.
 

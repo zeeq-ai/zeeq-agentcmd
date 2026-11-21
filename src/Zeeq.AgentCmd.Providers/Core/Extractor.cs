@@ -14,6 +14,9 @@ public sealed record ProviderExtractionOptions
     /// <summary>Reports an isolated adapter or sink defect. The model result is never changed by it.</summary>
     public Action<string, Exception>? OnFailure { get; init; }
 
+    /// <summary>Clock for call start and end times; replace it in tests so durations are deterministic.</summary>
+    public TimeProvider TimeProvider { get; init; } = TimeProvider.System;
+
     /// <summary>Invokes the optional failure observer. The observer is itself untrusted: its exceptions are swallowed.</summary>
     internal void ReportFailure(string stage, Exception error)
     {

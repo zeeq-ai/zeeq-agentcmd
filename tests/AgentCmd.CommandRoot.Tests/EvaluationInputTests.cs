@@ -1,4 +1,5 @@
 using CommandRoot;
+using Microsoft.Extensions.AI;
 using TUnit.Assertions;
 using TUnit.Assertions.Extensions;
 using TUnit.Core;
@@ -65,5 +66,44 @@ public class EvaluationInputTests
 
         await Assert.That(result).IsTypeOf<RetainResult.NotStored>();
         await Assert.That(store.Items.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task Single_client_send_exposes_its_correlation_to_the_provider_call()
+    {
+        AttemptCorrelation? seen = null;
+        var ledger = new InMemoryFeedbackLedger();
+        var actor = new Actor("test", "reviewer");
+        using var runtime = CommandRuntime.Create(
+            () =>
+                new Observing(new FakeClient("{\"Total\":12.5,\"Currency\":\"USD\"}"), () =>
+                    seen = AttemptScope.Current
+                ),
+            new Dictionary<string, Profile> { { "extraction", new("m") } },
+            ledger,
+            () => actor
+        );
+
+        var success = (Outcome<Invoice>.Success)
+            await new ExtractInvoice(runtime).WithParameters(new("doc")).ExecuteAsync();
+
+        await Assert.That(seen!.Command.ExecutionId).IsEqualTo(success.ExecutionId);
+        await Assert.That(seen.AttemptNumber).IsEqualTo(1);
+        await Assert.That(AttemptScope.Current).IsNull();
+    }
+
+    // Stands where provider capture sits: inside the runtime's send, next to the provider.
+    sealed class Observing(IChatClient inner, Action observe) : DelegatingChatClient(inner)
+    {
+        public override Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            observe();
+
+            return base.GetResponseAsync(messages, options, cancellationToken);
+        }
     }
 }

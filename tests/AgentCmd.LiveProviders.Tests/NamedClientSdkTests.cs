@@ -44,7 +44,7 @@ public sealed class NamedClientSdkTests
                 registration,
                 ApiKind.ChatCompletions
             );
-            var captured = new ProviderExtractionChatClient(
+            var captured = new AttemptCaptureChatClient(
                 new ChatClient(
                     model,
                     new ApiKeyCredential("synthetic-not-a-credential"),
@@ -57,7 +57,7 @@ public sealed class NamedClientSdkTests
                 ).AsIChatClient(),
                 extractor,
                 identity,
-                snapshots
+                [snapshots]
             );
             return new ModelPolicyChatClient(
                 captured,
@@ -80,7 +80,7 @@ public sealed class NamedClientSdkTests
         services.AddKeyedChatClient("claude", _ =>
         {
             var identity = new ProviderIdentity("anthropic", "claude", ApiKind.Messages);
-            var captured = new ProviderExtractionChatClient(
+            var captured = new AttemptCaptureChatClient(
                 new AnthropicClient
                 {
                     ApiKey = "synthetic-not-a-credential",
@@ -90,7 +90,7 @@ public sealed class NamedClientSdkTests
                 }.AsIChatClient(defaultModelId: null, defaultMaxOutputTokens: 64),
                 extractor,
                 identity,
-                snapshots
+                [snapshots]
             );
             return new ModelPolicyChatClient(
                 captured,
@@ -331,16 +331,13 @@ public sealed class NamedClientSdkTests
         }
     }
 
-    sealed class SnapshotSink : IExtractionSink
+    sealed class SnapshotSink : IAttemptSink
     {
         internal List<ExtractionResult> Items { get; } = [];
 
-        public ValueTask OnExtractedAsync(
-            ExtractionResult result,
-            CancellationToken cancellationToken
-        )
+        public ValueTask OnAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
         {
-            Items.Add(result);
+            Items.Add(attempt.Result);
             return ValueTask.CompletedTask;
         }
     }

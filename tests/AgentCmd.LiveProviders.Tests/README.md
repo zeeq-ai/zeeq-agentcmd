@@ -1,6 +1,6 @@
 # Explicit live provider capture tests
 
-These TUnit tests call Azure OpenAI or direct OpenAI Chat Completions and Anthropic Messages through real SDK-to-MEAI bridges and `ProviderExtractionChatClient`. The generated-runtime cases also exercise the actual command library. Aspire, Docker and Python are not required for these API tests.
+These TUnit tests call Azure OpenAI or direct OpenAI Chat Completions and Anthropic Messages through real SDK-to-MEAI bridges and `AttemptCaptureChatClient`. The generated-runtime cases also exercise the actual command library. Aspire, Docker and Python are not required for these API tests.
 
 ## Set up keys on this project
 

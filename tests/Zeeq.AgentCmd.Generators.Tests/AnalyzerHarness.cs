@@ -18,6 +18,20 @@ internal static class AnalyzerHarness
         namespace Microsoft.Extensions.AI
         {
             public interface IChatClient { }
+            public sealed class ChatClientBuilder { }
+        }
+        namespace Zeeq.AgentCmd.Providers
+        {
+            using Microsoft.Extensions.AI;
+            public sealed class ProviderProtocol { }
+            public static class Protocols
+            {
+                public static ProviderProtocol AzureOpenAIChatCompletions => null!;
+            }
+            public static class AgentCmdBuilderCaptureExtensions
+            {
+                public static AgentCmdBuilder AddChatClient(this AgentCmdBuilder builder, string name, System.Func<System.IServiceProvider, IChatClient> provider, ProviderProtocol protocol, string? fixedModel = null, System.Func<System.Exception, FailureKind>? classify = null, System.Action<ChatClientBuilder>? configure = null) => builder;
+            }
         }
         namespace Zeeq.AgentCmd
         {
@@ -79,7 +93,14 @@ internal static class AnalyzerHarness
         string? stubOverride = null
     )
     {
-        var source = Preamble + "\n" + body + "\n" + Epilogue;
+        // The Providers capture extension exists only in the stubs; the shipped core API does not reference it.
+        var source =
+            (useRealApi ? "" : "using Zeeq.AgentCmd.Providers;\n")
+            + Preamble
+            + "\n"
+            + body
+            + "\n"
+            + Epilogue;
         var trees = new List<SyntaxTree> { CSharpSyntaxTree.ParseText(source, path: "Host.cs") };
         if (!useRealApi)
         {

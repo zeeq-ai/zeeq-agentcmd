@@ -53,11 +53,11 @@ internal static class ProviderCapture
                 ? ApiKind.ChatCompletions
                 : ApiKind.Messages
         );
-        using var captured = new ProviderExtractionChatClient(
+        using var captured = new AttemptCaptureChatClient(
             provider,
             extractor,
             registration,
-            sink
+            [sink]
         );
         var started = DateTimeOffset.UtcNow;
         ChatResponse response;
@@ -130,16 +130,13 @@ internal static class ProviderCapture
         );
     }
 
-    private sealed class RecordingSink : IExtractionSink
+    private sealed class RecordingSink : IAttemptSink
     {
         internal List<ExtractionResult> Results { get; } = [];
 
-        public ValueTask OnExtractedAsync(
-            ExtractionResult result,
-            CancellationToken cancellationToken
-        )
+        public ValueTask OnAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
         {
-            Results.Add(result);
+            Results.Add(attempt.Result);
             return ValueTask.CompletedTask;
         }
     }

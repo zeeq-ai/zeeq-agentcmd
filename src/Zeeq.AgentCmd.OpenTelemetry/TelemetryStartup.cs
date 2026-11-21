@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using global::OpenTelemetry;
 using global::OpenTelemetry.Trace;
 using Zeeq.AgentCmd.Providers;
@@ -44,32 +43,5 @@ public static class TelemetryStartup
                 }
             })
             .Build();
-    }
-}
-
-/// <summary>
-/// An <see cref="IExtractionSink"/> that emits each provider attempt as a Langfuse generation. It runs
-/// inline in the provider call, so the current activity is the command that made the call. It records
-/// one timestamp for both ends; a host that needs real durations should emit from its own sink.
-/// </summary>
-/// <param name="promptName">Optional Langfuse prompt name to link the generation to.</param>
-/// <param name="promptVersion">Optional integer prompt version.</param>
-public sealed class LangfuseGenerationSink(string? promptName = null, int? promptVersion = null)
-    : IExtractionSink
-{
-    /// <inheritdoc/>
-    public ValueTask OnExtractedAsync(ExtractionResult result, CancellationToken cancellationToken)
-    {
-        var now = DateTimeOffset.UtcNow;
-        LangfuseGeneration.EmitSafely(
-            result.Snapshot,
-            Activity.Current?.Context ?? default,
-            now,
-            now,
-            promptName,
-            promptVersion
-        );
-
-        return ValueTask.CompletedTask;
     }
 }

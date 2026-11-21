@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using TUnit.Assertions;
 using TUnit.Assertions.Extensions;
 using TUnit.Core;
@@ -13,35 +14,105 @@ public class MiddlewareTests
     static IChatClient Build(
         ScriptedClient inner,
         ProviderIdentity reg,
-        IExtractionSink sink,
+        IAttemptSink sink,
         ProviderExtractionOptions? options = null,
         ProviderAdapterRegistry? registry = null
     ) =>
         new ChatClientBuilder(inner)
-            .UseProviderExtraction(
-                new ProviderExtractor(registry ?? Fx.Registry(), options),
-                reg,
-                sink
-            )
+            .UseAttemptCapture(new ProviderExtractor(registry ?? Fx.Registry(), options), reg, sink)
             .Build();
 
     static readonly ChatMessage[] Hello = [new(ChatRole.User, "hello")];
 
     [Test]
-    public async Task Explicit_adapters_overload_builds_the_extractor_without_manual_wiring()
+    public async Task Protocol_preset_delivers_each_call_to_every_DI_sink_in_isolation()
     {
         var (response, _, _) = Fx.Load("anthropic-cache-ttl");
         var inner = new ScriptedClient { Respond = (_, _, _) => Task.FromResult(response) };
-        var sink = new CaptureSink();
+        var capture = new CaptureSink();
+        var failures = new List<string>();
+        using var services = new ServiceCollection()
+            .AddSingleton(
+                new ProviderExtractionOptions { OnFailure = (stage, _) => failures.Add(stage) }
+            )
+            .AddAttemptSink(new ThrowingSink())
+            .AddAttemptSink(capture)
+            .AddAttemptSink<CountingSink>()
+            .AddAttemptSink<CountingSink>()
+            .BuildServiceProvider();
         var client = new ChatClientBuilder(inner)
-            .UseProviderExtraction(Fx.Anthropic, sink, new AnthropicMessagesAdapter())
-            .Build();
+            .UseAttemptCapture(Protocols.AnthropicMessages, "claude")
+            .Build(services);
 
         var got = await client.GetResponseAsync(Hello);
 
+        // A failing sink is reported and skipped; the sinks after it still see the call.
         await Assert.That(ReferenceEquals(got, response)).IsTrue();
-        await Assert.That(sink.Results.Count).IsEqualTo(1);
-        await Assert.That(Fx.Status(sink.Results[0])).IsEqualTo("Extracted");
+        await Assert.That(failures).IsEquivalentTo(new[] { "sink" });
+        await Assert.That(capture.Records.Count).IsEqualTo(1);
+        await Assert.That(Fx.Status(capture.Results[0])).IsEqualTo("Extracted");
+        await Assert
+            .That(capture.Records[0].Snapshot.Registration.ClientRegistrationId)
+            .IsEqualTo("claude");
+        await Assert
+            .That(capture.Records[0].Snapshot.Registration.ProviderKey)
+            .IsEqualTo("anthropic");
+
+        // The same sink type registered twice records each call once.
+        await Assert.That(services.GetServices<IAttemptSink>().Count()).IsEqualTo(3);
+        await Assert
+            .That(
+                services
+                    .GetRequiredService<IEnumerable<IAttemptSink>>()
+                    .OfType<CountingSink>()
+                    .Single()
+                    .Count
+            )
+            .IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task Each_call_records_when_it_started_and_ended()
+    {
+        var (response, _, _) = Fx.Load("anthropic-cache-ttl");
+        var clock = new SteppingClock();
+        var options = new ProviderExtractionOptions { TimeProvider = clock };
+        var calls = 0;
+        var inner = new ScriptedClient
+        {
+            Respond = (_, _, _) =>
+                ++calls == 1
+                    ? Task.FromResult(response)
+                    : throw new HttpRequestException("provider down"),
+            Stream = _ => Updates(),
+        };
+        var sink = new CaptureSink();
+        var client = Build(inner, Fx.Anthropic, sink, options);
+
+        await client.GetResponseAsync(Hello);
+        await Assert.ThrowsAsync<HttpRequestException>(() => client.GetResponseAsync(Hello));
+        await foreach (var _ in client.GetStreamingResponseAsync(Hello))
+        {
+            break;
+        }
+
+        // Every outcome gets a real interval, including a failure and a stream abandoned early.
+        await Assert
+            .That(sink.Records.Select(r => r.Snapshot.End))
+            .IsEquivalentTo(
+                new[] { AttemptEnd.Completed, AttemptEnd.Failed, AttemptEnd.Abandoned }
+            );
+        foreach (var record in sink.Records)
+        {
+            await Assert.That(record.Ended).IsGreaterThan(record.Started);
+        }
+
+        static async IAsyncEnumerable<ChatResponseUpdate> Updates()
+        {
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "a");
+            await Task.Yield();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "b");
+        }
     }
 
     [Test]
@@ -354,7 +425,7 @@ public class MiddlewareTests
         var sink = new CaptureSink();
         var client = new ChatClientBuilder(inner)
             .UseFunctionInvocation()
-            .UseProviderExtraction(Fx.Extractor(), Fx.OpenAi, sink)
+            .UseAttemptCapture(Fx.Extractor(), Fx.OpenAi, sink)
             .Build();
         var response = await client.GetResponseAsync(
             Hello,
@@ -403,16 +474,12 @@ public class StreamingTests
     static IChatClient Build(
         ScriptedClient inner,
         ProviderIdentity reg,
-        IExtractionSink sink,
+        IAttemptSink sink,
         ProviderAdapterRegistry? registry = null,
         ProviderExtractionOptions? options = null
     ) =>
         new ChatClientBuilder(inner)
-            .UseProviderExtraction(
-                new ProviderExtractor(registry ?? Fx.Registry(), options),
-                reg,
-                sink
-            )
+            .UseAttemptCapture(new ProviderExtractor(registry ?? Fx.Registry(), options), reg, sink)
             .Build();
 
     static async Task<List<ChatResponseUpdate>> Drain(
@@ -722,4 +789,27 @@ sealed class DisposeThrowsStream(IEnumerable<ChatResponseUpdate> updates)
         public ValueTask DisposeAsync() =>
             throw new InvalidOperationException("provider dispose failed");
     }
+}
+
+sealed class CountingSink : IAttemptSink
+{
+    int count;
+
+    public int Count => count;
+
+    public ValueTask OnAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
+    {
+        Interlocked.Increment(ref count);
+
+        return ValueTask.CompletedTask;
+    }
+}
+
+// Each read moves one second forward, so an end time is always after its start.
+sealed class SteppingClock : TimeProvider
+{
+    long ticks = new DateTimeOffset(2026, 11, 20, 0, 0, 0, TimeSpan.Zero).UtcTicks;
+
+    public override DateTimeOffset GetUtcNow() =>
+        new(Interlocked.Add(ref ticks, TimeSpan.TicksPerSecond), TimeSpan.Zero);
 }

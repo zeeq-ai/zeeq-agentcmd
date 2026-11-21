@@ -48,6 +48,34 @@ public sealed class ClientRegistrationAnalyzerTests
     }
 
     [Test]
+    public async Task CapturedClientExtensionRegistersItsNameAndFixedModel()
+    {
+        await AnalyzerHarness.ExpectAsync(
+            """
+            services.AddAgentCmd(b => b
+                .AddChatClient("azure", Create, Protocols.AzureOpenAIChatCompletions, fixedModel: "m")
+                .AddProfile("draft", "azure", "m"));
+            """
+        );
+        await AnalyzerHarness.ExpectAsync(
+            """
+            services.AddAgentCmd(b => b
+                .AddChatClient("azure", Create, Protocols.AzureOpenAIChatCompletions)
+                .AddProfile("draft", "Azure", "m"));
+            """,
+            "AGENTCLIENT001:\"Azure\""
+        );
+        await AnalyzerHarness.ExpectAsync(
+            """
+            services.AddAgentCmd(b => b
+                .AddChatClient("azure", Create, Protocols.AzureOpenAIChatCompletions, fixedModel: "m")
+                .AddProfile("draft", "azure", "other"));
+            """,
+            "AGENTCLIENT003:\"other\""
+        );
+    }
+
+    [Test]
     public async Task ReportsClientMisspellingCaseSensitiveAndArgumentLocations()
     {
         await AnalyzerHarness.ExpectAsync(

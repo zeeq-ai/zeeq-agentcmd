@@ -36,7 +36,7 @@
 - Extend **Microsoft.Extensions.AI (MEAI)** without replacing it. Accept standard `IChatClient` clients and preserve `ChatOptions`, responses, cancellation, and client ownership.
 - Compose behaviors through `ChatClientBuilder` and `DelegatingChatClient`. Preserve host middleware for retry, caching, tools, and telemetry. Place per-attempt capture next to the provider, inside retry/fallback/tool loops.
 - Keep the command layer provider-neutral. Add future Bedrock, DeepSeek, Fireworks, or other providers through adapters and optional SDK bridges, not core forks or vendor-specific fluent APIs.
-- Keep seams independent: `IProviderResponseAdapter` parses protocol accounting; `INativeResponseProjector` bridges an SDK response; `IExtractionSink` consumes normalized snapshots. Pricing and observability consume those snapshots, not SDK graphs.
+- Keep seams independent. `IProviderResponseAdapter` parses protocol accounting. `INativeResponseProjector` bridges an SDK response. `IAttemptSink` receives an `AttemptRecord` with a normalized snapshot, correlation, and timing. Pricing and observability consume this evidence independently of the SDK.
 - Keep platform emitters optional. A provider must not know about Langfuse or another sink. Avoid a separate implementation for every provider/platform pair.
 - Use typed hooks for defaults and validation; MEAI middleware for execution behaviors; `IHumanFeedbackLedger` and `ICompositionStore` for storage. Preserve extension boundaries when adding capabilities.
 - Keep setup small, DI-friendly, and explicit. Generate contracts, schemas, rendering, and registration; keep stable prompt IDs and authored intent visible.

@@ -591,7 +591,11 @@ public sealed class ProfileRouter : IDisposable
                         span?.SetTag("agentcmd.attempt.kind", kind);
                         try
                         {
-                            observed = await AwaitProvider(provider.Client.GetResponseAsync(messages.Select(m => m.Clone()), options, attemptToken.Token), attemptToken.Token).ConfigureAwait(false);
+                            // Provider capture reads this once at call start; a late completion keeps it.
+                            using (view.Context is { } owner ? AttemptScope.Begin(new(owner, attemptId, number, profile.Key.Id, span?.Context ?? default)) : null)
+                            {
+                                observed = await AwaitProvider(provider.Client.GetResponseAsync(messages.Select(m => m.Clone()), options, attemptToken.Token), attemptToken.Token).ConfigureAwait(false);
+                            }
                             callerToken.ThrowIfCancellationRequested();
                             if (attemptToken.IsCancellationRequested)
                             {

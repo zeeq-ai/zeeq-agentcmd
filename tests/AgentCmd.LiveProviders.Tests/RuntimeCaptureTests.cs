@@ -96,11 +96,11 @@ public class RuntimeCaptureTests
             "live-tests." + settings.Provider,
             settings.Provider == "anthropic" ? ApiKind.Messages : ApiKind.ChatCompletions
         );
-        var provider = new ProviderExtractionChatClient(
+        var provider = new AttemptCaptureChatClient(
             LiveProviderFactory.Create(settings, http),
             extractor,
             identity,
-            snapshots
+            [snapshots]
         );
         var events = new EventSink(throwFromListener);
         var actor = new Actor("live-tests", "runtime-probe");
@@ -137,16 +137,13 @@ public class RuntimeCaptureTests
         return new(success, snapshots.Items[0], events.Items, readBack);
     }
 
-    private sealed class CaptureSink : IExtractionSink
+    private sealed class CaptureSink : IAttemptSink
     {
         internal List<ResponseSnapshot> Items { get; } = [];
 
-        public ValueTask OnExtractedAsync(
-            ExtractionResult result,
-            CancellationToken cancellationToken
-        )
+        public ValueTask OnAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
         {
-            Items.Add(result.Snapshot);
+            Items.Add(attempt.Snapshot);
             return ValueTask.CompletedTask;
         }
     }

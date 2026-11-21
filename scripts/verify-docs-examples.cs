@@ -339,6 +339,10 @@ try
         Path.Combine(telemetryApp, "TelemetryExport.cs"),
         Fence(telemetryGuide, "csharp", "TelemetryExport.cs")
     );
+    File.WriteAllText(
+        Path.Combine(telemetryApp, "AttemptRowSink.cs"),
+        Fence(telemetryGuide, "csharp", "AttemptRowSink.cs")
+    );
     await Run(
         telemetryApp,
         "build",

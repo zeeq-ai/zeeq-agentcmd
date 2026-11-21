@@ -241,11 +241,11 @@ public class ModelPolicyTests
             },
         };
         var sink = new CaptureSink();
-        using var capture = new ProviderExtractionChatClient(
+        using var capture = new AttemptCaptureChatClient(
             provider,
             Fx.Extractor(),
             Fx.OpenAi,
-            sink
+            [sink]
         );
         using var policy = new ModelPolicyChatClient(capture, Fx.OpenAi);
         var options = new ChatOptions
